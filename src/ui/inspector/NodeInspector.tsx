@@ -3,14 +3,18 @@ import type {
   InspectorViewModel,
   UiCommand,
 } from "../../application/index.js";
+import type { WorkspaceLocale } from "../../workspace/index.js";
+import { t } from "../i18n/index.js";
 
 export function NodeActions({
   nodeId,
   availability,
+  locale,
   onCommand,
 }: {
   nodeId: string;
   availability: ActionAvailability;
+  locale: WorkspaceLocale;
   onCommand: (command: UiCommand) => void;
 }) {
   return (
@@ -30,7 +34,7 @@ export function NodeActions({
           data-testid="action-park"
           onClick={() => onCommand({ type: "parkNode", nodeId })}
         >
-          Park
+          {t(locale, "actions.park")}
         </button>
       ) : null}
       {availability.canResume ? (
@@ -39,7 +43,7 @@ export function NodeActions({
           data-testid="action-resume"
           onClick={() => onCommand({ type: "resumeNode", nodeId })}
         >
-          Resume
+          {t(locale, "actions.resume")}
         </button>
       ) : null}
       {availability.canClose ? (
@@ -48,7 +52,7 @@ export function NodeActions({
           data-testid="action-close"
           onClick={() => onCommand({ type: "closeNode", nodeId })}
         >
-          Close
+          {t(locale, "actions.close")}
         </button>
       ) : null}
       {availability.canReturnToParent ? (
@@ -57,7 +61,7 @@ export function NodeActions({
           data-testid="action-return-to-parent"
           onClick={() => onCommand({ type: "returnToParent" })}
         >
-          Return to Parent
+          {t(locale, "actions.returnToParent")}
         </button>
       ) : null}
     </div>
@@ -67,59 +71,66 @@ export function NodeActions({
 export function NodeInspector({
   inspector,
   availability,
+  locale,
   onCommand,
+  onClose,
 }: {
   inspector: InspectorViewModel;
   availability?: ActionAvailability;
+  locale: WorkspaceLocale;
   onCommand: (command: UiCommand) => void;
+  onClose: () => void;
 }) {
   if (!inspector.hasFocus || inspector.nodeId === undefined) {
     return (
       <section className="inspector" data-testid="node-inspector">
-        <h2>Node Inspector</h2>
-        <p className="empty">No node focused.</p>
+        <InspectorChrome locale={locale} onClose={onClose} />
+        <p className="empty">{t(locale, "inspector.noFocus")}</p>
       </section>
     );
   }
 
   return (
     <section className="inspector" data-testid="node-inspector">
-      <h2>Node Inspector</h2>
+      <InspectorChrome locale={locale} onClose={onClose} />
       {availability ? (
         <NodeActions
           nodeId={inspector.nodeId}
           availability={availability}
+          locale={locale}
           onCommand={onCommand}
         />
       ) : null}
       <dl className="inspector-fields">
         <div>
-          <dt>Question</dt>
+          <dt>{t(locale, "inspector.question")}</dt>
           <dd data-testid="inspector-question">{inspector.question}</dd>
         </div>
         <div>
-          <dt>Goal</dt>
+          <dt>{t(locale, "inspector.goal")}</dt>
           <dd data-testid="inspector-goal">{inspector.goal}</dd>
         </div>
         <div>
-          <dt>Target Depth</dt>
+          <dt>{t(locale, "inspector.targetDepth")}</dt>
           <dd data-testid="inspector-depth">{inspector.targetDepth}</dd>
         </div>
         <div>
-          <dt>Lifecycle</dt>
+          <dt>{t(locale, "inspector.lifecycle")}</dt>
           <dd data-testid="inspector-lifecycle">{inspector.lifecycle}</dd>
         </div>
         <div>
-          <dt>Derived Blocked</dt>
+          <dt>{t(locale, "inspector.blocked")}</dt>
           <dd data-testid="inspector-blocked">
-            {inspector.isBlocked ? "Yes" : "No"}
+            {inspector.isBlocked
+              ? t(locale, "inspector.blockedYes")
+              : t(locale, "inspector.blockedNo")}
           </dd>
         </div>
       </dl>
 
-      <h3>Definition of Done</h3>
+      <h3>{t(locale, "inspector.dod")}</h3>
       {inspector.definitionOfDone.length === 0 ? (
-        <p className="empty">No criteria.</p>
+        <p className="empty">{t(locale, "inspector.noCriteria")}</p>
       ) : (
         <ul data-testid="inspector-dod">
           {inspector.definitionOfDone.map((criterion) => (
@@ -127,18 +138,23 @@ export function NodeInspector({
               <strong>{criterion.description}</strong>
               <span>
                 {" "}
-                ({criterion.required ? "required" : "optional"},{" "}
-                {criterion.status}
-                {criterion.evidenceRequired ? ", evidence required" : ""})
+                ({criterion.required
+                  ? t(locale, "inspector.required")
+                  : t(locale, "inspector.optional")}
+                , {criterion.status}
+                {criterion.evidenceRequired
+                  ? `, ${t(locale, "inspector.evidenceRequired")}`
+                  : ""}
+                )
               </span>
             </li>
           ))}
         </ul>
       )}
 
-      <h3>Evidence</h3>
+      <h3>{t(locale, "inspector.evidence")}</h3>
       {inspector.evidence.length === 0 ? (
-        <p className="empty">No evidence.</p>
+        <p className="empty">{t(locale, "inspector.noEvidence")}</p>
       ) : (
         <ul data-testid="inspector-evidence">
           {inspector.evidence.map((item) => (
@@ -150,10 +166,33 @@ export function NodeInspector({
         </ul>
       )}
 
-      <h3>Summary</h3>
+      <h3>{t(locale, "inspector.summary")}</h3>
       <p data-testid="inspector-summary">
-        {inspector.summary ?? "No summary yet."}
+        {inspector.summary ?? t(locale, "inspector.noSummary")}
       </p>
     </section>
+  );
+}
+
+function InspectorChrome({
+  locale,
+  onClose,
+}: {
+  locale: WorkspaceLocale;
+  onClose: () => void;
+}) {
+  return (
+    <div className="inspector-chrome">
+      <h2>{t(locale, "inspector.title")}</h2>
+      <button
+        type="button"
+        className="inspector-close"
+        data-testid="inspector-close"
+        aria-label={t(locale, "inspector.close")}
+        onClick={onClose}
+      >
+        ×
+      </button>
+    </div>
   );
 }

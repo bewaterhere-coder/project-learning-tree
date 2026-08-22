@@ -46,6 +46,20 @@ describe("import and state boundaries", () => {
     expect(source).not.toContain("@xyflow/react");
   });
 
+  it("keeps Workspace free of React, XYFlow, and browser storage APIs", () => {
+    const source = readAll(join(ROOT, "src/workspace"));
+    expect(source).not.toContain("from \"react\"");
+    expect(source).not.toContain("from \"react-dom\"");
+    expect(source).not.toContain("@xyflow/react");
+    expect(source).not.toContain("localStorage");
+  });
+
+  it("keeps Application free of Workspace imports", () => {
+    const source = readAll(join(ROOT, "src/application"));
+    expect(source).not.toContain("from \"../workspace");
+    expect(source).not.toContain("from \"../../workspace");
+  });
+
   it("does not let UI store domain business state locally", () => {
     const uiFiles = collectSourceFiles(join(ROOT, "src/ui")).filter(
       (file) => !file.endsWith(".css"),

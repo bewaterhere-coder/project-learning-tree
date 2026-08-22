@@ -53,6 +53,8 @@ export {
   type MoveCandidateToFrontier,
   type NodeLifecycle,
   type ParkNode,
+  type PassId,
+  type ProjectId,
   type PromoteFrontierItem,
   type ReopenEvent,
   type ReopenNode,

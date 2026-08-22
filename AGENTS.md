@@ -19,6 +19,8 @@ Dependencies point inward:
 ```text
 UI / Infrastructure
         ↓
+Workspace
+        ↓
 Application
         ↓
 Domain
