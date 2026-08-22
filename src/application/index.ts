@@ -3,6 +3,7 @@ export {
   isAuthoringCommand,
   isClosePrerequisiteError,
   isGlobalDomainError,
+  isProjectCreateCommand,
   presentDomainError,
   type DomainErrorPresentation,
 } from "./errors.js";
@@ -18,6 +19,11 @@ export {
   type AuthoringAvailability,
   type ChildDraftValidation,
 } from "./selectors/child-authoring.js";
+export {
+  selectCoreQuestionAuthoring,
+  validateCoreQuestionDraft,
+  type CoreQuestionAuthoring,
+} from "./selectors/core-question-authoring.js";
 export {
   selectCloseReadiness,
   type CloseReadiness,

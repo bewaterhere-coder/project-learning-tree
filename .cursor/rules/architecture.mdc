@@ -11,9 +11,10 @@ alwaysApply: true
 - Prefer explicit domain operations over UI-driven state mutation.
 - Keep the first implementation local-first.
 - DomainSnapshot is the single source of truth for learning state.
-- Workspace layout is the source of truth for UI chrome (sidebar, inspector, viewport, node positions, locale).
-- UI may keep viewport, zoom, hover, and panel chrome in Workspace layout, including localStorage for those preferences only.
-- UI must not persist DomainSnapshot.
+- Workspace layout is the source of truth for UI chrome (sidebar, inspector, viewport, node positions, locale, appearance).
+- UI may keep viewport, zoom, hover, panel chrome, locale, and colorScheme in Workspace preferences, including localStorage for those preferences only.
+- DomainSnapshot must never be stored in UI preference persistence.
+- DomainSnapshot may be stored in the dedicated Workspace semantic persistence layer.
 - UI must not store lifecycle, activeStack, currentFocus, blocked, DoD satisfaction, evidence relationships, or parent/child relationships.
 - XYFlow nodes/edges are a derived view and must not become the domain source of truth.
 - Node dragging may update WorkspaceLayout.nodePositions only. It must not call Domain operations or change parent/child.

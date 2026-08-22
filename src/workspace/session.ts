@@ -6,6 +6,7 @@ import {
   type ProjectId,
   type UiCommand,
 } from "../application/index.js";
+import { createProject, defaultPorts } from "../domain/index.js";
 import {
   clampInspectorWidth,
   clampSidebarWidth,
@@ -23,24 +24,17 @@ import type {
 
 export function createWorkspace(
   snapshots: DomainSnapshot[],
-  selectedProjectId?: ProjectId,
+  selectedProjectId?: ProjectId | null,
 ): LearningWorkspace {
-  if (snapshots.length === 0) {
-    throw new Error("LearningWorkspace requires at least one project");
-  }
   const projects = snapshots.map((snapshot) => ({
     projectId: snapshot.project.id,
     snapshot,
     layout: defaultProjectLayout(snapshot),
+    archived: false,
   }));
-  const selected =
-    selectedProjectId !== undefined &&
-    projects.some((project) => project.projectId === selectedProjectId)
-      ? selectedProjectId
-      : projects[0]!.projectId;
   return {
     projects,
-    selectedProjectId: selected,
+    selectedProjectId: resolveInitialSelection(projects, selectedProjectId),
     shell: defaultShell(),
   };
 }
@@ -53,26 +47,39 @@ export function workspaceFromSnapshot(
 
 export function selectedProject(
   workspace: LearningWorkspace,
-): ProjectWorkspace {
-  const found = workspace.projects.find(
-    (project) => project.projectId === workspace.selectedProjectId,
-  );
-  if (!found) {
-    throw new Error(
-      `Selected project ${workspace.selectedProjectId} is missing from the workspace`,
-    );
+): ProjectWorkspace | undefined {
+  if (workspace.selectedProjectId === null) {
+    return undefined;
   }
-  return found;
+  return workspace.projects.find(
+    (project) =>
+      project.projectId === workspace.selectedProjectId && !project.archived,
+  );
+}
+
+export function activeProjects(
+  workspace: LearningWorkspace,
+): ProjectWorkspace[] {
+  return workspace.projects.filter((project) => !project.archived);
+}
+
+export function archivedProjects(
+  workspace: LearningWorkspace,
+): ProjectWorkspace[] {
+  return workspace.projects.filter((project) => project.archived);
 }
 
 export function selectProject(
   workspace: LearningWorkspace,
   projectId: ProjectId,
 ): LearningWorkspace {
-  if (
-    projectId === workspace.selectedProjectId ||
-    !workspace.projects.some((project) => project.projectId === projectId)
-  ) {
+  if (projectId === workspace.selectedProjectId) {
+    return workspace;
+  }
+  const found = workspace.projects.find(
+    (project) => project.projectId === projectId && !project.archived,
+  );
+  if (!found) {
     return workspace;
   }
   return {
@@ -89,6 +96,9 @@ export function applySelectedCommand(
   ports?: Ports,
 ): LearningWorkspace {
   const current = selectedProject(workspace);
+  if (!current) {
+    return workspace;
+  }
   const nextSession = dispatchCommand(
     {
       snapshot: current.snapshot,
@@ -103,10 +113,104 @@ export function applySelectedCommand(
     lastError: nextSession.lastError,
     lastErrorCommand: nextSession.lastErrorCommand,
     projects: workspace.projects.map((project) =>
-      project.projectId === workspace.selectedProjectId
+      project.projectId === current.projectId
         ? { ...project, snapshot: nextSession.snapshot }
         : project,
     ),
+  };
+}
+
+export function createWorkspaceProject(
+  workspace: LearningWorkspace,
+  command: { name: string; source?: string },
+  ports: Ports = defaultPorts(),
+): LearningWorkspace {
+  const result = createProject(command, ports);
+  if (!result.ok) {
+    return {
+      ...workspace,
+      lastError: result.error,
+      lastErrorCommand: "createProject",
+    };
+  }
+  const project: ProjectWorkspace = {
+    projectId: result.snapshot.project.id,
+    snapshot: result.snapshot,
+    layout: defaultProjectLayout(result.snapshot),
+    archived: false,
+  };
+  return {
+    ...workspace,
+    projects: [...workspace.projects, project],
+    selectedProjectId: project.projectId,
+    lastError: undefined,
+    lastErrorCommand: undefined,
+  };
+}
+
+export function archiveProject(
+  workspace: LearningWorkspace,
+  projectId: ProjectId,
+): LearningWorkspace {
+  const index = workspace.projects.findIndex(
+    (project) => project.projectId === projectId,
+  );
+  const current = index >= 0 ? workspace.projects[index] : undefined;
+  if (!current || current.archived) {
+    return workspace;
+  }
+  const projects = workspace.projects.map((project, projectIndex) =>
+    projectIndex === index ? { ...project, archived: true } : project,
+  );
+  return {
+    ...workspace,
+    projects,
+    selectedProjectId:
+      workspace.selectedProjectId === projectId
+        ? nextActiveProjectId(projects, index)
+        : workspace.selectedProjectId,
+    lastError: undefined,
+    lastErrorCommand: undefined,
+  };
+}
+
+export function restoreProject(
+  workspace: LearningWorkspace,
+  projectId: ProjectId,
+): LearningWorkspace {
+  const current = workspace.projects.find(
+    (project) => project.projectId === projectId,
+  );
+  if (!current || !current.archived) {
+    return workspace;
+  }
+  return {
+    ...workspace,
+    projects: workspace.projects.map((project) =>
+      project.projectId === projectId ? { ...project, archived: false } : project,
+    ),
+    selectedProjectId:
+      workspace.selectedProjectId === null
+        ? projectId
+        : workspace.selectedProjectId,
+    lastError: undefined,
+    lastErrorCommand: undefined,
+  };
+}
+
+export function normalizeWorkspaceSelection(
+  workspace: LearningWorkspace,
+): LearningWorkspace {
+  if (workspace.selectedProjectId === null) {
+    return workspace;
+  }
+  const selected = selectedProject(workspace);
+  if (selected) {
+    return workspace;
+  }
+  return {
+    ...workspace,
+    selectedProjectId: nextActiveProjectId(workspace.projects, -1),
   };
 }
 
@@ -139,10 +243,14 @@ export function updateSelectedLayout(
   workspace: LearningWorkspace,
   patch: Partial<ProjectWorkspaceLayout>,
 ): LearningWorkspace {
+  const current = selectedProject(workspace);
+  if (!current) {
+    return workspace;
+  }
   return {
     ...workspace,
     projects: workspace.projects.map((project) => {
-      if (project.projectId !== workspace.selectedProjectId) {
+      if (project.projectId !== current.projectId) {
         return project;
       }
       const layout: ProjectWorkspaceLayout = {
@@ -184,4 +292,42 @@ export function setInspectorOpen(
   inspectorOpen: boolean,
 ): LearningWorkspace {
   return updateSelectedLayout(workspace, { inspectorOpen });
+}
+
+function resolveInitialSelection(
+  projects: ProjectWorkspace[],
+  selectedProjectId?: ProjectId | null,
+): ProjectId | null {
+  if (selectedProjectId === null) {
+    return null;
+  }
+  if (
+    selectedProjectId !== undefined &&
+    projects.some(
+      (project) =>
+        project.projectId === selectedProjectId && !project.archived,
+    )
+  ) {
+    return selectedProjectId;
+  }
+  return nextActiveProjectId(projects, -1);
+}
+
+function nextActiveProjectId(
+  projects: ProjectWorkspace[],
+  archivedIndex: number,
+): ProjectId | null {
+  for (let index = archivedIndex + 1; index < projects.length; index += 1) {
+    const project = projects[index];
+    if (project && !project.archived) {
+      return project.projectId;
+    }
+  }
+  for (let index = archivedIndex - 1; index >= 0; index -= 1) {
+    const project = projects[index];
+    if (project && !project.archived) {
+      return project.projectId;
+    }
+  }
+  return null;
 }

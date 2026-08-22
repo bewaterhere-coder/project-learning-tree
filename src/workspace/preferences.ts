@@ -1,13 +1,19 @@
 import {
   clampInspectorWidth,
   clampSidebarWidth,
+  DEFAULT_COLOR_SCHEME,
+  resolveColorScheme,
   WORKSPACE_PREFERENCES_KEY,
+  WORKSPACE_PREFERENCES_KEY_V1,
+  WORKSPACE_THEME_HINT_KEY,
 } from "./defaults.js";
 import {
   LAYOUT_VERSION,
+  type ColorScheme,
   type LearningWorkspace,
   type PreferenceStorage,
   type ProjectWorkspaceLayout,
+  type ResolvedColorScheme,
   type StoredWorkspacePreferences,
   type Viewport,
   type WorkspaceLocale,
@@ -51,6 +57,7 @@ export function serializeWorkspacePreferences(
       projectSidebarOpen: workspace.shell.projectSidebarOpen,
       projectSidebarWidth: workspace.shell.projectSidebarWidth,
       locale: workspace.shell.locale,
+      colorScheme: workspace.shell.colorScheme,
     },
     projects,
   };
@@ -67,15 +74,12 @@ export function saveWorkspacePreferences(
 export function loadWorkspacePreferences(
   storage: PreferenceStorage,
 ): StoredWorkspacePreferences | undefined {
-  const raw = storage.getItem(WORKSPACE_PREFERENCES_KEY);
-  if (raw === null || raw === "") {
-    return undefined;
+  const current = readPreferences(storage, WORKSPACE_PREFERENCES_KEY);
+  if (current !== undefined) {
+    return current;
   }
-  try {
-    return parseStoredPreferences(JSON.parse(raw));
-  } catch {
-    return undefined;
-  }
+  const legacy = readPreferences(storage, WORKSPACE_PREFERENCES_KEY_V1);
+  return legacy;
 }
 
 export function hydrateWorkspacePreferences(
@@ -117,10 +121,10 @@ export function parseStoredPreferences(
       return undefined;
     }
   }
-  if (value.version !== LAYOUT_VERSION) {
+  if (value.version !== 1 && value.version !== LAYOUT_VERSION) {
     return undefined;
   }
-  const shell = parseShell(value.shell);
+  const shell = parseShell(value.shell, value.version === 1);
   if (shell === undefined) {
     return undefined;
   }
@@ -131,7 +135,55 @@ export function parseStoredPreferences(
   return { version: LAYOUT_VERSION, shell, projects };
 }
 
-function parseShell(value: unknown): WorkspaceShellLayout | undefined {
+export function writeThemeHint(
+  storage: PreferenceStorage,
+  colorScheme: ColorScheme,
+  systemPrefersDark: boolean,
+): void {
+  storage.setItem(
+    WORKSPACE_THEME_HINT_KEY,
+    resolveColorScheme(colorScheme, systemPrefersDark),
+  );
+}
+
+export function readThemeHint(
+  storage: PreferenceStorage,
+): ResolvedColorScheme | undefined {
+  const raw = storage.getItem(WORKSPACE_THEME_HINT_KEY);
+  return raw === "dark" || raw === "light" ? raw : undefined;
+}
+
+export function reconcileThemeHint(
+  storage: PreferenceStorage,
+  colorScheme: ColorScheme,
+  systemPrefersDark: boolean,
+): ResolvedColorScheme {
+  const resolved = resolveColorScheme(colorScheme, systemPrefersDark);
+  if (readThemeHint(storage) !== resolved) {
+    writeThemeHint(storage, colorScheme, systemPrefersDark);
+  }
+  return resolved;
+}
+
+function readPreferences(
+  storage: PreferenceStorage,
+  key: string,
+): StoredWorkspacePreferences | undefined {
+  const raw = storage.getItem(key);
+  if (raw === null || raw === "") {
+    return undefined;
+  }
+  try {
+    return parseStoredPreferences(JSON.parse(raw));
+  } catch {
+    return undefined;
+  }
+}
+
+function parseShell(
+  value: unknown,
+  legacy: boolean,
+): WorkspaceShellLayout | undefined {
   if (!isRecord(value)) {
     return undefined;
   }
@@ -145,10 +197,15 @@ function parseShell(value: unknown): WorkspaceShellLayout | undefined {
   if (typeof value.projectSidebarWidth !== "number") {
     return undefined;
   }
+  const colorScheme = parseColorScheme(value.colorScheme);
+  if (!legacy && colorScheme === undefined) {
+    return undefined;
+  }
   return {
     projectSidebarOpen: value.projectSidebarOpen,
     projectSidebarWidth: clampSidebarWidth(value.projectSidebarWidth),
     locale,
+    colorScheme: colorScheme ?? DEFAULT_COLOR_SCHEME,
   };
 }
 
@@ -240,6 +297,12 @@ function parseViewport(value: unknown): Viewport | undefined {
 
 function parseLocale(value: unknown): WorkspaceLocale | undefined {
   return value === "zh-CN" || value === "en-US" ? value : undefined;
+}
+
+function parseColorScheme(value: unknown): ColorScheme | undefined {
+  return value === "system" || value === "light" || value === "dark"
+    ? value
+    : undefined;
 }
 
 function cloneLayout(layout: ProjectWorkspaceLayout): ProjectWorkspaceLayout {

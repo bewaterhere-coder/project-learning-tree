@@ -34,6 +34,7 @@ const errorExamples: DomainError[] = [
   { kind: "CriterionNotFound", nodeId: "n1", criterionId: "c1" },
   { kind: "QuestionRequired" },
   { kind: "GoalRequired" },
+  { kind: "ProjectNameRequired" },
   { kind: "NotADirectChild", parentId: "n1", childId: "n2" },
 ];
 

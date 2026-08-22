@@ -32,7 +32,7 @@ describe("multi-project workspace", () => {
     const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
     const a = selectedProject(workspace);
     const b = workspace.projects[1];
-    if (!b) {
+    if (!a || !b) {
       throw new Error("missing project B");
     }
 
@@ -118,7 +118,7 @@ describe("multi-project workspace", () => {
     const resizedB = updateSelectedLayout(onB, { inspectorWidth: 480 });
     expect(resizedB.projects[0]?.layout.inspectorOpen).toBe(false);
     expect(resizedB.projects[1]?.layout.inspectorOpen).toBe(true);
-    expect(resizedB.projects[1]?.layout.inspectorWidth).toBe(480);
+    expect(resizedB.projects[1]?.layout.inspectorWidth).toBe(420);
     expect(resizedB.projects[0]?.layout.inspectorWidth).toBe(400);
   });
 

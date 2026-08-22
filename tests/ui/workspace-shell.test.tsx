@@ -171,7 +171,7 @@ describe("inspector overlay", () => {
     const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
     const prepared = updateSelectedLayout(
       setInspectorOpen(workspace, false),
-      { inspectorWidth: 480 },
+      { inspectorWidth: 360 },
     );
     render(
       <App
@@ -185,7 +185,7 @@ describe("inspector overlay", () => {
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
     expect(screen.getByTestId("inspector-overlay")).toHaveAttribute(
       "data-width",
-      "480",
+      "360",
     );
 
     await user.click(
@@ -254,12 +254,14 @@ describe("workspace layout restore", () => {
       />,
     );
 
+    await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
     await user.click(
       screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
     );
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
+    await user.click(screen.getByTestId("settings-open"));
     expect(screen.getByTestId("locale-zh")).toHaveAttribute(
       "data-active",
       "true",
@@ -328,7 +330,7 @@ describe("i18n catalogs", () => {
       />,
     );
 
-    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("Projects");
+    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("Learning projects");
     expect(
       within(screen.getByTestId("node-inspector")).getByRole("heading", {
         level: 2,
@@ -337,9 +339,7 @@ describe("i18n catalogs", () => {
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
       "Start learning",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent(
-      "Current learning path:",
-    );
+    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
     expect(screen.getByTestId("inspector-depth")).toHaveTextContent("Level 1");
 
@@ -359,6 +359,7 @@ describe("i18n catalogs", () => {
       "Learning",
     );
 
+    await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
     expect(

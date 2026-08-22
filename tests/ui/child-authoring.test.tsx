@@ -1,5 +1,6 @@
 /** @vitest-environment jsdom */
 
+import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -9,6 +10,7 @@ import {
   createWorkspace,
 } from "../../src/workspace/index.js";
 import { App } from "../../src/ui/App.js";
+import { ChildAuthoringSection } from "../../src/ui/inspector/ChildAuthoringSection.js";
 import {
   createClosableNodeFixture,
   createDemoTreeFixture,
@@ -28,6 +30,7 @@ describe("child authoring UI", () => {
       "Add a sub-question",
     );
 
+    await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("action-add-sub-question")).toHaveTextContent(
       "添加子问题",
@@ -190,6 +193,43 @@ describe("child authoring UI", () => {
       ids.parent,
     );
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Parent");
+  });
+
+  it("keeps the authoring draft when Domain rejects the command", async () => {
+    const user = userEvent.setup();
+    const { snapshot } = createDemoTreeFixture();
+    function Harness() {
+      const [error, setError] = useState<string>();
+      return (
+        <ChildAuthoringSection
+          parentId="missing-parent"
+          children={[]}
+          availability={{
+            canCreateChild: true,
+            canCreateBlockingChild: false,
+            canChangeBlockingRelationship: false,
+          }}
+          locale="en-US"
+          authoringError={error}
+          onCommand={(command) => {
+            const next = dispatchCommand(createSession(snapshot), command);
+            if (next.lastError) {
+              setError("That question could not be found.");
+              return false;
+            }
+            return true;
+          }}
+        />
+      );
+    }
+    render(<Harness />);
+    await user.click(screen.getByTestId("action-add-sub-question"));
+    await user.type(screen.getByTestId("authoring-question"), "Keep this question");
+    await user.type(screen.getByTestId("authoring-goal"), "Keep this goal");
+    await user.click(screen.getByTestId("authoring-submit"));
+    expect(screen.getByTestId("authoring-error")).toBeInTheDocument();
+    expect(screen.getByTestId("authoring-question")).toHaveValue("Keep this question");
+    expect(screen.getByTestId("authoring-goal")).toHaveValue("Keep this goal");
   });
 
   it("does not use engineering terms in authoring copy", () => {

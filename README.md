@@ -30,7 +30,7 @@ Create Project
 - Vitest
 - Pure domain engine with no dependency on React, persistence, LLM providers, GitHub, or network APIs
 
-Zustand and Dexie/IndexedDB remain deferred past M2. Workspace UI preferences (sidebar, inspector, viewport, node positions, locale) may use localStorage. DomainSnapshot must not be persisted there.
+Zustand and Dexie/IndexedDB remain deferred. Workspace UI preferences (sidebar, inspector, viewport, node positions, locale, appearance) use localStorage. DomainSnapshot is persisted only in the dedicated Workspace semantic store, never in UI preferences.
 
 AI is an advisor. The domain engine is the authority for state transitions. DomainSnapshot is the single source of truth.
 
@@ -42,6 +42,7 @@ AI is an advisor. The domain engine is the authority for state transitions. Doma
 4. M2 Tree UI: `docs/milestones/M2-tree-ui.md`.
 5. M2.1 Multi-Project Workspace: `docs/milestones/M2.1-multi-project-workspace.md`.
 6. M2.3 Question Authoring: `docs/milestones/M2.3-question-authoring.md`.
+7. M2.4 Product Workspace & UI Foundation: `docs/milestones/M2.4-product-workspace-ui.md`.
 
 ```bash
 npm install
@@ -52,7 +53,7 @@ npm run dev
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented.
+M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented. M2.4 Product Workspace & UI Foundation is implemented: project create/archive/restore, semantic local persistence, core question authoring, light/dark/system, and the product UI foundation.
 
 ## License
 

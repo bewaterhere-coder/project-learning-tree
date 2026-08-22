@@ -1,0 +1,207 @@
+/** @vitest-environment jsdom */
+
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
+import { App } from "../../src/ui/App.js";
+import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
+import { createDemoWorkspaceFixture } from "../../src/fixtures/demo-workspace.js";
+import {
+  applyNodeDragStop,
+  archiveProject,
+  createMemoryPreferenceStorage,
+  createWorkspace,
+  createWorkspaceProject,
+  saveSemanticWorkspace,
+  setSelectedViewport,
+  updateSelectedLayout,
+  updateShell,
+  WORKSPACE_SEMANTIC_KEY,
+} from "../../src/workspace/index.js";
+
+vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
+
+function trackingStorage() {
+  const inner = createMemoryPreferenceStorage();
+  const writes: string[] = [];
+  return {
+    getItem: (key: string) => inner.getItem(key),
+    setItem: (key: string, value: string) => {
+      writes.push(key);
+      inner.setItem(key, value);
+    },
+    writes,
+  };
+}
+
+describe("production workspace UI", () => {
+  it("starts empty without demo projects", () => {
+    render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
+    expect(screen.getByTestId("workspace-empty")).toBeInTheDocument();
+    expect(screen.queryByText("M2 Demo Tree")).not.toBeInTheDocument();
+    expect(screen.getByTestId("project-create-open")).toBeInTheDocument();
+  });
+
+  it("validates an empty project name locally", async () => {
+    const user = userEvent.setup();
+    render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
+    await user.click(screen.getByTestId("project-create-open"));
+    await user.click(screen.getByTestId("project-create-submit"));
+    expect(screen.getByText("Enter a project name.")).toBeInTheDocument();
+    expect(screen.queryByTestId("domain-error")).not.toBeInTheDocument();
+  });
+
+  it("creates a project, selects it, and shows the empty-project path", async () => {
+    const user = userEvent.setup();
+    render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
+    await user.click(screen.getByTestId("project-create-open"));
+    await user.type(screen.getByTestId("project-name-input"), "Agents");
+    await user.click(screen.getByTestId("project-create-submit"));
+    expect(screen.getByTestId("project-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("project-list")).toHaveTextContent("Agents");
+    await user.click(screen.getByTestId("project-empty-add-core"));
+    await user.type(screen.getByTestId("core-question-input"), "How do agents plan?");
+    await user.type(screen.getByTestId("core-goal-input"), "Explain the loop");
+    await user.click(screen.getByTestId("core-question-submit"));
+    expect(screen.getByText("How do agents plan?")).toBeInTheDocument();
+  });
+
+  it("archives and restores a project, including the last active project", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
+    render(
+      <App
+        initialWorkspace={workspace}
+        preferenceStorage={createMemoryPreferenceStorage()}
+      />,
+    );
+    await user.click(screen.getByTestId(`project-actions-${projectA.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-archive-${projectA.snapshot.project.id}`));
+    expect(
+      screen.queryByTestId(`project-item-${projectA.snapshot.project.id}`),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
+    ).toHaveAttribute("data-selected", "true");
+    await user.click(screen.getByTestId("archived-toggle"));
+    expect(screen.getByTestId("archived-list")).toHaveTextContent("M2 Demo Tree");
+    await user.click(screen.getByTestId(`archived-actions-${projectA.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-restore-${projectA.snapshot.project.id}`));
+    expect(
+      screen.getByTestId(`project-item-${projectA.snapshot.project.id}`),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByTestId(`project-actions-${projectB.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-archive-${projectB.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-actions-${projectA.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-archive-${projectA.snapshot.project.id}`));
+    expect(screen.getByTestId("workspace-empty")).toBeInTheDocument();
+  });
+});
+
+describe("persistence write channels", () => {
+  it("does not write the semantic store for layout, locale, or theme changes", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    const storage = trackingStorage();
+    render(<App initialWorkspace={workspace} preferenceStorage={storage} />);
+    storage.writes.length = 0;
+    await user.click(screen.getByTestId(`node-drag-${projectA.ids.q2}`));
+    await user.click(screen.getByTestId("settings-open"));
+    await user.click(screen.getByTestId("theme-dark"));
+    await user.click(screen.getByTestId("locale-zh"));
+    expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
+  });
+
+  it("writes the semantic store when creating a project", async () => {
+    const user = userEvent.setup();
+    const storage = trackingStorage();
+    render(<App preferenceStorage={storage} />);
+    storage.writes.length = 0;
+    await user.click(screen.getByTestId("project-create-open"));
+    await user.type(screen.getByTestId("project-name-input"), "Persist me");
+    await user.click(screen.getByTestId("project-create-submit"));
+    expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(true);
+  });
+
+  it("rehydrates created and archived projects from the semantic store", () => {
+    const storage = createMemoryPreferenceStorage();
+    let workspace = createWorkspaceProject(
+      createWorkspace([]),
+      { name: "Kept" },
+      sequentialFixturePorts(40),
+    );
+    workspace = archiveProject(workspace, workspace.projects[0]!.projectId);
+    saveSemanticWorkspace(storage, workspace);
+    render(<App preferenceStorage={storage} />);
+    expect(screen.getByTestId("workspace-empty")).toBeInTheDocument();
+    expect(screen.getByTestId("archived-toggle")).toBeInTheDocument();
+  });
+});
+
+describe("theme controls", () => {
+  it("applies light, dark, and system to the document", async () => {
+    const user = userEvent.setup();
+    const { workspace } = createDemoWorkspaceFixture();
+    render(
+      <App
+        initialWorkspace={workspace}
+        preferenceStorage={createMemoryPreferenceStorage()}
+      />,
+    );
+    await user.click(screen.getByTestId("settings-open"));
+    await user.click(screen.getByTestId("theme-dark"));
+    expect(document.documentElement.dataset.theme).toBe("dark");
+    await user.click(screen.getByTestId("theme-light"));
+    expect(document.documentElement.dataset.theme).toBe("light");
+    await user.click(screen.getByTestId("theme-system"));
+    expect(["light", "dark"]).toContain(document.documentElement.dataset.theme);
+  });
+});
+
+describe("selected vs active visual hooks", () => {
+  it("keeps focus and lifecycle channels distinct", () => {
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    render(
+      <App
+        initialWorkspace={workspace}
+        preferenceStorage={createMemoryPreferenceStorage()}
+      />,
+    );
+    expect(screen.getByTestId(`node-${projectA.ids.q2}`)).toHaveAttribute(
+      "data-focus",
+      "true",
+    );
+    expect(screen.getByTestId(`node-${projectA.ids.q2}`)).toHaveAttribute(
+      "data-lifecycle",
+      "open",
+    );
+    expect(screen.getByTestId(`node-${projectA.ids.q1}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
+    );
+    expect(screen.getByTestId(`node-${projectA.ids.q1}`)).toHaveAttribute(
+      "data-focus",
+      "false",
+    );
+  });
+});
+
+describe("unused layout helpers stay preference-only", () => {
+  it("exposes the layout mutators used by write-isolation coverage", () => {
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    expect(
+      applyNodeDragStop(workspace, { [projectA.ids.q1]: { x: 1, y: 2 } }).projects[0]
+        ?.snapshot,
+    ).toBe(workspace.projects[0]?.snapshot);
+    expect(
+      setSelectedViewport(workspace, { x: 0, y: 0, zoom: 1 }).projects[0]?.snapshot,
+    ).toBe(workspace.projects[0]?.snapshot);
+    expect(updateSelectedLayout(workspace, { inspectorOpen: false })).not.toBe(
+      undefined,
+    );
+    expect(updateShell(workspace, { colorScheme: "dark" }).shell.colorScheme).toBe(
+      "dark",
+    );
+  });
+});

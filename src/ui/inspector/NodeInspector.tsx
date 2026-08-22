@@ -91,7 +91,7 @@ export function NodeActions({
   readiness: CloseReadiness;
   locale: WorkspaceLocale;
   actionError?: string;
-  onCommand: (command: UiCommand) => void;
+  onCommand: (command: UiCommand) => boolean | void;
 }) {
   const unmet = readiness.requirements.filter((requirement) => !requirement.met);
 
@@ -199,7 +199,7 @@ export function NodeInspector({
   locale: WorkspaceLocale;
   actionError?: string;
   authoringError?: string;
-  onCommand: (command: UiCommand) => void;
+  onCommand: (command: UiCommand) => boolean | void;
   onClose: () => void;
 }) {
   if (!inspector.hasFocus || inspector.nodeId === undefined) {
@@ -228,26 +228,6 @@ export function NodeInspector({
   return (
     <section className="inspector" data-testid="node-inspector">
       <InspectorChrome locale={locale} onClose={onClose} />
-      {availability && readiness ? (
-        <NodeActions
-          nodeId={inspector.nodeId}
-          availability={availability}
-          readiness={readiness}
-          locale={locale}
-          actionError={actionError}
-          onCommand={onCommand}
-        />
-      ) : null}
-      {authoring ? (
-        <ChildAuthoringSection
-          parentId={inspector.nodeId}
-          children={inspector.children}
-          availability={authoring}
-          locale={locale}
-          authoringError={authoringError}
-          onCommand={onCommand}
-        />
-      ) : null}
       <dl className="inspector-fields">
         <div>
           <dt>{t(locale, "inspector.question")}</dt>
@@ -256,14 +236,6 @@ export function NodeInspector({
         <div>
           <dt>{t(locale, "inspector.goal")}</dt>
           <dd data-testid="inspector-goal">{inspector.goal}</dd>
-        </div>
-        <div>
-          <dt>{t(locale, "inspector.targetDepth")}</dt>
-          <dd data-testid="inspector-depth">
-            {inspector.targetDepth
-              ? t(locale, depthMessageKey(inspector.targetDepth))
-              : ""}
-          </dd>
         </div>
         <div>
           <dt>{t(locale, "inspector.lifecycle")}</dt>
@@ -294,7 +266,36 @@ export function NodeInspector({
           </dd>
         </div>
       </dl>
-
+      {availability && readiness ? (
+        <NodeActions
+          nodeId={inspector.nodeId}
+          availability={availability}
+          readiness={readiness}
+          locale={locale}
+          actionError={actionError}
+          onCommand={onCommand}
+        />
+      ) : null}
+      {authoring ? (
+        <ChildAuthoringSection
+          parentId={inspector.nodeId}
+          children={inspector.children}
+          availability={authoring}
+          locale={locale}
+          authoringError={authoringError}
+          onCommand={onCommand}
+        />
+      ) : null}
+      <details className="inspector-details" data-testid="inspector-details">
+        <summary>{t(locale, "inspector.details")}</summary>
+      <div>
+        <dt>{t(locale, "inspector.targetDepth")}</dt>
+        <dd data-testid="inspector-depth">
+          {inspector.targetDepth
+            ? t(locale, depthMessageKey(inspector.targetDepth))
+            : ""}
+        </dd>
+      </div>
       <h3 data-testid="inspector-dod-heading">
         {showCloseRequirements && hasRequiredCriterion ? <RequiredMarker /> : null}
         {t(locale, "inspector.dod")}
@@ -392,6 +393,7 @@ export function NodeInspector({
       <p data-testid="inspector-summary">
         {inspector.summary ?? t(locale, "inspector.noSummary")}
       </p>
+      </details>
     </section>
   );
 }
@@ -411,6 +413,7 @@ function InspectorChrome({
         className="inspector-close"
         data-testid="inspector-close"
         aria-label={t(locale, "inspector.close")}
+        title={t(locale, "inspector.close")}
         onClick={onClose}
       >
         ×

@@ -34,4 +34,5 @@ export type DomainError =
   | { kind: "CriterionNotFound"; nodeId: NodeId; criterionId: CriterionId }
   | { kind: "QuestionRequired" }
   | { kind: "GoalRequired" }
+  | { kind: "ProjectNameRequired" }
   | { kind: "NotADirectChild"; parentId: NodeId; childId: NodeId };

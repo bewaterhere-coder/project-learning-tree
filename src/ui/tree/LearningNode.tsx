@@ -22,17 +22,18 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
       data-focus={data.isCurrentFocus ? "true" : "false"}
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
-      <div className="node-badges">
-        <span className="lifecycle-badge" data-testid={`lifecycle-badge-${data.id}`}>
-          {t(locale, lifecycleMessageKey(data.lifecycle))}
-        </span>
-        {data.isBlocked ? (
-          <span className="blocked-badge" data-testid={`blocked-badge-${data.id}`}>
-            {t(locale, "node.blocked", { count: data.unresolvedBlockerCount })}
-          </span>
-        ) : null}
-      </div>
+      <p
+        className="node-status"
+        data-testid={`lifecycle-badge-${data.id}`}
+      >
+        {t(locale, lifecycleMessageKey(data.lifecycle))}
+      </p>
       <p className="node-question">{data.question}</p>
+      {data.isBlocked ? (
+        <p className="node-meta" data-testid={`blocked-badge-${data.id}`}>
+          {t(locale, "node.blocked", { count: data.unresolvedBlockerCount })}
+        </p>
+      ) : null}
     </div>
   );
 }

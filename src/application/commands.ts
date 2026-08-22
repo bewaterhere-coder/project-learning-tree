@@ -1,5 +1,6 @@
 import {
   activateNode,
+  addCoreQuestion,
   closeNode,
   createBlockingChild,
   createChild,
@@ -41,6 +42,12 @@ export type UiCommand =
     }
   | { type: "markChildBlocking"; parentId: NodeId; childId: NodeId }
   | { type: "unmarkChildBlocking"; parentId: NodeId; childId: NodeId }
+  | {
+      type: "addCoreQuestion";
+      question: string;
+      goal: string;
+      targetDepth?: LearningDepth;
+    }
   | { type: "dismissError" };
 
 export function dispatchCommand(
@@ -113,5 +120,15 @@ function runDomainCommand(
         parentId: command.parentId,
         childId: command.childId,
       });
+    case "addCoreQuestion":
+      return addCoreQuestion(
+        snapshot,
+        {
+          question: command.question,
+          goal: command.goal,
+          targetDepth: command.targetDepth,
+        },
+        ports,
+      );
   }
 }

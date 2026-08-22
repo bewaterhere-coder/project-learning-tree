@@ -21,7 +21,7 @@ export function ChildAuthoringSection({
   availability: AuthoringAvailability;
   locale: WorkspaceLocale;
   authoringError?: string;
-  onCommand: (command: UiCommand) => void;
+  onCommand: (command: UiCommand) => boolean | void;
 }) {
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
@@ -60,7 +60,7 @@ export function ChildAuthoringSection({
     setFieldErrors({});
     const createBlocking =
       mustResolveFirst && availability.canCreateBlockingChild;
-    onCommand(
+    const ok = onCommand(
       createBlocking
         ? {
             type: "createBlockingChild",
@@ -75,7 +75,9 @@ export function ChildAuthoringSection({
             goal,
           },
     );
-    resetDraft();
+    if (ok !== false) {
+      resetDraft();
+    }
   };
 
   return (
@@ -134,6 +136,12 @@ export function ChildAuthoringSection({
             onSubmit={(event) => {
               event.preventDefault();
               handleSubmit();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                resetDraft();
+              }
             }}
           >
             <h3>{t(locale, "authoring.title")}</h3>

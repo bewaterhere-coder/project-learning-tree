@@ -194,12 +194,16 @@ export function createProject(
   command: CreateProject,
   ports: Ports,
 ): DomainResult<DomainSnapshot> {
+  const name = command.name.trim();
+  if (name === "") {
+    return fail({ kind: "ProjectNameRequired" });
+  }
   const projectId = ports.id();
   const passId = ports.id();
   const snapshot: DomainSnapshot = {
     project: {
       id: projectId,
-      name: command.name,
+      name,
       source: command.source,
       passIds: [passId],
     },
@@ -224,7 +228,15 @@ export function addCoreQuestion(
   if (snapshot.pass.rootNodeIds.length >= CORE_QUESTION_LIMIT) {
     return fail({ kind: "CoreQuestionLimitReached", limit: CORE_QUESTION_LIMIT });
   }
-  const node = createOpenNode(ports, command);
+  const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
+  if (authoringError) {
+    return fail(authoringError);
+  }
+  const node = createOpenNode(ports, {
+    question: command.question.trim(),
+    goal: command.goal.trim(),
+    targetDepth: command.targetDepth,
+  });
   const next = putNode(snapshot, node);
   next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
   return ok(next, [{ type: "CoreQuestionAdded", nodeId: node.id }]);

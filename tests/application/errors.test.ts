@@ -124,5 +124,17 @@ describe("isGlobalDomainError", () => {
         "markChildBlocking",
       ),
     ).toBe(false);
+    expect(
+      isGlobalDomainError({ kind: "QuestionRequired" }, "addCoreQuestion"),
+    ).toBe(false);
+    expect(
+      isGlobalDomainError(
+        { kind: "CoreQuestionLimitReached", limit: 5 },
+        "addCoreQuestion",
+      ),
+    ).toBe(false);
+    expect(
+      isGlobalDomainError({ kind: "ProjectNameRequired" }, "createProject"),
+    ).toBe(false);
   });
 });

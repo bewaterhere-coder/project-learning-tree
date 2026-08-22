@@ -26,6 +26,7 @@ const AUTHORING_COMMANDS: ReadonlySet<UiCommand["type"]> = new Set([
   "createBlockingChild",
   "markChildBlocking",
   "unmarkChildBlocking",
+  "addCoreQuestion",
 ]);
 
 const ACTIVE_STACK_REASON_KEYS: Record<string, string> = {
@@ -55,22 +56,26 @@ export function isClosePrerequisiteError(kind: DomainError["kind"]): boolean {
 }
 
 export function isAuthoringCommand(
-  command?: UiCommand["type"],
+  command?: string,
 ): boolean {
-  return command !== undefined && AUTHORING_COMMANDS.has(command);
+  return command !== undefined && AUTHORING_COMMANDS.has(command as UiCommand["type"]);
+}
+
+export function isProjectCreateCommand(command?: string): boolean {
+  return command === "createProject";
 }
 
 export function isGlobalDomainError(
   error: DomainError,
-  command?: UiCommand["type"],
+  command?: string,
 ): boolean {
   if (isClosePrerequisiteError(error.kind)) {
     return false;
   }
-  if (command !== undefined && NODE_ACTION_COMMANDS.has(command)) {
+  if (command !== undefined && NODE_ACTION_COMMANDS.has(command as UiCommand["type"])) {
     return false;
   }
-  if (isAuthoringCommand(command)) {
+  if (isAuthoringCommand(command) || isProjectCreateCommand(command)) {
     return false;
   }
   return true;
@@ -161,6 +166,8 @@ export function presentDomainError(
       return { key: "error.QuestionRequired", params: {} };
     case "GoalRequired":
       return { key: "error.GoalRequired", params: {} };
+    case "ProjectNameRequired":
+      return { key: "error.ProjectNameRequired", params: {} };
     case "NotADirectChild":
       return { key: "error.NotADirectChild", params: {} };
   }

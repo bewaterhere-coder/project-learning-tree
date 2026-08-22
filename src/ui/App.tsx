@@ -1,23 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   isAuthoringCommand,
   isGlobalDomainError,
+  isProjectCreateCommand,
   selectActionAvailability,
   selectAuthoringAvailability,
   selectCloseReadiness,
+  selectCoreQuestionAuthoring,
   selectInspectorViewModel,
   selectProjectSummary,
   selectTreeViewModel,
   type DomainSnapshot,
   type UiCommand,
 } from "../application/index.js";
-import { createDemoWorkspaceFixture } from "../fixtures/demo-workspace.js";
 import {
   applyNodeDragStop,
   applySelectedCommand,
+  archiveProject,
   createWorkspace,
+  createWorkspaceProject,
   focusAndOpenInspector,
+  hydrateSemanticWorkspace,
   hydrateWorkspacePreferences,
+  restoreProject,
+  saveSemanticWorkspace,
   saveWorkspacePreferences,
   selectProject,
   selectedProject,
@@ -25,6 +31,7 @@ import {
   setSelectedViewport,
   updateSelectedLayout,
   updateShell,
+  type ColorScheme,
   type LearningWorkspace,
   type NodePosition,
   type PreferenceStorage,
@@ -37,8 +44,27 @@ import { createBrowserPreferenceStorage } from "./persistence/browser-storage.js
 import { ProjectSidebar } from "./sidebar/ProjectSidebar.js";
 import { ResizeHandle } from "./chrome/ResizeHandle.js";
 import { TreeCanvas } from "./tree/TreeCanvas.js";
+import { Button } from "./primitives/Button.js";
+import { EmptyState } from "./primitives/EmptyState.js";
+import { Menu } from "./primitives/Menu.js";
+import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
+import { applyWorkspaceTheme } from "./theme/apply-theme.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
+
+function bootWorkspace(
+  storage: PreferenceStorage,
+  initialWorkspace?: LearningWorkspace,
+  initialSnapshot?: DomainSnapshot,
+): LearningWorkspace {
+  if (initialWorkspace) {
+    return hydrateWorkspacePreferences(initialWorkspace, storage);
+  }
+  if (initialSnapshot) {
+    return hydrateWorkspacePreferences(createWorkspace([initialSnapshot]), storage);
+  }
+  return hydrateWorkspacePreferences(hydrateSemanticWorkspace(storage), storage);
+}
 
 export function App({
   initialSnapshot,
@@ -53,18 +79,36 @@ export function App({
     () => preferenceStorage ?? createBrowserPreferenceStorage(),
     [preferenceStorage],
   );
-  const [workspace, setWorkspace] = useState<LearningWorkspace>(() => {
-    const base =
-      initialWorkspace ??
-      (initialSnapshot
-        ? createWorkspace([initialSnapshot])
-        : createDemoWorkspaceFixture().workspace);
-    return hydrateWorkspacePreferences(base, storage);
-  });
+  const [workspace, setWorkspace] = useState<LearningWorkspace>(() =>
+    bootWorkspace(storage, initialWorkspace, initialSnapshot),
+  );
+  const workspaceRef = useRef(workspace);
+  workspaceRef.current = workspace;
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [coreFormOpen, setCoreFormOpen] = useState(false);
+  const [archivedOpen, setArchivedOpen] = useState(false);
 
   useEffect(() => {
     saveWorkspacePreferences(storage, workspace);
   }, [storage, workspace]);
+
+  useEffect(() => {
+    applyWorkspaceTheme(storage, workspace.shell.colorScheme);
+  }, [storage, workspace.shell.colorScheme]);
+
+  useEffect(() => {
+    const media = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
+    if (!media) {
+      return;
+    }
+    const onChange = () => {
+      if (workspaceRef.current.shell.colorScheme === "system") {
+        applyWorkspaceTheme(storage, "system");
+      }
+    };
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [storage]);
 
   const current = selectedProject(workspace);
   const locale = workspace.shell.locale;
@@ -75,34 +119,47 @@ export function App({
   }, [locale]);
 
   const tree = useMemo(
-    () => selectTreeViewModel(current.snapshot),
-    [current.snapshot],
+    () => (current ? selectTreeViewModel(current.snapshot) : undefined),
+    [current],
   );
   const inspector = useMemo(
-    () => selectInspectorViewModel(current.snapshot),
-    [current.snapshot],
+    () => (current ? selectInspectorViewModel(current.snapshot) : undefined),
+    [current],
   );
   const availability = useMemo(() => {
-    if (inspector.nodeId === undefined) {
+    if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectActionAvailability(current.snapshot, inspector.nodeId);
-  }, [inspector.nodeId, current.snapshot]);
+  }, [inspector?.nodeId, current]);
   const readiness = useMemo(() => {
-    if (inspector.nodeId === undefined) {
+    if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectCloseReadiness(current.snapshot, inspector.nodeId);
-  }, [inspector.nodeId, current.snapshot]);
+  }, [inspector?.nodeId, current]);
   const authoring = useMemo(() => {
-    if (inspector.nodeId === undefined) {
+    if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectAuthoringAvailability(current.snapshot, inspector.nodeId);
-  }, [inspector.nodeId, current.snapshot]);
+  }, [inspector?.nodeId, current]);
+  const coreAuthoring = useMemo(
+    () => (current ? selectCoreQuestionAuthoring(current.snapshot) : undefined),
+    [current],
+  );
   const summaries = useMemo(
     () =>
-      workspace.projects.map((project) => selectProjectSummary(project.snapshot)),
+      workspace.projects
+        .filter((project) => !project.archived)
+        .map((project) => selectProjectSummary(project.snapshot)),
+    [workspace.projects],
+  );
+  const archivedSummaries = useMemo(
+    () =>
+      workspace.projects
+        .filter((project) => project.archived)
+        .map((project) => selectProjectSummary(project.snapshot)),
     [workspace.projects],
   );
 
@@ -113,92 +170,176 @@ export function App({
       : undefined;
   const authoringError =
     workspace.lastError &&
-    isAuthoringCommand(workspace.lastErrorCommand)
+    isAuthoringCommand(workspace.lastErrorCommand) &&
+    workspace.lastErrorCommand !== "addCoreQuestion"
+      ? workspace.lastError
+      : undefined;
+  const coreAuthoringError =
+    workspace.lastError && workspace.lastErrorCommand === "addCoreQuestion"
+      ? workspace.lastError
+      : undefined;
+  const createError =
+    workspace.lastError && isProjectCreateCommand(workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
   const actionError =
     workspace.lastError &&
     !isGlobalDomainError(workspace.lastError, workspace.lastErrorCommand) &&
-    !isAuthoringCommand(workspace.lastErrorCommand)
+    !isAuthoringCommand(workspace.lastErrorCommand) &&
+    !isProjectCreateCommand(workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
 
-  const dispatch = useCallback((command: UiCommand) => {
-    setWorkspace((currentWorkspace) =>
-      applySelectedCommand(currentWorkspace, command),
-    );
-  }, []);
+  const commit = useCallback(
+    (next: LearningWorkspace, semantic: boolean) => {
+      workspaceRef.current = next;
+      if (semantic) {
+        saveSemanticWorkspace(storage, next);
+      }
+      setWorkspace(next);
+      return next;
+    },
+    [storage],
+  );
 
-  const handleFocusNode = useCallback((nodeId: string) => {
-    setWorkspace((currentWorkspace) =>
-      focusAndOpenInspector(currentWorkspace, nodeId),
-    );
-  }, []);
+  const dispatch = useCallback(
+    (command: UiCommand): boolean => {
+      const currentWorkspace = workspaceRef.current;
+      const next = applySelectedCommand(currentWorkspace, command);
+      const before = selectedProject(currentWorkspace)?.snapshot;
+      const after = selectedProject(next)?.snapshot;
+      commit(next, before !== after);
+      return next.lastError === undefined;
+    },
+    [commit],
+  );
+
+  const handleFocusNode = useCallback(
+    (nodeId: string) => {
+      const currentWorkspace = workspaceRef.current;
+      const next = focusAndOpenInspector(currentWorkspace, nodeId);
+      const before = selectedProject(currentWorkspace)?.snapshot;
+      const after = selectedProject(next)?.snapshot;
+      commit(next, before !== after);
+    },
+    [commit],
+  );
 
   const handleNodeDragStop = useCallback(
     (positions: Record<string, NodePosition>) => {
-      setWorkspace((currentWorkspace) =>
-        applyNodeDragStop(currentWorkspace, positions),
-      );
+      commit(applyNodeDragStop(workspaceRef.current, positions), false);
     },
-    [],
+    [commit],
   );
 
-  const handleViewportChange = useCallback((viewport: Viewport) => {
-    setWorkspace((currentWorkspace) =>
-      setSelectedViewport(currentWorkspace, viewport),
-    );
-  }, []);
+  const handleViewportChange = useCallback(
+    (viewport: Viewport) => {
+      commit(setSelectedViewport(workspaceRef.current, viewport), false);
+    },
+    [commit],
+  );
+
+  const breadcrumb =
+    tree && tree.activeStack.length > 0
+      ? tree.activeStack
+          .map((id) => tree.nodes.find((node) => node.id === id)?.question ?? id)
+          .join(" › ")
+      : "";
+
+  const emptyProject = current !== undefined && current.snapshot.pass.rootNodeIds.length === 0;
 
   return (
     <LocaleProvider locale={locale}>
-      <div className="shell">
+      <div className="shell" data-theme={document.documentElement.dataset.theme}>
         <header className="shell-header">
-          <div>
+          <div className="header-identity">
             <h1>{t(locale, "app.title")}</h1>
-            <p className="project-name">{current.snapshot.project.name}</p>
+            {current ? (
+              <p className="project-name">{current.snapshot.project.name}</p>
+            ) : null}
+            {breadcrumb ? (
+              <p className="stack-legend" data-testid="active-stack">
+                {breadcrumb}
+              </p>
+            ) : (
+              <p className="stack-legend is-empty" data-testid="active-stack" hidden>
+                {t(locale, "app.activeStackEmpty")}
+              </p>
+            )}
           </div>
           <div className="header-tools">
-            <p className="stack-legend" data-testid="active-stack">
-              {t(locale, "app.activeStack")}{" "}
-              {tree.activeStack.length === 0
-                ? t(locale, "app.activeStackEmpty")
-                : tree.activeStack
-                    .map(
-                      (id) =>
-                        tree.nodes.find((node) => node.id === id)?.question ?? id,
-                    )
-                    .join(" → ")}
-            </p>
-            <div className="locale-switch" data-testid="locale-switch">
+            <div className="settings-anchor">
               <button
                 type="button"
-                data-testid="locale-en"
-                data-active={locale === "en-US" ? "true" : "false"}
-                onClick={() =>
-                  setWorkspace((currentWorkspace) =>
-                    updateShell(currentWorkspace, { locale: "en-US" }),
-                  )
-                }
+                className="ui-button ui-button-icon"
+                data-testid="settings-open"
+                aria-label={t(locale, "app.settings")}
+                title={t(locale, "app.settings")}
+                onClick={() => setSettingsOpen((value) => !value)}
               >
-                {t(locale, "app.localeEn")}
+                ⚙
               </button>
-              <button
-                type="button"
-                data-testid="locale-zh"
-                data-active={locale === "zh-CN" ? "true" : "false"}
-                onClick={() =>
-                  setWorkspace((currentWorkspace) =>
-                    updateShell(currentWorkspace, { locale: "zh-CN" }),
-                  )
-                }
+              <Menu
+                open={settingsOpen}
+                onClose={() => setSettingsOpen(false)}
+                testId="settings-menu"
               >
-                {t(locale, "app.localeZh")}
-              </button>
+                <p className="settings-label">{t(locale, "app.language")}</p>
+                <div className="locale-switch" data-testid="locale-switch">
+                  <button
+                    type="button"
+                    data-testid="locale-en"
+                    data-active={locale === "en-US" ? "true" : "false"}
+                    onClick={() =>
+                      commit(updateShell(workspaceRef.current, { locale: "en-US" }), false)
+                    }
+                  >
+                    {t(locale, "app.localeEn")}
+                  </button>
+                  <button
+                    type="button"
+                    data-testid="locale-zh"
+                    data-active={locale === "zh-CN" ? "true" : "false"}
+                    onClick={() =>
+                      commit(updateShell(workspaceRef.current, { locale: "zh-CN" }), false)
+                    }
+                  >
+                    {t(locale, "app.localeZh")}
+                  </button>
+                </div>
+                <p className="settings-label">{t(locale, "app.appearance")}</p>
+                <div className="theme-switch" data-testid="theme-switch">
+                  {(["system", "light", "dark"] as ColorScheme[]).map((scheme) => (
+                    <button
+                      key={scheme}
+                      type="button"
+                      data-testid={`theme-${scheme}`}
+                      data-active={
+                        workspace.shell.colorScheme === scheme ? "true" : "false"
+                      }
+                      onClick={() =>
+                        commit(
+                          updateShell(workspaceRef.current, { colorScheme: scheme }),
+                          false,
+                        )
+                      }
+                    >
+                      {t(
+                        locale,
+                        scheme === "system"
+                          ? "app.themeSystem"
+                          : scheme === "light"
+                            ? "app.themeLight"
+                            : "app.themeDark",
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </Menu>
             </div>
           </div>
         </header>
-        {globalError ? (
+        {globalError && current ? (
           <DomainErrorBanner
             message={formatPresentedError(locale, globalError, current.snapshot)}
             onDismiss={() => dispatch({ type: "dismissError" })}
@@ -211,99 +352,228 @@ export function App({
             width={workspace.shell.projectSidebarWidth}
             selectedProjectId={workspace.selectedProjectId}
             summaries={summaries}
+            archivedSummaries={archivedSummaries}
+            createError={
+              createError
+                ? formatPresentedError(locale, createError)
+                : undefined
+            }
+            archivedOpen={archivedOpen}
+            onArchivedOpenChange={setArchivedOpen}
             onSelectProject={(projectId) =>
-              setWorkspace((currentWorkspace) =>
-                selectProject(currentWorkspace, projectId),
-              )
+              commit(selectProject(workspaceRef.current, projectId), true)
+            }
+            onArchiveProject={(projectId) =>
+              commit(archiveProject(workspaceRef.current, projectId), true)
+            }
+            onRestoreProject={(projectId) =>
+              commit(restoreProject(workspaceRef.current, projectId), true)
             }
             onToggle={() =>
-              setWorkspace((currentWorkspace) =>
-                updateShell(currentWorkspace, {
-                  projectSidebarOpen: !currentWorkspace.shell.projectSidebarOpen,
+              commit(
+                updateShell(workspaceRef.current, {
+                  projectSidebarOpen: !workspaceRef.current.shell.projectSidebarOpen,
                 }),
+                false,
               )
             }
             onResize={(width) =>
-              setWorkspace((currentWorkspace) =>
-                updateShell(currentWorkspace, { projectSidebarWidth: width }),
+              commit(
+                updateShell(workspaceRef.current, { projectSidebarWidth: width }),
+                false,
               )
             }
+            onCreateProject={(name) => {
+              const next = createWorkspaceProject(workspaceRef.current, { name });
+              const failed = isProjectCreateCommand(next.lastErrorCommand);
+              commit(next, !failed);
+              if (!failed) {
+                setCoreFormOpen(false);
+              }
+              return !failed;
+            }}
           />
           <main className="tree-pane" data-testid="tree-canvas">
-            <TreeCanvas
-              key={workspace.selectedProjectId}
-              model={tree}
-              savedPositions={current.layout.nodePositions}
-              viewport={current.layout.viewport}
-              onFocusNode={handleFocusNode}
-              onNodeDragStop={handleNodeDragStop}
-              onViewportChange={handleViewportChange}
-            />
-            {current.layout.inspectorOpen ? (
-              <aside
-                className="inspector-overlay"
-                data-testid="inspector-overlay"
-                data-width={String(current.layout.inspectorWidth)}
-                style={{ width: current.layout.inspectorWidth }}
+            {!current ? (
+              <EmptyState
+                testId="workspace-empty"
+                title={t(locale, "workspace.emptyTitle")}
+                body={t(locale, "workspace.emptyBody")}
               >
-                <NodeInspector
-                  inspector={inspector}
-                  availability={availability}
-                  readiness={readiness}
-                  authoring={authoring}
-                  locale={locale}
-                  actionError={
-                    actionError
-                      ? formatPresentedError(
-                          locale,
-                          actionError,
-                          current.snapshot,
-                        )
-                      : undefined
-                  }
-                  authoringError={
-                    authoringError
-                      ? formatPresentedError(
-                          locale,
-                          authoringError,
-                          current.snapshot,
-                        )
-                      : undefined
-                  }
-                  onCommand={dispatch}
-                  onClose={() =>
-                    setWorkspace((currentWorkspace) =>
-                      setInspectorOpen(currentWorkspace, false),
-                    )
-                  }
-                />
-                <ResizeHandle
-                  invert
-                  testId="inspector-resize"
-                  onDelta={(delta) =>
-                    setWorkspace((currentWorkspace) =>
-                      updateSelectedLayout(currentWorkspace, {
-                        inspectorWidth:
-                          selectedProject(currentWorkspace).layout.inspectorWidth +
-                          delta,
-                      }),
-                    )
-                  }
-                />
-              </aside>
+                <Button
+                  variant="primary"
+                  data-testid="workspace-empty-create"
+                  onClick={() => {
+                    const plus = document.querySelector<HTMLButtonElement>(
+                      '[data-testid="project-create-open"]',
+                    );
+                    plus?.click();
+                  }}
+                >
+                  {t(locale, "workspace.emptyCreate")}
+                </Button>
+                {archivedSummaries.length > 0 ? (
+                  <Button
+                    variant="ghost"
+                    data-testid="workspace-view-archived"
+                    onClick={() => setArchivedOpen(true)}
+                  >
+                    {t(locale, "sidebar.viewArchived")}
+                  </Button>
+                ) : null}
+              </EmptyState>
             ) : (
-              <button
-                type="button"
-                className="inspector-open"
-                data-testid="inspector-open"
-                onClick={() =>
-                  setWorkspace((currentWorkspace) =>
-                    setInspectorOpen(currentWorkspace, true),
-                  )
-                }
-              >
-                {t(locale, "inspector.open")}
-              </button>
+              <>
+                {emptyProject ? (
+                  <EmptyState
+                    testId="project-empty"
+                    title={t(locale, "project.emptyTitle")}
+                    body={t(locale, "project.emptyBody")}
+                  >
+                    {coreFormOpen && coreAuthoring ? (
+                      <CoreQuestionForm
+                        locale={locale}
+                        remaining={coreAuthoring.remaining}
+                        atLimit={coreAuthoring.atLimit}
+                        authoringError={
+                          coreAuthoringError
+                            ? formatPresentedError(
+                                locale,
+                                coreAuthoringError,
+                                current.snapshot,
+                              )
+                            : undefined
+                        }
+                        onCommand={dispatch}
+                      />
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        data-testid="project-empty-add-core"
+                        onClick={() => setCoreFormOpen(true)}
+                      >
+                        {t(locale, "project.addCore")}
+                      </Button>
+                    )}
+                  </EmptyState>
+                ) : (
+                  <>
+                    {tree ? (
+                      <TreeCanvas
+                        key={workspace.selectedProjectId ?? "none"}
+                        model={tree}
+                        savedPositions={current.layout.nodePositions}
+                        viewport={current.layout.viewport}
+                        onFocusNode={handleFocusNode}
+                        onNodeDragStop={handleNodeDragStop}
+                        onViewportChange={handleViewportChange}
+                      />
+                    ) : null}
+                    {coreAuthoring?.canAdd ? (
+                      <div className="canvas-core-action">
+                        {coreFormOpen ? (
+                          <CoreQuestionForm
+                            locale={locale}
+                            remaining={coreAuthoring.remaining}
+                            atLimit={coreAuthoring.atLimit}
+                            authoringError={
+                              coreAuthoringError
+                                ? formatPresentedError(
+                                    locale,
+                                    coreAuthoringError,
+                                    current.snapshot,
+                                  )
+                                : undefined
+                            }
+                            onCommand={(command) => {
+                              const ok = dispatch(command);
+                              if (ok) {
+                                setCoreFormOpen(false);
+                              }
+                              return ok;
+                            }}
+                            onCancel={() => setCoreFormOpen(false)}
+                          />
+                        ) : (
+                          <Button
+                            variant="secondary"
+                            data-testid="add-core-question"
+                            onClick={() => setCoreFormOpen(true)}
+                          >
+                            {t(locale, "project.addCore")}
+                          </Button>
+                        )}
+                      </div>
+                    ) : coreAuthoring?.atLimit ? (
+                      <p className="canvas-core-limit" data-testid="core-question-limit-reached">
+                        {t(locale, "project.coreLimit")}
+                      </p>
+                    ) : null}
+                  </>
+                )}
+                {current.layout.inspectorOpen && inspector ? (
+                  <aside
+                    className="inspector-overlay"
+                    data-testid="inspector-overlay"
+                    data-width={String(current.layout.inspectorWidth)}
+                    style={{ width: current.layout.inspectorWidth }}
+                  >
+                    <NodeInspector
+                      inspector={inspector}
+                      availability={availability}
+                      readiness={readiness}
+                      authoring={authoring}
+                      locale={locale}
+                      actionError={
+                        actionError
+                          ? formatPresentedError(locale, actionError, current.snapshot)
+                          : undefined
+                      }
+                      authoringError={
+                        authoringError
+                          ? formatPresentedError(
+                              locale,
+                              authoringError,
+                              current.snapshot,
+                            )
+                          : undefined
+                      }
+                      onCommand={dispatch}
+                      onClose={() =>
+                        commit(setInspectorOpen(workspaceRef.current, false), false)
+                      }
+                    />
+                    <ResizeHandle
+                      invert
+                      testId="inspector-resize"
+                      onDelta={(delta) =>
+                        commit(
+                          updateSelectedLayout(workspaceRef.current, {
+                            inspectorWidth:
+                              (selectedProject(workspaceRef.current)?.layout
+                                .inspectorWidth ?? current.layout.inspectorWidth) +
+                              delta,
+                          }),
+                          false,
+                        )
+                      }
+                    />
+                  </aside>
+                ) : current ? (
+                  <button
+                    type="button"
+                    className="inspector-open ui-button ui-button-secondary"
+                    data-testid="inspector-open"
+                    aria-label={t(locale, "inspector.open")}
+                    title={t(locale, "inspector.open")}
+                    onClick={() =>
+                      commit(setInspectorOpen(workspaceRef.current, true), false)
+                    }
+                  >
+                    {t(locale, "inspector.open")}
+                  </button>
+                ) : null}
+              </>
             )}
           </main>
         </div>
