@@ -8,7 +8,7 @@ development:
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: human
 artifacts:
   plan: ../plans/TASK-001-plan.md
   pr: null
@@ -260,8 +260,6 @@ Relevant existing automated tests must continue to pass, and new tests must cove
 
 This task is not Done when the Plan is written.
 
-Current Gate is `planning`.
-
-Cursor may inspect code, analyze impact, and create/update `docs/plans/TASK-001-plan.md`.
+Current Gate is `planning`. The canonical plan is in `docs/plans/TASK-001-plan.md` and is awaiting Plan review.
 
 Implementation is forbidden until `plan_approved=true` is recorded after Plan review.
