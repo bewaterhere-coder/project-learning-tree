@@ -21,8 +21,10 @@ describe("knowledge cluster underlays", () => {
       />,
     );
 
+    const projectRootId = projectA.snapshot.pass.projectRootNodeId;
+    expect(projectRootId).toBeDefined();
     expect(
-      screen.getByTestId(`knowledge-cluster-${projectA.ids.q1}`),
+      screen.getByTestId(`knowledge-cluster-${projectRootId}`),
     ).toBeInTheDocument();
     expect(storage.getItem(WORKSPACE_SEMANTIC_KEY)).toBeNull();
   });
