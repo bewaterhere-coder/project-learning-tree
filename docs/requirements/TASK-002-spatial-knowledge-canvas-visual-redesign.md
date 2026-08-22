@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: implementation
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/21
@@ -450,6 +450,6 @@ Visual evidence should cover at least:
 
 Plan review approved on PR #19 (`plan_approved=true`).
 
-Implementation proceeds on `cursor/task-002-implement-1405` per the approved plan and binding review decisions (solid canvas; clusters after quieting; `minZoom=0.4`; soften blocking tick).
+Implementation completed on `cursor/task-002-implement-1405` / PR #21.
 
-After implementation evidence is ready, advance to `acceptance` with `next_expected_actor: chatgpt` and leave `acceptance_approved=false` for ChatGPT Acceptance Review.
+**Acceptance handoff:** `development.stage: acceptance`, `next_expected_actor: chatgpt`, `acceptance_approved: false`. Please run **ChatGPT Acceptance Review TASK-002**. Do not self-approve acceptance.
