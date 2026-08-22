@@ -52,6 +52,8 @@ describe("semantic persistence", () => {
     expect(payload).not.toContain("sidebarWidth");
     expect(payload).not.toContain("colorScheme");
     expect(payload).not.toContain("locale");
+    expect(payload).not.toContain("archivedPaneHeight");
+    expect(payload).not.toContain("archivedPaneOpen");
     const parsed = parseSemanticWorkspace(JSON.parse(payload));
     expect(parsed?.projects[1]?.archived).toBe(true);
     expect(parsed?.projects[1]?.snapshot.project.id).toBe(
@@ -153,6 +155,8 @@ describe("preference migration and theme hint", () => {
     expect(hydrated.shell.locale).toBe("zh-CN");
     expect(hydrated.shell.colorScheme).toBe("system");
     expect(hydrated.shell.projectSidebarWidth).toBe(300);
+    expect(hydrated.shell.archivedPaneOpen).toBe(false);
+    expect(hydrated.shell.archivedPaneHeight).toBe(168);
     expect(hydrated.projects[0]?.layout.nodePositions[projectA.ids.q1]).toEqual({
       x: 9,
       y: 8,
@@ -176,5 +180,25 @@ describe("preference migration and theme hint", () => {
     const storage = createMemoryPreferenceStorage();
     saveWorkspacePreferences(storage, workspace);
     expect(storage.getItem(WORKSPACE_PREFERENCES_KEY)).toContain("\"colorScheme\"");
+    expect(storage.getItem(WORKSPACE_PREFERENCES_KEY)).toContain("\"archivedPaneHeight\"");
+  });
+
+  it("rejects preference-only pane fields in the semantic store", () => {
+    expect(
+      parseSemanticWorkspace({
+        version: 1,
+        selectedProjectId: null,
+        projects: [],
+        archivedPaneHeight: 200,
+      }),
+    ).toBeUndefined();
+    expect(
+      parseSemanticWorkspace({
+        version: 1,
+        selectedProjectId: null,
+        projects: [],
+        archivedPaneOpen: true,
+      }),
+    ).toBeUndefined();
   });
 });

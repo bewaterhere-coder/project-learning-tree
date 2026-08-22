@@ -110,6 +110,7 @@ describe("persistence write channels", () => {
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("theme-dark"));
     await user.click(screen.getByTestId("locale-zh"));
+    await user.click(screen.getByTestId("sidebar-toggle"));
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
   });
 
@@ -152,8 +153,10 @@ describe("theme controls", () => {
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("theme-dark"));
     expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(screen.getByTestId("shell")).toHaveAttribute("data-theme", "dark");
     await user.click(screen.getByTestId("theme-light"));
     expect(document.documentElement.dataset.theme).toBe("light");
+    expect(screen.getByTestId("shell")).toHaveAttribute("data-theme", "light");
     await user.click(screen.getByTestId("theme-system"));
     expect(["light", "dark"]).toContain(document.documentElement.dataset.theme);
   });

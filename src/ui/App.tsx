@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   isAuthoringCommand,
   isGlobalDomainError,
@@ -22,6 +29,8 @@ import {
   focusAndOpenInspector,
   hydrateSemanticWorkspace,
   hydrateWorkspacePreferences,
+  reconcileThemeHint,
+  resolveColorScheme,
   restoreProject,
   saveSemanticWorkspace,
   saveWorkspacePreferences,
@@ -42,13 +51,13 @@ import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
 import { NodeInspector } from "./inspector/NodeInspector.js";
 import { createBrowserPreferenceStorage } from "./persistence/browser-storage.js";
 import { ProjectSidebar } from "./sidebar/ProjectSidebar.js";
-import { ResizeHandle } from "./chrome/ResizeHandle.js";
+import { PaneDivider } from "./chrome/Pane.js";
 import { TreeCanvas } from "./tree/TreeCanvas.js";
 import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
-import { applyWorkspaceTheme } from "./theme/apply-theme.js";
+import { applyResolvedTheme, systemPrefersDark } from "./theme/apply-theme.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 
@@ -86,15 +95,20 @@ export function App({
   workspaceRef.current = workspace;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coreFormOpen, setCoreFormOpen] = useState(false);
-  const [archivedOpen, setArchivedOpen] = useState(false);
+  const [systemDark, setSystemDark] = useState(systemPrefersDark);
+  const [inspectorDragWidth, setInspectorDragWidth] = useState<number>();
+  const inspectorDragRef = useRef<number | null>(null);
+  const settingsTriggerRef = useRef<HTMLButtonElement>(null);
+  const resolvedTheme = resolveColorScheme(workspace.shell.colorScheme, systemDark);
 
   useEffect(() => {
     saveWorkspacePreferences(storage, workspace);
   }, [storage, workspace]);
 
-  useEffect(() => {
-    applyWorkspaceTheme(storage, workspace.shell.colorScheme);
-  }, [storage, workspace.shell.colorScheme]);
+  useLayoutEffect(() => {
+    applyResolvedTheme(resolvedTheme);
+    reconcileThemeHint(storage, workspace.shell.colorScheme, systemDark);
+  }, [resolvedTheme, storage, systemDark, workspace.shell.colorScheme]);
 
   useEffect(() => {
     const media = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
@@ -102,13 +116,11 @@ export function App({
       return;
     }
     const onChange = () => {
-      if (workspaceRef.current.shell.colorScheme === "system") {
-        applyWorkspaceTheme(storage, "system");
-      }
+      setSystemDark(media.matches);
     };
     media.addEventListener("change", onChange);
     return () => media.removeEventListener("change", onChange);
-  }, [storage]);
+  }, []);
 
   const current = selectedProject(workspace);
   const locale = workspace.shell.locale;
@@ -250,7 +262,7 @@ export function App({
 
   return (
     <LocaleProvider locale={locale}>
-      <div className="shell" data-theme={document.documentElement.dataset.theme}>
+      <div className="shell" data-testid="shell" data-theme={resolvedTheme}>
         <header className="shell-header">
           <div className="header-identity">
             <h1>{t(locale, "app.title")}</h1>
@@ -270,10 +282,13 @@ export function App({
           <div className="header-tools">
             <div className="settings-anchor">
               <button
+                ref={settingsTriggerRef}
                 type="button"
                 className="ui-button ui-button-icon"
                 data-testid="settings-open"
                 aria-label={t(locale, "app.settings")}
+                aria-haspopup="menu"
+                aria-expanded={settingsOpen}
                 title={t(locale, "app.settings")}
                 onClick={() => setSettingsOpen((value) => !value)}
               >
@@ -283,6 +298,8 @@ export function App({
                 open={settingsOpen}
                 onClose={() => setSettingsOpen(false)}
                 testId="settings-menu"
+                anchorRef={settingsTriggerRef}
+                anchorId="settings"
               >
                 <p className="settings-label">{t(locale, "app.language")}</p>
                 <div className="locale-switch" data-testid="locale-switch">
@@ -350,6 +367,8 @@ export function App({
             locale={locale}
             open={workspace.shell.projectSidebarOpen}
             width={workspace.shell.projectSidebarWidth}
+            archivedOpen={workspace.shell.archivedPaneOpen}
+            archivedHeight={workspace.shell.archivedPaneHeight}
             selectedProjectId={workspace.selectedProjectId}
             summaries={summaries}
             archivedSummaries={archivedSummaries}
@@ -358,8 +377,6 @@ export function App({
                 ? formatPresentedError(locale, createError)
                 : undefined
             }
-            archivedOpen={archivedOpen}
-            onArchivedOpenChange={setArchivedOpen}
             onSelectProject={(projectId) =>
               commit(selectProject(workspaceRef.current, projectId), true)
             }
@@ -377,9 +394,21 @@ export function App({
                 false,
               )
             }
-            onResize={(width) =>
+            onSidebarCommit={(next) =>
               commit(
-                updateShell(workspaceRef.current, { projectSidebarWidth: width }),
+                updateShell(workspaceRef.current, {
+                  projectSidebarOpen: next.open,
+                  projectSidebarWidth: next.size,
+                }),
+                false,
+              )
+            }
+            onArchivedCommit={(next) =>
+              commit(
+                updateShell(workspaceRef.current, {
+                  archivedPaneOpen: next.open,
+                  archivedPaneHeight: next.size,
+                }),
                 false,
               )
             }
@@ -416,7 +445,12 @@ export function App({
                   <Button
                     variant="ghost"
                     data-testid="workspace-view-archived"
-                    onClick={() => setArchivedOpen(true)}
+                    onClick={() =>
+                      commit(
+                        updateShell(workspaceRef.current, { archivedPaneOpen: true }),
+                        false,
+                      )
+                    }
                   >
                     {t(locale, "sidebar.viewArchived")}
                   </Button>
@@ -515,8 +549,8 @@ export function App({
                   <aside
                     className="inspector-overlay"
                     data-testid="inspector-overlay"
-                    data-width={String(current.layout.inspectorWidth)}
-                    style={{ width: current.layout.inspectorWidth }}
+                    data-width={String(inspectorDragWidth ?? current.layout.inspectorWidth)}
+                    style={{ width: inspectorDragWidth ?? current.layout.inspectorWidth }}
                   >
                     <NodeInspector
                       inspector={inspector}
@@ -543,20 +577,32 @@ export function App({
                         commit(setInspectorOpen(workspaceRef.current, false), false)
                       }
                     />
-                    <ResizeHandle
+                    <PaneDivider
                       invert
+                      orientation="vertical"
                       testId="inspector-resize"
-                      onDelta={(delta) =>
+                      label={t(locale, "inspector.resize")}
+                      onDrag={(delta) => {
+                        const base =
+                          inspectorDragRef.current ??
+                          selectedProject(workspaceRef.current)?.layout.inspectorWidth ??
+                          current.layout.inspectorWidth;
+                        const next = Math.max(0, base + delta);
+                        inspectorDragRef.current = next;
+                        setInspectorDragWidth(next);
+                      }}
+                      onRelease={() => {
+                        const next =
+                          inspectorDragRef.current ?? current.layout.inspectorWidth;
+                        inspectorDragRef.current = null;
+                        setInspectorDragWidth(undefined);
                         commit(
                           updateSelectedLayout(workspaceRef.current, {
-                            inspectorWidth:
-                              (selectedProject(workspaceRef.current)?.layout
-                                .inspectorWidth ?? current.layout.inspectorWidth) +
-                              delta,
+                            inspectorWidth: next,
                           }),
                           false,
-                        )
-                      }
+                        );
+                      }}
                     />
                   </aside>
                 ) : current ? (

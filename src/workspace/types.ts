@@ -24,8 +24,15 @@ export interface Viewport {
 export interface WorkspaceShellLayout {
   projectSidebarOpen: boolean;
   projectSidebarWidth: number;
+  archivedPaneOpen: boolean;
+  archivedPaneHeight: number;
   locale: WorkspaceLocale;
   colorScheme: ColorScheme;
+}
+
+export interface PaneReleaseResult {
+  open: boolean;
+  size: number;
 }
 
 export interface ProjectWorkspaceLayout {
