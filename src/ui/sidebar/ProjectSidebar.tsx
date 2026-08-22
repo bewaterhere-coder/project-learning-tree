@@ -207,6 +207,7 @@ export function ProjectSidebar({
             {archivedSummaries.length > 0 ? (
               <>
                 <PaneDivider
+                  invert
                   orientation="horizontal"
                   testId="archived-resize"
                   label={t(locale, "sidebar.archivedResize")}

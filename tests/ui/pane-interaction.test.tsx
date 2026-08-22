@@ -139,7 +139,7 @@ describe("pane interaction", () => {
     ).toBeInTheDocument();
   });
 
-  it("resizes and collapses the archived pane without writing the semantic store", async () => {
+  it("grows archived height when dragged up and collapses when dragged down past the threshold", async () => {
     const user = userEvent.setup();
     const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
     const storage = trackingStorage();
@@ -150,15 +150,20 @@ describe("pane interaction", () => {
     render(<App initialWorkspace={prepared} preferenceStorage={storage} />);
     storage.writes.length = 0;
     const handle = screen.getByTestId("archived-resize");
-    drag(handle, 180, 220, "y");
+    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "180");
+
+    drag(handle, 180, 140, "y");
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes).toEqual([]);
-    pointer(handle, "pointerup", 10, 220);
+    pointer(handle, "pointerup", 10, 140);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
 
-    drag(handle, 220, 20, "y");
-    pointer(handle, "pointerup", 10, 20);
+    pointer(handle, "pointerdown", 10, 140);
+    pointer(handle, "pointermove", 10, 180);
+    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "180");
+    pointer(handle, "pointermove", 10, 400);
+    pointer(handle, "pointerup", 10, 400);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByTestId("archived-list")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("archived-toggle"));
