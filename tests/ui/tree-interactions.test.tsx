@@ -2,7 +2,7 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createSession, dispatchCommand } from "../../src/application/index.js";
 import {
   createBlockedBranchFixture,
@@ -11,6 +11,8 @@ import {
   sequentialFixturePorts,
 } from "../../src/fixtures/demo-tree.js";
 import { App } from "../../src/ui/App.js";
+
+vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("tree interactions", () => {
   it("clicking a node only changes Current Focus", async () => {

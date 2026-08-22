@@ -1,3 +1,5 @@
+import { cleanup } from "@testing-library/react";
+import { afterEach } from "vitest";
 import "@testing-library/jest-dom/vitest";
 
 class ResizeObserverMock {
@@ -25,3 +27,9 @@ if (typeof window !== "undefined") {
       },
     }) as DOMRect;
 }
+
+afterEach(() => {
+  if (typeof document !== "undefined") {
+    cleanup();
+  }
+});

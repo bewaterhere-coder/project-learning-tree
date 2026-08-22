@@ -2,13 +2,15 @@
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createSession, dispatchCommand } from "../../src/application/index.js";
 import { App } from "../../src/ui/App.js";
 import {
   createBlockedBranchFixture,
   createDemoTreeFixture,
 } from "../../src/fixtures/demo-tree.js";
+
+vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("node inspector", () => {
   it("shows focused node fields without treating blocked as a lifecycle", async () => {

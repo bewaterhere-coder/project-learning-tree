@@ -50,7 +50,7 @@ npm run dev
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is in progress.
+M1 Domain Engine is complete. M2 Tree UI is implemented.
 
 ## License
 
