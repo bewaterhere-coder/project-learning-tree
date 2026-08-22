@@ -27,6 +27,10 @@ const AUTHORING_COMMANDS: ReadonlySet<UiCommand["type"]> = new Set([
   "markChildBlocking",
   "unmarkChildBlocking",
   "addCoreQuestion",
+  "moveCandidateToFrontier",
+  "addEvidence",
+  "addCriterion",
+  "setNodeSummary",
 ]);
 
 const ACTIVE_STACK_REASON_KEYS: Record<string, string> = {

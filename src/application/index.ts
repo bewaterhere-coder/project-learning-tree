@@ -39,6 +39,22 @@ export {
   type ProjectSummary,
 } from "./selectors/project-summary.js";
 export {
+  selectBoundConversationIdentity,
+  selectFocusDiffersFromChat,
+  type BoundConversationIdentity,
+  type ChatBindingInput,
+} from "./selectors/chat-binding.js";
+export {
+  contextExcludesSiblingConversations,
+  selectContextInspectorView,
+  selectLearningContext,
+  type ContextInspectorView,
+  type ContextMessage,
+  type LearningContext,
+  type LearningContextNode,
+  type LearningContextTarget,
+} from "./selectors/learning-context.js";
+export {
   selectTreeViewModel,
   type TreeEdgeView,
   type TreeNodeView,
