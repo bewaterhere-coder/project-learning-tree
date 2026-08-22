@@ -8,15 +8,15 @@ pr:
   number: 27
   head_ref: task/TASK-006-simplify-question-interaction-details
   base_ref: main
-  state: open
+  state: merged
 development:
-  stage: accepted
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: true
-    completion_verified: false
-  next_expected_actor: chatgpt
+    merge_verified: true
+  next_expected_actor: null
 artifacts:
   plan: ../plans/TASK-006-plan.md
 transport:
@@ -242,8 +242,16 @@ Verified:
 6. Dedicated TASK-006 acceptance regressions cover readiness gating and Details-closed node actions.
 7. GitHub Actions CI run #116 completed successfully on the accepted head.
 
-`acceptance_approved=true`. Completion remains unverified until PR #27 is merged to `main` and merge read-back succeeds.
+`acceptance_approved=true`. PR #27 was merged to `main` at `72d3512d4fbc5adfd04b11e640d3256518e2fb5f`. Merge read-back on `main` confirms direct completion, readiness-gated node Complete, Details-closed node actions (`focusSelectedNode`), Details `达成条件`/`心得`, and TASK-006 acceptance regressions.
 
-## Cursor Handoff
+## Completion
 
-Implementation and Acceptance are complete on this TASK-006 branch / PR #27. Do not create another TASK-006 PR. Merge PR #27 to `main`, then verify the integrated state before claiming TASK-006 done.
+Canonical implementation plan: `docs/plans/TASK-006-plan.md`.
+
+TASK-006 is complete. PR #27 was accepted and merged into `main`.
+
+Merge commit:
+
+- PR #27: `72d3512d4fbc5adfd04b11e640d3256518e2fb5f`
+
+Final state: `stage: done`, `acceptance_approved: true`, `merge_verified: true`.
