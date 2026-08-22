@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: draft
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-003-plan.md
 ---
@@ -315,13 +315,8 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-This Requirement is ready for development planning.
+Canonical implementation plan: `docs/plans/TASK-003-plan.md`.
 
-Cursor should now:
+Development stage is `plan_review`. Next expected actor: ChatGPT (Plan review).
 
-1. work only on `task/TASK-003-project-root-editable-metadata-tree-init` / the active TASK-003 PR;
-2. inspect current Domain/Application/Workspace/UI implementation;
-3. write `docs/plans/TASK-003-plan.md` with concrete code evidence and migration implications;
-4. update this Requirement’s development state to `plan_review` when the Plan is remotely committed;
-5. **do not implement product code until ChatGPT approves the Plan (`plan_approved=true`)**;
-6. do not create another PR for planning or implementation; use the same task branch and PR until merge.
+Cursor must **not** implement product code until Plan review records `plan_approved=true`. Keep all further work on this same task branch and PR.
