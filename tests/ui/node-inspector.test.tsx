@@ -13,7 +13,7 @@ import {
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("node inspector", () => {
-  it("focuses knowledge deposition fields without learning-start ceremony", async () => {
+  it("shows focused question details without Start Learning ceremony", async () => {
     const user = userEvent.setup();
     const { snapshot, ids } = createDemoTreeFixture();
     render(<App initialSnapshot={snapshot} />);
@@ -23,29 +23,33 @@ describe("node inspector", () => {
       "Completion criteria",
     );
     expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent(
-      "Learning notes",
+      "Reflection",
     );
-    expect(screen.queryByTestId("action-activate")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("chat-open")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("action-add-sub-question")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.queryByTestId("action-park")).toBeNull();
+    expect(screen.queryByTestId("chat-open")).toBeNull();
+    expect(screen.queryByTestId("action-add-sub-question")).toBeNull();
+    expect(screen.queryByTestId("action-return-to-parent")).toBeNull();
+    expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
 
     await user.click(screen.getByTestId(`node-${ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Q1.2");
-    expect(screen.queryByTestId("inspector-lifecycle")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("action-park")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("action-return-to-parent")).not.toBeInTheDocument();
+    expect(screen.getByTestId(`node-chat-${ids.q1}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`node-add-child-${ids.q1}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`node-complete-${ids.q1}`)).toBeInTheDocument();
   });
 
-  it("shows Complete for a focused blocking child without Start Learning", () => {
+  it("keeps chat and add-child on the Question node for a blocking child", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
       nodeId: ids.childA,
     });
     render(<App initialSnapshot={focused.snapshot} />);
-    expect(screen.queryByTestId("action-activate")).not.toBeInTheDocument();
-    expect(screen.getByTestId("action-close")).toBeInTheDocument();
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.getByTestId(`node-chat-${ids.childA}`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`node-add-child-${ids.childA}`),
+    ).toBeInTheDocument();
   });
 });

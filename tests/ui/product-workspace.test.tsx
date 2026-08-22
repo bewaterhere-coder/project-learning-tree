@@ -77,7 +77,12 @@ describe("production workspace UI", () => {
     expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
       "Completion criteria",
     );
-    expect(screen.queryByTestId("active-stack")).not.toHaveTextContent(recommended!.textContent ?? "---");
+    expect(screen.getByTestId("inspector-summary-heading")).toBeInTheDocument();
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
+    expect(screen.queryByTestId("active-stack")).not.toHaveTextContent(
+      recommended!.textContent ?? "---",
+    );
     await user.click(screen.getByTestId("add-core-question"));
     await user.type(screen.getByTestId("core-question-input"), "How do agents plan?");
     await user.type(screen.getByTestId("core-goal-input"), "Explain the loop");

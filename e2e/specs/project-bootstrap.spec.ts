@@ -33,9 +33,10 @@ test("creating a GitHub project opens onto top-level Questions (no Project Root)
   await page.getByTestId("bootstrap-recommended").locator("button").first().click();
   await expect(page.getByTestId("node-inspector")).toBeVisible();
   // Details panel is knowledge deposition — no Start Learning ceremony
-  await expect(page.getByTestId("action-activate")).toHaveCount(0);
   await expect(page.getByTestId("inspector-dod-heading")).toBeVisible();
   await expect(page.getByTestId("inspector-summary-heading")).toBeVisible();
+  await expect(page.getByTestId("action-activate")).toHaveCount(0);
+  await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);
 });
 
 test("URL-only create defaults the project name from the GitHub URL", async ({

@@ -6,6 +6,7 @@ import {
   DEFAULT_ARCHIVED_PANE_HEIGHT,
   DEFAULT_COLOR_SCHEME,
   defaultChatLayout,
+  parseThemeRecipeId,
   resolveColorScheme,
   WORKSPACE_PREFERENCES_KEY,
   WORKSPACE_PREFERENCES_KEY_V1,
@@ -69,6 +70,7 @@ export function serializeWorkspacePreferences(
       archivedPaneHeight: workspace.shell.archivedPaneHeight,
       locale: workspace.shell.locale,
       colorScheme: workspace.shell.colorScheme,
+      themeRecipeId: workspace.shell.themeRecipeId,
     },
     projects,
   };
@@ -238,6 +240,7 @@ function parseShell(
         : DEFAULT_ARCHIVED_PANE_HEIGHT,
     locale,
     colorScheme: colorScheme ?? DEFAULT_COLOR_SCHEME,
+    themeRecipeId: parseThemeRecipeId(value.themeRecipeId),
   };
 }
 

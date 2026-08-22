@@ -1,0 +1,257 @@
+---
+task_id: TASK-006
+title: Simplify question interaction and details panel
+repository: bewaterhere-coder/project-learning-tree
+task_ref: task/TASK-006-simplify-question-interaction-details
+integration_ref: main
+pr:
+  number: 27
+  head_ref: task/TASK-006-simplify-question-interaction-details
+  base_ref: main
+  state: merged
+development:
+  stage: done
+  gates:
+    requirement_ready: true
+    plan_approved: true
+    acceptance_approved: true
+    merge_verified: true
+  next_expected_actor: null
+artifacts:
+  plan: ../plans/TASK-006-plan.md
+transport:
+  type: github-pr
+---
+
+# TASK-006 — Simplify Question Interaction and Details Panel
+
+## Goal
+
+Remove redundant learning workflow and duplicated actions from the Question Details UI.
+
+The product model should be:
+
+> A Question is the learning unit. Clicking, reading, chatting about, and extending that Question is already learning.
+
+Users should not need to explicitly "start learning" a Question or manage a learning-session state before using it.
+
+## Product Principle
+
+```text
+Question Node = primary interaction surface
+Question Details = knowledge / reflection surface
+```
+
+Do not duplicate node operations inside the right-side details panel.
+
+## Problem
+
+The current right-side details experience contains actions and navigation that are redundant with the Question node itself, including patterns such as:
+
+- 开始学习 / Start Learning
+- 聊聊这个问题
+- 添加子问题
+- 返回上一个问题 / parent-question navigation
+- 未开始 / 学习中 / Active Learning style states
+
+These interactions make the product feel like a workflow/state machine instead of a question-driven learning tree.
+
+The tree itself already expresses parent/child navigation, and node-level affordances can already support chat and child-question creation.
+
+## Requirements
+
+### 1. Remove explicit learning-start UX
+
+There must be no required "Start Learning" step for a Question.
+
+Remove or stop exposing primary-flow concepts such as:
+
+- 开始学习
+- 进入学习
+- 暂停学习
+- 继续学习
+- 未开始
+- 学习中
+- Active Learning
+- Current Learning Node
+
+Clicking/focusing a Question is sufficient to interact with it.
+
+Do not add persisted state solely to track whether a user has "started learning" a Question.
+
+Existing internal domain state may remain if required by confirmed architecture, but it must not leak into the primary UI unless it has clear user value.
+
+### 2. Question node is the primary interaction surface
+
+The Question node/card should own the common operations related to that Question.
+
+At minimum, the node interaction model should support:
+
+- click/focus Question
+- open contextual chat for the Question
+- add a child Question
+- show child count when useful
+- show completion/progress when useful
+- mark/represent completion according to the existing completion model
+
+Do not require the user to open Details merely to perform these operations.
+
+### 3. Remove duplicated actions from the right-side Details panel
+
+The Question Details panel must not duplicate operations already available on the node.
+
+Remove from the Details panel:
+
+- “聊聊这个问题” / Chat action
+- “添加子问题” / Add child question action
+- “返回上一个问题” or equivalent parent/back navigation
+- “开始学习” or equivalent learning activation actions
+- explicit learning-state controls whose only purpose is to model Start / Learning / Pause / Resume
+
+The tree structure itself is the parent/child navigation model. Do not create a second navigation system inside Details.
+
+### 4. Details panel becomes a knowledge/reflection surface
+
+The right-side Question Details panel should be intentionally minimal.
+
+Its primary user-facing content should be:
+
+#### 达成条件
+
+What must be understood, answered, verified, or completed for this Question to be considered complete.
+
+Use the current criterion / Definition-of-Done capability where appropriate, but present it with user-facing language such as `达成条件` in zh-CN.
+
+#### 心得
+
+A learner-owned reflection / learning record for the Question.
+
+This is where the user can capture conclusions, understanding, observations, or lessons learned.
+
+Prefer the label `心得` in zh-CN rather than implementation-oriented terminology such as `Summary` or `Learning Record` when the user-facing meaning is the learner's own understanding.
+
+Small supporting metadata may remain only when it materially helps understanding, but the panel must not become another action dashboard.
+
+### 5. Keep completion semantics simple in the UI
+
+For this UX, the meaningful user-facing state is primarily:
+
+```text
+not completed -> completed
+```
+
+The default/not-completed state usually does not need a prominent textual badge.
+
+Do not introduce or preserve a visible learning-state machine just to express progress.
+
+Progress should come from actual learning structure and completion facts, for example child-question completion, not from whether the user clicked a Start Learning button.
+
+### 6. Direct question interaction is the learning flow
+
+Expected user flow:
+
+```text
+click Question
+→ read / inspect it
+→ chat about it when needed
+→ add child Questions when deeper questions emerge
+→ record 达成条件 / 心得
+→ complete when understood
+```
+
+Not:
+
+```text
+click Question
+→ Start Learning
+→ enter Learning state
+→ open Details
+→ click Chat
+→ add child through Details
+→ manage lifecycle state
+```
+
+### 7. zh-CN copy
+
+When locale is `zh-CN`, all new/changed user-facing strings in this task must use Chinese.
+
+Preferred labels:
+
+- 达成条件
+- 心得
+- 添加子问题
+- 已完成
+
+Do not expose raw engineering terms such as `Active`, `Learning State`, `Definition of Done`, `Frontier`, or `Blocking` unless another confirmed requirement explicitly needs them user-facing.
+
+## Constraints
+
+- Preserve contextual node chat behavior and conversation persistence.
+- Preserve real Question → child Question graph relationships.
+- Avoid introducing new persisted UI-only state.
+- Prefer removing UI ceremony over redesigning the Domain unless code evidence shows the Domain itself blocks the intended UX.
+- Do not duplicate Question navigation in the Details panel.
+- Do not depend on another unmerged task/PR as the canonical source for this requirement. If implementation overlaps another active branch, surface the conflict in the Plan rather than silently reusing or merging task identity.
+
+## Non-goals
+
+This task does not include:
+
+- GitHub project creation redesign
+- Project/Root node removal
+- project metadata/details redesign
+- API key/provider settings
+- LLM provider implementation
+- broad visual-system redesign
+- new learning methodology
+- a new mastery/state-machine architecture
+
+## Acceptance Criteria
+
+- [x] A Question has no required “开始学习 / Start Learning” interaction.
+- [x] Primary UI no longer presents `未开始 / 学习中 / Active Learning` ceremony for Questions.
+- [x] Clicking/focusing a Question is sufficient to begin interacting with it.
+- [x] Question node/card exposes direct contextual Chat access.
+- [x] Question node/card exposes direct child-question creation.
+- [x] Details panel does not contain a duplicate Chat action.
+- [x] Details panel does not contain a duplicate Add Child Question action.
+- [x] Details panel does not contain parent/back navigation that duplicates tree navigation.
+- [x] Details panel does not contain Start/Pause/Resume learning controls.
+- [x] Details panel primarily exposes `达成条件` and `心得` in zh-CN.
+- [x] Completion/progress does not depend on an explicit Start Learning state.
+- [x] No new persisted state is introduced solely for “learning started / learning active”.
+- [x] Existing contextual chat persistence is not regressed.
+- [x] Existing Question parent/child graph behavior is not regressed.
+- [x] New/changed zh-CN copy is fully localized.
+
+## Plan Review Decision
+
+Plan approved after revision. The approved plan explicitly removes hidden `activateNode()` as a completion precondition and defines direct completion (`open -> closed` when convergence/readiness is satisfied) with an A/B active-stack isolation regression. Node Add Child uses ordinary `createChild` only; TASK-006 does not introduce hidden activation for blocking-child authoring.
+
+## Acceptance Decision
+
+Accepted on PR #27 at implementation head `644d3d45b03e3e7caa2a8bc97fb85e6facddcd78`.
+
+Verified:
+
+1. Node Complete is disabled until `selectCloseReadiness.allowed` and becomes enabled when the Question is ready.
+2. Node Add Child and Complete focus the Question without force-opening Details; clicking the card itself still opens Details.
+3. Direct completion does not call `activateNode` and preserves unrelated Active Stack/lifecycle state.
+4. Details is reduced to the knowledge/reflection surface centered on `达成条件` and `心得`.
+5. Node owns Chat, Add Child, and Complete; duplicate Details actions and learning-state ceremony are removed.
+6. Dedicated TASK-006 acceptance regressions cover readiness gating and Details-closed node actions.
+7. GitHub Actions CI run #116 completed successfully on the accepted head.
+
+`acceptance_approved=true`. PR #27 was merged to `main` at `72d3512d4fbc5adfd04b11e640d3256518e2fb5f`. Merge read-back on `main` confirms direct completion, readiness-gated node Complete, Details-closed node actions (`focusSelectedNode`), Details `达成条件`/`心得`, and TASK-006 acceptance regressions.
+
+## Completion
+
+Canonical implementation plan: `docs/plans/TASK-006-plan.md`.
+
+TASK-006 is complete. PR #27 was accepted and merged into `main`.
+
+Merge commit:
+
+- PR #27: `72d3512d4fbc5adfd04b11e640d3256518e2fb5f`
+
+Final state: `stage: done`, `acceptance_approved: true`, `merge_verified: true`.

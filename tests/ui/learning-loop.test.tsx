@@ -158,10 +158,10 @@ describe("M3B learning loop", () => {
     await user.type(screen.getByTestId("chat-input"), "evidence please");
     await user.click(screen.getByTestId("chat-send"));
     await screen.findByTestId("proposal-card-evidence");
-    expect(screen.queryByTestId("inspector-evidence")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("inspector-evidence")).toBeNull();
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
-      expect(screen.getByTestId("inspector-evidence")).toHaveTextContent("commit graph notes");
+      expect(screen.queryByTestId("proposal-card-evidence")).not.toBeInTheDocument();
     });
   });
 
@@ -206,7 +206,7 @@ describe("M3B learning loop", () => {
     });
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
-      expect(screen.getByTestId("inspector-summary")).toHaveTextContent(
+      expect(screen.getByTestId("inspector-summary")).toHaveValue(
         "Q1 learning summary from assistant",
       );
     });

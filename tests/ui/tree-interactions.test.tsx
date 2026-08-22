@@ -39,50 +39,100 @@ describe("tree interactions", () => {
       "data-focus",
       "true",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("active-stack")).not.toHaveTextContent("Q1.1");
+    expect(screen.getByTestId(`node-completed-${ids.q11}`)).toBeInTheDocument();
   });
 
-  it("shows unmet close requirements before click without lifecycle ceremony", async () => {
-    const { snapshot, ids } = createDemoTreeFixture();
+  it("does not expose Start Learning activate controls", async () => {
+    const user = userEvent.setup();
+    const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
-      nodeId: ids.q1,
+      nodeId: ids.childA,
     });
     render(<App initialSnapshot={focused.snapshot} />);
 
-    expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Q1.2");
-    expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.queryByTestId("inspector-lifecycle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.getByTestId(`node-complete-${ids.childA}`)).toBeInTheDocument();
+    await user.click(screen.getByTestId(`node-${ids.childB}`));
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.getByTestId(`node-${ids.childA}`)).toHaveAttribute(
+      "data-lifecycle",
+      "open",
+    );
   });
 
-  it("closes a prepared leaf and updates lifecycle and stack from Domain", async () => {
+  it("disables Complete on an unready Question instead of using Domain errors", async () => {
+    const user = userEvent.setup();
+    const { snapshot, ids } = createBlockedBranchFixture();
+    const focused = dispatchCommand(createSession(snapshot), {
+      type: "focusNode",
+      nodeId: ids.parent,
+    });
+    render(<App initialSnapshot={focused.snapshot} />);
+
+    const complete = screen.getByTestId(`node-complete-${ids.parent}`);
+    expect(complete).toBeDisabled();
+    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
+      "data-can-complete",
+      "false",
+    );
+    await user.click(complete);
+    expect(screen.queryByTestId("node-action-error")).toBeNull();
+    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
+    );
+  });
+
+  it("closes a prepared open leaf without activateNode and without mutating stack", async () => {
     const user = userEvent.setup();
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
+    const onParent = dispatchCommand(createSession(branch.snapshot), {
       type: "activateNode",
-      nodeId: branch.ids.childA,
+      nodeId: branch.ids.parent,
     });
-    const closable = createClosableNodeFixture(
-      activated.snapshot,
-      branch.ids.childA,
+    const closableB = createClosableNodeFixture(
+      onParent.snapshot,
+      branch.ids.childB,
       ports,
     );
-    const focused = dispatchCommand(createSession(closable), {
+    const focused = dispatchCommand(createSession(closableB), {
       type: "focusNode",
-      nodeId: branch.ids.childA,
+      nodeId: branch.ids.childB,
     });
     render(<App initialSnapshot={focused.snapshot} />);
 
-    await user.click(screen.getByTestId("action-close"));
-    expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId(`node-${branch.ids.childA}`)).toHaveAttribute(
+    expect(screen.getByTestId(`node-${branch.ids.parent}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
+    );
+    expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
+      "data-lifecycle",
+      "open",
+    );
+
+    await user.click(screen.getByTestId(`node-complete-${branch.ids.childB}`));
+
+    expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
       "data-lifecycle",
       "closed",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Parent");
-    expect(screen.getByTestId("active-stack")).not.toHaveTextContent("Child A");
+    expect(screen.getByTestId(`node-${branch.ids.parent}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
+    );
+    expect(screen.getByTestId(`node-${branch.ids.parent}`)).toHaveAttribute(
+      "data-on-stack",
+      "true",
+    );
+  });
+
+  it("does not expose Return to Parent in Details", async () => {
+    const user = userEvent.setup();
+    const { snapshot, ids } = createDemoTreeFixture();
+    render(<App initialSnapshot={snapshot} />);
+    await user.click(screen.getByTestId(`node-${ids.q2}`));
+    expect(screen.queryByTestId("action-return-to-parent")).toBeNull();
   });
 });

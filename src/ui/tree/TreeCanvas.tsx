@@ -9,7 +9,6 @@ import {
 } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
-import type { UiCommand } from "../../application/index.js";
 import type { NodePosition, Viewport, WorkspaceLocale } from "../../workspace/index.js";
 import {
   ClusterRegionFlowNode,
@@ -31,13 +30,19 @@ function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
       <LearningNodeHandles />
       <LearningNode
         data={data}
-        locale={data.locale ?? "en-US"}
         onOpenChat={
           data.onOpenChatForNode
             ? () => data.onOpenChatForNode?.(data.id)
             : undefined
         }
-        onCommand={data.onCommand}
+        onAddChild={
+          data.onAddChildForNode
+            ? () => data.onAddChildForNode?.(data.id)
+            : undefined
+        }
+        onComplete={
+          data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
+        }
       />
     </>
   );
@@ -57,7 +62,8 @@ export function TreeCanvas({
   locale,
   onFocusNode,
   onOpenChatForNode,
-  onCommand,
+  onAddChildForNode,
+  onCompleteNode,
   onNodeDragStop,
   onViewportChange,
 }: {
@@ -69,7 +75,8 @@ export function TreeCanvas({
   locale: WorkspaceLocale;
   onFocusNode: (nodeId: NodeId) => void;
   onOpenChatForNode: (nodeId: NodeId) => void;
-  onCommand: (command: UiCommand) => boolean | void;
+  onAddChildForNode: (nodeId: NodeId) => void;
+  onCompleteNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
@@ -85,10 +92,11 @@ export function TreeCanvas({
           ...node.data,
           locale,
           onOpenChatForNode,
-          onCommand,
+          onAddChildForNode,
+          onCompleteNode,
         },
       })),
-    [locale, onCommand, onOpenChatForNode],
+    [locale, onOpenChatForNode, onAddChildForNode, onCompleteNode],
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

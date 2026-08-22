@@ -11,6 +11,8 @@ interface StubNode {
     locale?: "en-US" | "zh-CN";
     onOpenChatForNode?: (nodeId: string) => void;
     onCommand?: (command: import("../../src/application/commands.js").UiCommand) => boolean | void;
+    onAddChildForNode?: (nodeId: string) => void;
+    onCompleteNode?: (nodeId: string) => void;
     region?: { rootId: string; title: string };
   };
 }
@@ -79,6 +81,7 @@ export function ReactFlow({
             data-on-stack={node.data.isOnActiveStack ? "true" : "false"}
             data-focus={node.data.isCurrentFocus ? "true" : "false"}
             data-parent={node.data.parentId ?? ""}
+            data-can-complete={node.data.canComplete ? "true" : "false"}
             data-x={String(node.position?.x ?? 0)}
             data-y={String(node.position?.y ?? 0)}
             onClick={(event) =>
@@ -98,13 +101,21 @@ export function ReactFlow({
           >
             <LearningNode
               data={{ ...node.data }}
-              locale={node.data.locale ?? "en-US"}
               onOpenChat={
                 node.data.onOpenChatForNode
                   ? () => node.data.onOpenChatForNode?.(node.id)
                   : undefined
               }
-              onCommand={node.data.onCommand}
+              onAddChild={
+                node.data.onAddChildForNode
+                  ? () => node.data.onAddChildForNode?.(node.id)
+                  : undefined
+              }
+              onComplete={
+                node.data.onCompleteNode
+                  ? () => node.data.onCompleteNode?.(node.id)
+                  : undefined
+              }
             />
           </div>
           <button

@@ -29,6 +29,7 @@ function modelFixture(): TreeViewModel {
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        canComplete: false,
       },
       {
         id: "child-a",
@@ -45,6 +46,7 @@ function modelFixture(): TreeViewModel {
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        canComplete: false,
       },
       {
         id: "root-b",
@@ -60,6 +62,7 @@ function modelFixture(): TreeViewModel {
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        canComplete: false,
       },
     ],
     edges: [

@@ -237,6 +237,7 @@ describe("preference migration and theme hint", () => {
     const hydrated = hydrateWorkspacePreferences(workspace, storage);
     expect(hydrated.shell.locale).toBe("zh-CN");
     expect(hydrated.shell.colorScheme).toBe("system");
+    expect(hydrated.shell.themeRecipeId).toBe("rose-pine");
     expect(hydrated.shell.projectSidebarWidth).toBe(300);
     expect(hydrated.shell.archivedPaneOpen).toBe(false);
     expect(hydrated.shell.archivedPaneHeight).toBe(168);

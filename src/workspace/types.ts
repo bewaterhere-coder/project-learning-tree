@@ -9,6 +9,11 @@ import type {
 export type WorkspaceLocale = "zh-CN" | "en-US";
 export type ColorScheme = "system" | "light" | "dark";
 export type ResolvedColorScheme = "light" | "dark";
+export type ThemeRecipeId =
+  | "rose-pine"
+  | "catppuccin"
+  | "everforest"
+  | "nord";
 export type WorkspaceErrorOrigin = string;
 
 export interface NodePosition {
@@ -29,6 +34,7 @@ export interface WorkspaceShellLayout {
   archivedPaneHeight: number;
   locale: WorkspaceLocale;
   colorScheme: ColorScheme;
+  themeRecipeId: ThemeRecipeId;
 }
 
 export interface PaneReleaseResult {

@@ -1,24 +1,23 @@
 import type { LearningFlowNode } from "./to-react-flow.js";
-import type { NodeId, UiCommand } from "../../application/index.js";
-import type { WorkspaceLocale } from "../../workspace/index.js";
 import { Button } from "../primitives/Button.js";
-import { t } from "../i18n/index.js";
-import { NodeAddChildAction } from "./NodeAddChildAction.js";
+import { t, useLocale } from "../i18n/index.js";
 
 export function LearningNode({
   data,
-  locale,
   onOpenChat,
-  onCommand,
+  onAddChild,
+  onComplete,
 }: {
   data: LearningFlowNode["data"];
-  locale: WorkspaceLocale;
   onOpenChat?: () => void;
-  onCommand?: (command: UiCommand) => boolean | void;
+  onAddChild?: () => void;
+  onComplete?: () => void;
 }) {
+  const locale = useLocale();
+  const { lifecycle } = data;
   const className = [
     "learning-node",
-    `lifecycle-${data.lifecycle}`,
+    `lifecycle-${lifecycle}`,
     data.isOnActiveStack ? "on-stack" : "",
     data.isCurrentFocus ? "focused" : "",
     data.isActiveStackLeaf ? "stack-leaf" : "",
@@ -30,26 +29,30 @@ export function LearningNode({
   const blockedLabel = t(locale, "node.blocked", {
     count: data.unresolvedBlockerCount,
   });
-  const contextLine = data.summary?.trim();
+  const canAddChild = lifecycle !== "closed" && onAddChild;
+  const showComplete = lifecycle !== "closed" && onComplete;
+  const completeEnabled = showComplete && data.canComplete === true;
+  const completeTitle = completeEnabled
+    ? t(locale, "actions.complete")
+    : t(locale, "close.notReady");
 
   return (
     <div
       className={className}
       data-node-id={data.id}
-      data-lifecycle={data.lifecycle}
+      data-lifecycle={lifecycle}
       data-blocked={data.isBlocked ? "true" : "false"}
       data-on-stack={data.isOnActiveStack ? "true" : "false"}
       data-focus={data.isCurrentFocus ? "true" : "false"}
       data-recommended={data.isRecommended ? "true" : "false"}
       data-completed={data.isCompleted ? "true" : "false"}
+      data-can-complete={completeEnabled ? "true" : "false"}
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <p className="node-question">{data.question}</p>
-      {contextLine ? (
-        <p className="node-meta" data-testid={`node-context-${data.id}`}>
-          {contextLine}
-        </p>
-      ) : null}
+      <p className="node-meta" data-testid={`node-goal-${data.id}`}>
+        {data.goal}
+      </p>
       {data.childCount > 0 ? (
         <p className="node-progress" data-testid={`node-progress-${data.id}`}>
           {t(locale, "node.childProgress", {
@@ -84,7 +87,7 @@ export function LearningNode({
           title={blockedLabel}
         />
       ) : null}
-      <div className="node-actions-row nodrag nopan">
+      <div className="node-toolbar nodrag nopan">
         {onOpenChat ? (
           <Button
             type="button"
@@ -112,13 +115,41 @@ export function LearningNode({
             </svg>
           </Button>
         ) : null}
-        {onCommand ? (
-          <NodeAddChildAction
-            nodeId={data.id as NodeId}
-            locale={locale}
-            canCreateChild={data.canCreateChild === true}
-            onCommand={onCommand}
-          />
+        {canAddChild ? (
+          <Button
+            type="button"
+            variant="icon"
+            className="node-add-child-action"
+            data-testid={`node-add-child-${data.id}`}
+            aria-label={t(locale, "actions.addSubQuestion")}
+            title={t(locale, "actions.addSubQuestion")}
+            onClick={(event) => {
+              event.stopPropagation();
+              onAddChild();
+            }}
+          >
+            <span aria-hidden="true">＋</span>
+          </Button>
+        ) : null}
+        {showComplete ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="node-complete-action"
+            data-testid={`node-complete-${data.id}`}
+            aria-label={completeTitle}
+            title={completeTitle}
+            disabled={!completeEnabled}
+            onClick={(event) => {
+              event.stopPropagation();
+              if (!completeEnabled) {
+                return;
+              }
+              onComplete();
+            }}
+          >
+            {t(locale, "actions.complete")}
+          </Button>
         ) : null}
       </div>
     </div>

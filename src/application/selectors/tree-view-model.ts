@@ -5,6 +5,7 @@ import {
   type NodeId,
   type NodeLifecycle,
 } from "../../domain/index.js";
+import { selectCloseReadiness } from "./close-readiness.js";
 
 export interface TreeNodeView {
   id: NodeId;
@@ -23,6 +24,8 @@ export interface TreeNodeView {
   progressPercent?: number;
   isCompleted: boolean;
   canCreateChild: boolean;
+  /** True when convergence/readiness allows Complete (not merely non-closed). */
+  canComplete: boolean;
 }
 
 export interface TreeEdgeView {
@@ -95,6 +98,7 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
           : undefined,
       isCompleted: node.lifecycle === "closed",
       canCreateChild: node.lifecycle !== "closed",
+      canComplete: selectCloseReadiness(snapshot, node.id).allowed,
     });
     for (const childId of node.childIds) {
       const child = snapshot.nodes[childId];

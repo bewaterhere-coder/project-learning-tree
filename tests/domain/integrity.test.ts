@@ -40,7 +40,8 @@ describe("general integrity", () => {
       throw new Error("missing root");
     }
     expectError(parkNode(open, { nodeId: rootId }), "InvalidLifecycleTransition");
-    expectError(closeNode(open, { nodeId: rootId }), "InvalidLifecycleTransition");
+    // Close from open without convergence fails on readiness, not lifecycle gate.
+    expectError(closeNode(open, { nodeId: rootId }), "SummaryRequired");
     expectError(resumeNode(open, { nodeId: rootId }), "InvalidLifecycleTransition");
 
     const active = unwrap(activateNode(open, { nodeId: rootId }));
