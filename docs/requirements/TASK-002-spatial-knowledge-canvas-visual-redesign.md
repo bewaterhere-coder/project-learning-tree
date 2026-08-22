@@ -14,7 +14,7 @@ development:
   next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-002-plan.md
-  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/21
 ---
 
 # TASK-002 — Spatial Knowledge Canvas Visual Redesign
