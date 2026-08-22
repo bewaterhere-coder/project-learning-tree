@@ -8,15 +8,15 @@ pr:
   number: 20
   head_ref: task/TASK-003-project-root-editable-metadata-tree-init
   base_ref: main
-  state: draft
+  state: merged
 development:
-  stage: acceptance
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
-    merge_verified: false
-  next_expected_actor: chatgpt
+    acceptance_approved: true
+    merge_verified: true
+  next_expected_actor: null
 artifacts:
   plan: ../plans/TASK-003-plan.md
 ---
@@ -313,16 +313,17 @@ Do not expand this task into:
 - broad UI redesign (TASK-002 owns visual redesign);
 - implicit repository re-bootstrap when metadata changes.
 
-## Cursor Gate
+## Completion
 
 Canonical implementation plan: `docs/plans/TASK-003-plan.md` (approved by review `5000630434`).
 
-Development stage is `acceptance`. `plan_approved: true`. `acceptance_approved: false`. Next expected actor: ChatGPT (acceptance re-review).
+TASK-003 is complete. PR #20 was accepted (review `5000689049`), merged into `main`, and merge read-back was verified after hotfix PR #24 restored Edit Project wiring dropped during the TASK-004 merge collision.
 
-CI receipt on PR head `b203c2a9b1216b6cec5a1790245a16002b56b017`:
+Merge commits:
 
-- Actions run: https://github.com/bewaterhere-coder/project-learning-tree/actions/runs/32587851056
-- `check`: success
-- `e2e`: success
+- PR #20: `7b7e1794616fb226030f968511a5dd678bf21c9b`
+- PR #24 (restore `onUpdateProject`): `3772e120319881081b3e08baeb54c1f922d4a915`
 
-Acceptance review `5000678263` correctly blocked on the prior failing head `989393c` / run `32587759206`. That failure was the Linux visual baseline for hierarchical Project Root layout; baseline was refreshed from the Actions Chromium actual and CI is now green. Request **验收 TASK-003** again on this same branch/PR.
+Post-merge CI on `main` for `3772e12` completed successfully (`check` + `e2e`). Read-back on `main` confirms `ensureProjectRoot` / `updateProjectMetadata`, hierarchical bootstrap, and both `onUpdateProject` and `onDeleteProject` on `App.tsx`.
+
+Final state: `stage: done`, `acceptance_approved: true`, `merge_verified: true`.
