@@ -147,4 +147,4 @@ Live LLM SDKs, API keys, RAG, vector DBs, agent frameworks, cloud sync, accounts
 
 ## Completion
 
-M3 is COMPLETE only when M3A acceptance, M3B acceptance, typecheck, tests, build, and CI are all green. Otherwise mark `M3A COMPLETE / M3B PENDING` or `M3 BLOCKED`.
+**M3 COMPLETE** — M3A acceptance, M3B acceptance, typecheck, tests, build, and CI are green on `dfa0a4a` (`cursor/m3-node-conversation-4691`).
