@@ -11,6 +11,7 @@ import {
   createBlockedBranchFixture,
   createClosableNodeFixture,
   createDemoTreeFixture,
+  createMixedChildrenFixture,
   sequentialFixturePorts,
 } from "../../src/fixtures/demo-tree.js";
 
@@ -64,6 +65,37 @@ describe("tree view model", () => {
     );
     expect(stackEdge?.isOnActiveStack).toBe(true);
     expect(otherEdge?.isOnActiveStack).toBe(false);
+  });
+
+  it("marks blocking from parent.blockingChildIds and recedes parked/closed off-stack edges", () => {
+    const { snapshot, ids } = createDemoTreeFixture();
+    const model = selectTreeViewModel(snapshot);
+    const closedEdge = model.edges.find(
+      (edge) => edge.parentId === ids.q1 && edge.childId === ids.q11,
+    );
+    const parkedEdge = model.edges.find(
+      (edge) => edge.parentId === ids.q1 && edge.childId === ids.q12,
+    );
+    expect(closedEdge?.isBlocking).toBe(true);
+    expect(closedEdge?.isReceded).toBe(true);
+    expect(closedEdge?.isOnActiveStack).toBe(false);
+    expect(parkedEdge?.isBlocking).toBe(true);
+    expect(parkedEdge?.isReceded).toBe(true);
+
+    const mixed = createMixedChildrenFixture();
+    const mixedModel = selectTreeViewModel(mixed.snapshot);
+    const ordinary = mixedModel.edges.find(
+      (edge) =>
+        edge.parentId === mixed.ids.parent && edge.childId === mixed.ids.ordinary,
+    );
+    const blocking = mixedModel.edges.find(
+      (edge) =>
+        edge.parentId === mixed.ids.parent && edge.childId === mixed.ids.blocking,
+    );
+    expect(ordinary?.isBlocking).toBe(false);
+    expect(ordinary?.isReceded).toBe(false);
+    expect(blocking?.isBlocking).toBe(true);
+    expect(blocking?.isReceded).toBe(false);
   });
 
   it("keeps Active nodes identical to Active Stack membership", () => {

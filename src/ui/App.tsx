@@ -41,6 +41,7 @@ import {
   setSelectedViewport,
   updateSelectedLayout,
   updateShell,
+  clampInspectorWidth,
   type ColorScheme,
   type LearningWorkspace,
   type NodePosition,
@@ -52,10 +53,10 @@ import type { ConversationStore } from "../conversation/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
-import { NodeInspector } from "./inspector/NodeInspector.js";
+import { ContextualWorkspace } from "./contextual/ContextualWorkspace.js";
+import { NodeDetails } from "./contextual/NodeDetails.js";
 import { createBrowserPreferenceStorage } from "./persistence/browser-storage.js";
 import { ProjectSidebar } from "./sidebar/ProjectSidebar.js";
-import { PaneDivider } from "./chrome/Pane.js";
 import { TreeCanvas } from "./tree/TreeCanvas.js";
 import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
@@ -106,6 +107,26 @@ export function App({
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
   const [inspectorDragWidth, setInspectorDragWidth] = useState<number>();
   const inspectorDragRef = useRef<number | null>(null);
+  const [viewportPersistLocked, setViewportPersistLocked] = useState(false);
+  const viewportUnlockTimer = useRef<number | undefined>(undefined);
+
+  const lockViewportPersist = useCallback(() => {
+    if (viewportUnlockTimer.current !== undefined) {
+      window.clearTimeout(viewportUnlockTimer.current);
+      viewportUnlockTimer.current = undefined;
+    }
+    setViewportPersistLocked(true);
+  }, []);
+
+  const unlockViewportPersist = useCallback(() => {
+    if (viewportUnlockTimer.current !== undefined) {
+      window.clearTimeout(viewportUnlockTimer.current);
+    }
+    viewportUnlockTimer.current = window.setTimeout(() => {
+      setViewportPersistLocked(false);
+      viewportUnlockTimer.current = undefined;
+    }, 200);
+  }, []);
   const [assistInput, setAssistInput] = useState<string>();
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const resolvedTheme = resolveColorScheme(workspace.shell.colorScheme, systemDark);
@@ -275,6 +296,25 @@ export function App({
     [commit],
   );
 
+  const inspectorOpen = current?.layout.inspectorOpen === true;
+  const prevInspectorOpenRef = useRef(inspectorOpen);
+  useEffect(() => {
+    if (prevInspectorOpenRef.current === inspectorOpen) {
+      return;
+    }
+    prevInspectorOpenRef.current = inspectorOpen;
+    lockViewportPersist();
+    unlockViewportPersist();
+  }, [inspectorOpen, lockViewportPersist, unlockViewportPersist]);
+
+  useEffect(() => {
+    return () => {
+      if (viewportUnlockTimer.current !== undefined) {
+        window.clearTimeout(viewportUnlockTimer.current);
+      }
+    };
+  }, []);
+
   const breadcrumb =
     tree && tree.activeStack.length > 0
       ? tree.activeStack
@@ -289,9 +329,16 @@ export function App({
       <div className="shell" data-testid="shell" data-theme={resolvedTheme}>
         <header className="shell-header">
           <div className="header-identity">
-            <h1>{t(locale, "app.title")}</h1>
+            <h1
+              className={current ? "app-title" : "app-title is-primary"}
+              data-testid="app-title"
+            >
+              {t(locale, "app.title")}
+            </h1>
             {current ? (
-              <p className="project-name">{current.snapshot.project.name}</p>
+              <p className="project-title" data-testid="project-title">
+                {current.snapshot.project.name}
+              </p>
             ) : null}
             {breadcrumb ? (
               <p className="stack-legend" data-testid="active-stack">
@@ -462,6 +509,7 @@ export function App({
               return !failed;
             }}
           />
+          <div className="workspace-body">
           <main className="tree-pane" data-testid="tree-canvas">
             {!current ? (
               <EmptyState
@@ -538,6 +586,7 @@ export function App({
                         model={tree}
                         savedPositions={current.layout.nodePositions}
                         viewport={current.layout.viewport}
+                        persistViewport={!viewportPersistLocked}
                         onFocusNode={handleFocusNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
@@ -585,74 +634,7 @@ export function App({
                     ) : null}
                   </>
                 )}
-                {current.layout.inspectorOpen && inspector ? (
-                  <aside
-                    className="inspector-overlay"
-                    data-testid="inspector-overlay"
-                    data-width={String(inspectorDragWidth ?? current.layout.inspectorWidth)}
-                    style={{ width: inspectorDragWidth ?? current.layout.inspectorWidth }}
-                  >
-                    <NodeInspector
-                      inspector={inspector}
-                      availability={availability}
-                      readiness={readiness}
-                      authoring={authoring}
-                      locale={locale}
-                      actionError={
-                        actionError
-                          ? formatPresentedError(locale, actionError, current.snapshot)
-                          : undefined
-                      }
-                      authoringError={
-                        authoringError
-                          ? formatPresentedError(
-                              locale,
-                              authoringError,
-                              current.snapshot,
-                            )
-                          : undefined
-                      }
-                      onCommand={dispatch}
-                      onClose={() =>
-                        commit(setInspectorOpen(workspaceRef.current, false), false)
-                      }
-                      onOpenChat={() =>
-                        commit(openChat(workspaceRef.current), false)
-                      }
-                      onAskSummary={() => {
-                        commit(openChat(workspaceRef.current), false);
-                        setAssistInput("整理当前学习结果");
-                      }}
-                    />
-                    <PaneDivider
-                      invert
-                      orientation="vertical"
-                      testId="inspector-resize"
-                      label={t(locale, "inspector.resize")}
-                      onDrag={(delta) => {
-                        const base =
-                          inspectorDragRef.current ??
-                          selectedProject(workspaceRef.current)?.layout.inspectorWidth ??
-                          current.layout.inspectorWidth;
-                        const next = Math.max(0, base + delta);
-                        inspectorDragRef.current = next;
-                        setInspectorDragWidth(next);
-                      }}
-                      onRelease={() => {
-                        const next =
-                          inspectorDragRef.current ?? current.layout.inspectorWidth;
-                        inspectorDragRef.current = null;
-                        setInspectorDragWidth(undefined);
-                        commit(
-                          updateSelectedLayout(workspaceRef.current, {
-                            inspectorWidth: next,
-                          }),
-                          false,
-                        );
-                      }}
-                    />
-                  </aside>
-                ) : current ? (
+                {!inspectorOpen ? (
                   <button
                     type="button"
                     className="inspector-open ui-button ui-button-secondary"
@@ -684,6 +666,69 @@ export function App({
               </>
             )}
           </main>
+          {current && inspectorOpen && inspector ? (
+            <ContextualWorkspace
+              width={inspectorDragWidth ?? current.layout.inspectorWidth}
+              locale={locale}
+              onResizeDrag={(delta) => {
+                lockViewportPersist();
+                const base =
+                  inspectorDragRef.current ??
+                  selectedProject(workspaceRef.current)?.layout.inspectorWidth ??
+                  current.layout.inspectorWidth;
+                const next = clampInspectorWidth(base + delta);
+                inspectorDragRef.current = next;
+                setInspectorDragWidth(next);
+              }}
+              onResizeRelease={() => {
+                const next =
+                  inspectorDragRef.current ?? current.layout.inspectorWidth;
+                inspectorDragRef.current = null;
+                setInspectorDragWidth(undefined);
+                commit(
+                  updateSelectedLayout(workspaceRef.current, {
+                    inspectorWidth: next,
+                  }),
+                  false,
+                );
+                unlockViewportPersist();
+              }}
+            >
+              <NodeDetails
+                inspector={inspector}
+                availability={availability}
+                readiness={readiness}
+                authoring={authoring}
+                locale={locale}
+                actionError={
+                  actionError
+                    ? formatPresentedError(locale, actionError, current.snapshot)
+                    : undefined
+                }
+                authoringError={
+                  authoringError
+                    ? formatPresentedError(
+                        locale,
+                        authoringError,
+                        current.snapshot,
+                      )
+                    : undefined
+                }
+                onCommand={dispatch}
+                onClose={() =>
+                  commit(setInspectorOpen(workspaceRef.current, false), false)
+                }
+                onOpenChat={() =>
+                  commit(openChat(workspaceRef.current), false)
+                }
+                onAskSummary={() => {
+                  commit(openChat(workspaceRef.current), false);
+                  setAssistInput("整理当前学习结果");
+                }}
+              />
+            </ContextualWorkspace>
+          ) : null}
+          </div>
         </div>
       </div>
     </LocaleProvider>

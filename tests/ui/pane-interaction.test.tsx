@@ -183,7 +183,7 @@ describe("pane interaction", () => {
     ]);
   });
 
-  it("keeps inspector as an overlay that reuses the shared divider", () => {
+  it("keeps inspector as a sibling column that reuses the shared divider", () => {
     const { workspace } = createDemoWorkspaceFixture();
     render(
       <App
@@ -192,9 +192,10 @@ describe("pane interaction", () => {
       />,
     );
     const canvas = screen.getByTestId("tree-canvas");
-    const overlay = screen.getByTestId("inspector-overlay");
-    expect(canvas).toContainElement(overlay);
+    const pane = screen.getByTestId("inspector-pane");
+    expect(canvas).not.toContainElement(pane);
+    expect(canvas.parentElement).toContainElement(pane);
     expect(screen.getByTestId("inspector-resize")).toBeInTheDocument();
-    expect(screen.queryByTestId("inspector-pane")).toBeNull();
+    expect(screen.queryByTestId("inspector-overlay")).toBeNull();
   });
 });

@@ -17,4 +17,16 @@ describe("toReactFlow position priority", () => {
     expect(placed?.draggable).toBe(true);
     expect(placed?.connectable).toBe(false);
   });
+
+  it("classifies stack, blocking, and receded edges without a domain edge type", () => {
+    const { snapshot, ids } = createDemoTreeFixture();
+    const { edges } = toReactFlow(selectTreeViewModel(snapshot));
+    const closed = edges.find((edge) => edge.id === `${ids.q1}->${ids.q11}`);
+    const parked = edges.find((edge) => edge.id === `${ids.q1}->${ids.q12}`);
+    expect(closed?.className).toContain("edge-quiet");
+    expect(closed?.className).toContain("edge-blocking");
+    expect(closed?.markerEnd).toBe("url(#blocking-tick)");
+    expect(parked?.className).toContain("edge-quiet");
+    expect(parked?.className).toContain("edge-blocking");
+  });
 });

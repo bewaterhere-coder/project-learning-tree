@@ -1,6 +1,5 @@
 import {
   applyNodeChanges,
-  Background,
   Handle,
   Position,
   ReactFlow,
@@ -33,6 +32,7 @@ export function TreeCanvas({
   model,
   savedPositions,
   viewport,
+  persistViewport = true,
   onFocusNode,
   onNodeDragStop,
   onViewportChange,
@@ -40,6 +40,7 @@ export function TreeCanvas({
   model: TreeViewModel;
   savedPositions: Record<NodeId, NodePosition>;
   viewport: Viewport;
+  persistViewport?: boolean;
   onFocusNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
@@ -82,7 +83,7 @@ export function TreeCanvas({
 
   const handleMoveEnd: OnMove = useCallback(
     (event, nextViewport) => {
-      if (event === null) {
+      if (event === null || !persistViewport) {
         return;
       }
       onViewportChange({
@@ -91,7 +92,7 @@ export function TreeCanvas({
         zoom: nextViewport.zoom,
       });
     },
-    [onViewportChange],
+    [onViewportChange, persistViewport],
   );
 
   return (
@@ -116,7 +117,20 @@ export function TreeCanvas({
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
       >
-        <Background />
+        <svg>
+          <defs>
+            <marker
+              id="blocking-tick"
+              markerWidth="8"
+              markerHeight="8"
+              refX="5"
+              refY="4"
+              orient="auto"
+            >
+              <rect x="1" y="1.5" width="3" height="5" rx="0.5" fill="var(--color-warning)" />
+            </marker>
+          </defs>
+        </svg>
       </ReactFlow>
     </div>
   );
