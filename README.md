@@ -45,6 +45,8 @@ AI is an advisor. The domain engine is the authority for state transitions. Doma
 6. M2.3 Question Authoring: `docs/milestones/M2.3-question-authoring.md`.
 7. M2.4 Product Workspace & UI Foundation: `docs/milestones/M2.4-product-workspace-ui.md`.
 8. M2.5 QA Harness: `docs/milestones/M2.5-qa-harness.md`.
+9. UI Reference Study: `docs/design/Learning-Tree-UI-Reference-Study.md`.
+10. M2.6 Visual Hierarchy (planned): `docs/milestones/M2.6-visual-hierarchy.md`.
 
 ```bash
 npm install
