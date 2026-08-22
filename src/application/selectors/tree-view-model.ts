@@ -22,6 +22,8 @@ export interface TreeEdgeView {
   parentId: NodeId;
   childId: NodeId;
   isOnActiveStack: boolean;
+  isBlocking: boolean;
+  isReceded: boolean;
 }
 
 export interface TreeViewModel {
@@ -71,10 +73,17 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       isCurrentFocus: snapshot.pass.currentFocusNodeId === node.id,
     });
     for (const childId of node.childIds) {
+      const child = snapshot.nodes[childId];
+      const isOnActiveStack = stackPairs.has(`${node.id}->${childId}`);
+      const childLifecycle = child?.lifecycle;
       edges.push({
         parentId: node.id,
         childId,
-        isOnActiveStack: stackPairs.has(`${node.id}->${childId}`),
+        isOnActiveStack,
+        isBlocking: node.blockingChildIds.includes(childId),
+        isReceded:
+          !isOnActiveStack &&
+          (childLifecycle === "parked" || childLifecycle === "closed"),
       });
       visit(childId);
     }

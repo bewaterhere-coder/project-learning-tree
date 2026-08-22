@@ -1,6 +1,9 @@
 import type { DomainSnapshot } from "../application/index.js";
 import type {
+  ChatBinding,
+  ChatPosition,
   ColorScheme,
+  NodePosition,
   PaneReleaseResult,
   ProjectWorkspaceLayout,
   ResolvedColorScheme,
@@ -12,6 +15,9 @@ import type {
 export const DEFAULT_INSPECTOR_WIDTH = 400;
 export const MIN_INSPECTOR_WIDTH = 320;
 export const MAX_INSPECTOR_WIDTH = 420;
+export const DEFAULT_CHAT_WIDTH = 360;
+export const MIN_CHAT_WIDTH = 280;
+export const MAX_CHAT_WIDTH = 480;
 export const DEFAULT_SIDEBAR_WIDTH = 260;
 export const MIN_SIDEBAR_WIDTH = 200;
 export const MAX_SIDEBAR_WIDTH = 360;
@@ -50,6 +56,55 @@ export function defaultProjectLayout(
     viewport: { ...DEFAULT_VIEWPORT },
     inspectorOpen: snapshot.pass.currentFocusNodeId !== undefined,
     inspectorWidth: DEFAULT_INSPECTOR_WIDTH,
+    ...defaultChatLayout(),
+  };
+}
+
+export function defaultChatLayout(): Pick<
+  ProjectWorkspaceLayout,
+  | "chatOpen"
+  | "chatPlacement"
+  | "chatWidth"
+  | "chatPosition"
+  | "chatPositionOrigin"
+  | "chatBinding"
+> {
+  return {
+    chatOpen: false,
+    chatPlacement: "floating",
+    chatWidth: DEFAULT_CHAT_WIDTH,
+    chatPositionOrigin: "auto",
+    chatBinding: { mode: "follow-focus" },
+  };
+}
+
+export function defaultChatBinding(): ChatBinding {
+  return { mode: "follow-focus" };
+}
+
+export function clampChatWidth(width: number, paneWidth?: number): number {
+  if (!Number.isFinite(width)) {
+    return DEFAULT_CHAT_WIDTH;
+  }
+  const paneCap =
+    paneWidth !== undefined && Number.isFinite(paneWidth)
+      ? Math.max(MIN_CHAT_WIDTH, paneWidth * 0.5)
+      : MAX_CHAT_WIDTH;
+  return Math.min(Math.max(width, MIN_CHAT_WIDTH), Math.min(MAX_CHAT_WIDTH, paneCap));
+}
+
+export function initialFloatingChatPosition(
+  nodePosition: NodePosition | undefined,
+  viewport: Viewport,
+): ChatPosition {
+  if (nodePosition === undefined) {
+    return { x: 24, y: 24 };
+  }
+  const x = nodePosition.x * viewport.zoom + viewport.x + 220;
+  const y = nodePosition.y * viewport.zoom + viewport.y + 12;
+  return {
+    x: Number.isFinite(x) ? Math.max(12, x) : 24,
+    y: Number.isFinite(y) ? Math.max(12, y) : 24,
   };
 }
 

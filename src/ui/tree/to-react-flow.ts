@@ -27,11 +27,21 @@ export function toReactFlow(
     connectable: false,
     style: { width: NODE_WIDTH, height: NODE_HEIGHT },
   }));
-  const edges: Edge[] = model.edges.map((edge) => ({
-    id: `${edge.parentId}->${edge.childId}`,
-    source: edge.parentId,
-    target: edge.childId,
-    className: edge.isOnActiveStack ? "edge-active-stack" : "edge-default",
-  }));
+  const edges: Edge[] = model.edges.map((edge) => {
+    const pathClass = edge.isOnActiveStack
+      ? "edge-active-stack"
+      : edge.isReceded
+        ? "edge-quiet"
+        : "edge-default";
+    return {
+      id: `${edge.parentId}->${edge.childId}`,
+      source: edge.parentId,
+      target: edge.childId,
+      className: [pathClass, edge.isBlocking ? "edge-blocking" : ""]
+        .filter(Boolean)
+        .join(" "),
+      markerEnd: edge.isBlocking ? "url(#blocking-tick)" : undefined,
+    };
+  });
   return { nodes, edges };
 }

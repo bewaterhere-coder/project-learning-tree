@@ -35,11 +35,29 @@ export interface PaneReleaseResult {
   size: number;
 }
 
+export type ChatPlacement = "floating" | "docked";
+export type ChatPositionOrigin = "auto" | "user";
+
+export type ChatBinding =
+  | { mode: "follow-focus" }
+  | { mode: "pinned"; projectId: ProjectId; nodeId: NodeId };
+
+export interface ChatPosition {
+  x: number;
+  y: number;
+}
+
 export interface ProjectWorkspaceLayout {
   nodePositions: Record<NodeId, NodePosition>;
   viewport: Viewport;
   inspectorOpen: boolean;
   inspectorWidth: number;
+  chatOpen: boolean;
+  chatPlacement: ChatPlacement;
+  chatWidth: number;
+  chatPosition?: ChatPosition;
+  chatPositionOrigin: ChatPositionOrigin;
+  chatBinding: ChatBinding;
 }
 
 export interface ProjectWorkspace {

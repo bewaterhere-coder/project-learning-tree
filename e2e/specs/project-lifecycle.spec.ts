@@ -11,7 +11,7 @@ test("creates, reloads, archives, and restores a project", async ({ page }) => {
     "true",
   );
   await expect(page.getByTestId("project-empty")).toBeVisible();
-  await expect(page.locator(".project-name")).toHaveText("E2E Lifecycle");
+  await expect(page.getByTestId("project-title")).toHaveText("E2E Lifecycle");
 
   await page.reload();
   await page.getByTestId("shell").waitFor();

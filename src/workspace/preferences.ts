@@ -1,9 +1,11 @@
 import {
   clampArchivedPaneHeight,
+  clampChatWidth,
   clampInspectorWidth,
   clampSidebarWidth,
   DEFAULT_ARCHIVED_PANE_HEIGHT,
   DEFAULT_COLOR_SCHEME,
+  defaultChatLayout,
   resolveColorScheme,
   WORKSPACE_PREFERENCES_KEY,
   WORKSPACE_PREFERENCES_KEY_V1,
@@ -11,6 +13,10 @@ import {
 } from "./defaults.js";
 import {
   LAYOUT_VERSION,
+  type ChatBinding,
+  type ChatPlacement,
+  type ChatPosition,
+  type ChatPositionOrigin,
   type ColorScheme,
   type LearningWorkspace,
   type PreferenceStorage,
@@ -21,6 +27,7 @@ import {
   type WorkspaceLocale,
   type WorkspaceShellLayout,
 } from "./types.js";
+import { normalizeChatBindings } from "./session.js";
 
 const DOMAIN_SNAPSHOT_KEYS = [
   "snapshot",
@@ -92,9 +99,9 @@ export function hydrateWorkspacePreferences(
 ): LearningWorkspace {
   const stored = loadWorkspacePreferences(storage);
   if (stored === undefined) {
-    return workspace;
+    return normalizeChatBindings(workspace);
   }
-  return applyStoredPreferences(workspace, stored);
+  return normalizeChatBindings(applyStoredPreferences(workspace, stored));
 }
 
 export function applyStoredPreferences(
@@ -243,6 +250,9 @@ function parseProjectLayout(value: unknown): ProjectWorkspaceLayout | undefined 
   if ("snapshot" in value || "activeStack" in value || "nodes" in value) {
     return undefined;
   }
+  if ("messages" in value || "proposals" in value) {
+    return undefined;
+  }
   const nodePositions = parseNodePositions(value.nodePositions);
   const viewport = parseViewport(value.viewport);
   if (nodePositions === undefined || viewport === undefined) {
@@ -254,12 +264,80 @@ function parseProjectLayout(value: unknown): ProjectWorkspaceLayout | undefined 
   if (typeof value.inspectorWidth !== "number") {
     return undefined;
   }
+  const chat = parseChatLayout(value);
   return {
     nodePositions,
     viewport,
     inspectorOpen: value.inspectorOpen,
     inspectorWidth: clampInspectorWidth(value.inspectorWidth),
+    ...chat,
   };
+}
+
+function parseChatLayout(value: Record<string, unknown>): ReturnType<typeof defaultChatLayout> & {
+  chatPosition?: ChatPosition;
+} {
+  const defaults = defaultChatLayout();
+  const chatOpen =
+    typeof value.chatOpen === "boolean" ? value.chatOpen : defaults.chatOpen;
+  const chatPlacement = parseChatPlacement(value.chatPlacement) ?? defaults.chatPlacement;
+  const chatWidth =
+    typeof value.chatWidth === "number"
+      ? clampChatWidth(value.chatWidth)
+      : defaults.chatWidth;
+  const chatPosition = parseChatPosition(value.chatPosition);
+  const chatPositionOrigin = parseChatOrigin(value.chatPositionOrigin) ?? defaults.chatPositionOrigin;
+  const chatBinding = parseChatBinding(value.chatBinding) ?? defaults.chatBinding;
+  return {
+    chatOpen,
+    chatPlacement,
+    chatWidth,
+    chatPosition,
+    chatPositionOrigin,
+    chatBinding,
+  };
+}
+
+function parseChatPlacement(value: unknown): ChatPlacement | undefined {
+  return value === "floating" || value === "docked" ? value : undefined;
+}
+
+function parseChatOrigin(value: unknown): ChatPositionOrigin | undefined {
+  return value === "auto" || value === "user" ? value : undefined;
+}
+
+function parseChatPosition(value: unknown): ChatPosition | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  if (typeof value.x !== "number" || typeof value.y !== "number") {
+    return undefined;
+  }
+  if (!Number.isFinite(value.x) || !Number.isFinite(value.y)) {
+    return undefined;
+  }
+  return { x: value.x, y: value.y };
+}
+
+function parseChatBinding(value: unknown): ChatBinding | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  if (value.mode === "follow-focus") {
+    return { mode: "follow-focus" };
+  }
+  if (
+    value.mode === "pinned" &&
+    typeof value.projectId === "string" &&
+    typeof value.nodeId === "string"
+  ) {
+    return {
+      mode: "pinned",
+      projectId: value.projectId,
+      nodeId: value.nodeId,
+    };
+  }
+  return undefined;
 }
 
 function parseNodePositions(
@@ -325,6 +403,18 @@ function cloneLayout(layout: ProjectWorkspaceLayout): ProjectWorkspaceLayout {
     viewport: { ...layout.viewport },
     inspectorOpen: layout.inspectorOpen,
     inspectorWidth: layout.inspectorWidth,
+    chatOpen: layout.chatOpen,
+    chatPlacement: layout.chatPlacement,
+    chatWidth: layout.chatWidth,
+    chatPosition:
+      layout.chatPosition === undefined
+        ? undefined
+        : { x: layout.chatPosition.x, y: layout.chatPosition.y },
+    chatPositionOrigin: layout.chatPositionOrigin,
+    chatBinding:
+      layout.chatBinding.mode === "pinned"
+        ? { ...layout.chatBinding }
+        : { mode: "follow-focus" },
   };
 }
 

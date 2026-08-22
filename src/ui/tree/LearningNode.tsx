@@ -12,6 +12,9 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
   ]
     .filter(Boolean)
     .join(" ");
+  const blockedLabel = t(locale, "node.blocked", {
+    count: data.unresolvedBlockerCount,
+  });
 
   return (
     <div
@@ -24,16 +27,19 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <p
-        className="node-status"
+        className="node-status visually-hidden"
         data-testid={`lifecycle-badge-${data.id}`}
       >
         {t(locale, lifecycleMessageKey(data.lifecycle))}
       </p>
       <p className="node-question">{data.question}</p>
       {data.isBlocked ? (
-        <p className="node-meta" data-testid={`blocked-badge-${data.id}`}>
-          {t(locale, "node.blocked", { count: data.unresolvedBlockerCount })}
-        </p>
+        <span
+          className="blocked-pip"
+          data-testid={`blocked-badge-${data.id}`}
+          aria-label={blockedLabel}
+          title={blockedLabel}
+        />
       ) : null}
     </div>
   );
