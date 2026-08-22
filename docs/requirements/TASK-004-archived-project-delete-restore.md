@@ -5,18 +5,18 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-004-archived-project-delete-restore
 integration_ref: main
 pr:
-  number: null
+  number: 22
   head_ref: task/TASK-004-archived-project-delete-restore
   base_ref: main
-  state: pending
+  state: draft
 development:
-  stage: requirement
+  stage: planning
   gates:
-    requirement_ready: false
+    requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-004-plan.md
 ---
@@ -335,7 +335,9 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-Requirement is being formally handed off. Cursor's first action after the Draft PR exists is planning only.
+Canonical Requirement is published on PR #22.
+
+Development stage is `planning`. `requirement_ready: true`. `plan_approved: false`. Next expected actor: Cursor.
 
 Cursor must inspect current project lifecycle, workspace persistence, conversation persistence, project-scoped preferences/bindings, and the Archived Projects UI, then write the canonical implementation plan to:
 
