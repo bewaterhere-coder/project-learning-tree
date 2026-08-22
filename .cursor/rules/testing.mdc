@@ -1,0 +1,11 @@
+---
+description: Testing requirements
+alwaysApply: true
+---
+
+# Testing Rules
+
+- Every material domain transition requires unit tests.
+- Prefer Given/When/Then behavior-oriented tests.
+- Test invalid transitions and invariants, not just happy paths.
+- A milestone is incomplete while its acceptance scenarios fail.
