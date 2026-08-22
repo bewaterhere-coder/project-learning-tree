@@ -115,7 +115,7 @@ commit(next, semantic: boolean)
 useEffect([workspace]) → saveWorkspacePreferences(storage, workspace)
 ```
 
-Archive/restore already call `commit(..., true)`. Delete must do the same.
+Archive/restore already call `commit(..., true)`. Successful delete must do the same **only when** the workspace layer reports `deleted === true` (see Decision C).
 
 ### 5. Selection and empty workspace
 
