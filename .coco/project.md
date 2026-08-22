@@ -19,7 +19,7 @@ The tree is progressively materialized: blocking questions become child nodes; a
 
 ## Current Goal
 
-Continue evolving the Learning Tree MVP beyond the completed M3 Node Conversation + AI Learning Loop while preserving the domain/state boundaries established by the existing product and architecture documents.
+Continue evolving the Learning Tree MVP beyond M3 Node Conversation, including M4 Project Learning Bootstrap from the Coco Project Learning Contract, while preserving the domain/state boundaries established by the existing product and architecture documents.
 
 ## Important Architecture Context
 

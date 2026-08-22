@@ -44,13 +44,19 @@ export function ProjectSidebar({
   onToggle: () => void;
   onSidebarCommit: (next: PaneReleaseResult) => void;
   onArchivedCommit: (next: PaneReleaseResult) => void;
-  onCreateProject: (name: string) => boolean;
+  onCreateProject: (input: {
+    name: string;
+    source?: string;
+    description?: string;
+  }) => boolean;
   onArchiveProject: (projectId: ProjectId) => void;
   onRestoreProject: (projectId: ProjectId) => void;
   onOpenCreate?: () => void;
 }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
+  const [source, setSource] = useState("");
+  const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState<string>();
   const [menuId, setMenuId] = useState<string>();
   const [dragWidth, setDragWidth] = useState<number>();
@@ -68,9 +74,15 @@ export function ProjectSidebar({
       setNameError(t(locale, "sidebar.projectNameEmpty"));
       return;
     }
-    const ok = onCreateProject(name);
+    const ok = onCreateProject({
+      name,
+      source: source.trim() || undefined,
+      description: description.trim() || undefined,
+    });
     if (ok) {
       setName("");
+      setSource("");
+      setDescription("");
       setNameError(undefined);
       setCreating(false);
     }
@@ -141,6 +153,25 @@ export function ProjectSidebar({
               value={name}
               autoFocus
               onChange={(event) => setName(event.target.value)}
+            />
+          </Field>
+          <Field
+            label={t(locale, "sidebar.projectSource")}
+            helper={t(locale, "sidebar.projectSourceHelper")}
+          >
+            <TextInput
+              data-testid="project-source-input"
+              value={source}
+              placeholder={t(locale, "sidebar.projectSourcePlaceholder")}
+              onChange={(event) => setSource(event.target.value)}
+            />
+          </Field>
+          <Field label={t(locale, "sidebar.projectDescription")}>
+            <TextInput
+              data-testid="project-description-input"
+              value={description}
+              placeholder={t(locale, "sidebar.projectDescriptionPlaceholder")}
+              onChange={(event) => setDescription(event.target.value)}
             />
           </Field>
           {createError ? (

@@ -12,13 +12,13 @@ test.describe("visual surfaces", () => {
     await expect(page.getByTestId("shell")).toHaveScreenshot("empty-workspace.png");
   });
 
-  test("product shell after project creation, before the tree canvas", async ({
+  test("product shell after project creation shows the generated first layer", async ({
     page,
   }) => {
     await openApp(page);
     await createProject(page, "Visual Shell");
-    await expect(page.getByTestId("project-empty")).toBeVisible();
-    await expect(page.locator("[data-node-id]")).toHaveCount(0);
-    await expect(page.getByTestId("shell")).toHaveScreenshot("project-empty-shell.png");
+    await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+    await expect(page.locator("[data-node-id]").first()).toBeVisible();
+    await expect(page.getByTestId("shell")).toHaveScreenshot("project-first-layer-shell.png");
   });
 });

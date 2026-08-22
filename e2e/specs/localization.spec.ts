@@ -16,7 +16,7 @@ test("switching to zh-CN keeps the core authoring workflow usable", async ({
   await page.getByTestId("locale-zh").click();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.getByTestId("sidebar-title")).toHaveText("项目");
-  await expect(page.getByTestId("project-empty")).toBeVisible();
+  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
 
   await addCoreQuestion(
     page,

@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   isAuthoringCommand,
+  isEmptyFirstLayer,
   isGlobalDomainError,
   isProjectCreateCommand,
   selectActionAvailability,
@@ -62,6 +63,7 @@ import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
+import { BootstrapSummary } from "./projects/BootstrapSummary.js";
 import { applyResolvedTheme, systemPrefersDark } from "./theme/apply-theme.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -322,7 +324,7 @@ export function App({
           .join(" › ")
       : "";
 
-  const emptyProject = current !== undefined && current.snapshot.pass.rootNodeIds.length === 0;
+  const emptyProject = current !== undefined && isEmptyFirstLayer(current.snapshot);
 
   return (
     <LocaleProvider locale={locale}>
@@ -499,8 +501,8 @@ export function App({
                 false,
               )
             }
-            onCreateProject={(name) => {
-              const next = createWorkspaceProject(workspaceRef.current, { name });
+            onCreateProject={(input) => {
+              const next = createWorkspaceProject(workspaceRef.current, input);
               const failed = isProjectCreateCommand(next.lastErrorCommand);
               commit(next, !failed);
               if (!failed) {
@@ -587,9 +589,20 @@ export function App({
                         savedPositions={current.layout.nodePositions}
                         viewport={current.layout.viewport}
                         persistViewport={!viewportPersistLocked}
+                        recommendedNodeIds={
+                          current.bootstrap?.recommendedFocusNodeIds ?? []
+                        }
                         onFocusNode={handleFocusNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
+                      />
+                    ) : null}
+                    {current.bootstrap ? (
+                      <BootstrapSummary
+                        locale={locale}
+                        record={current.bootstrap}
+                        snapshot={current.snapshot}
+                        onFocusNode={handleFocusNode}
                       />
                     ) : null}
                     {coreAuthoring?.canAdd ? (

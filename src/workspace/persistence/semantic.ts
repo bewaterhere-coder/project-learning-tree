@@ -1,4 +1,4 @@
-import type { DomainSnapshot } from "../../application/index.js";
+import type { DomainSnapshot, ProjectLearningBootstrapRecord } from "../../application/index.js";
 import {
   defaultProjectLayout,
   defaultShell,
@@ -42,6 +42,7 @@ export function serializeSemanticWorkspace(
       projectId: project.projectId,
       archived: project.archived,
       snapshot: project.snapshot,
+      bootstrap: project.bootstrap,
     })),
   };
 }
@@ -126,11 +127,56 @@ function parseStoredProject(value: unknown): ProjectWorkspace | undefined {
   if (!snapshot || snapshot.project.id !== value.projectId) {
     return undefined;
   }
+  const bootstrap = parseBootstrap(value.bootstrap);
+  if (value.bootstrap !== undefined && bootstrap === undefined) {
+    return undefined;
+  }
   return {
     projectId: value.projectId,
     archived: value.archived,
     snapshot,
     layout: defaultProjectLayout(snapshot),
+    bootstrap,
+  };
+}
+
+function parseBootstrap(
+  value: unknown,
+): ProjectLearningBootstrapRecord | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  if (
+    value.frameworkId !== "coco-project-learning" ||
+    value.frameworkVersion !== "v1"
+  ) {
+    return undefined;
+  }
+  if (
+    typeof value.positioning !== "string" ||
+    typeof value.learningValue !== "string" ||
+    typeof value.systemModel !== "string" ||
+    typeof value.generatedQuestionCount !== "number"
+  ) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(value.recommendedFocusNodeIds) ||
+    value.recommendedFocusNodeIds.some((id) => typeof id !== "string")
+  ) {
+    return undefined;
+  }
+  return {
+    frameworkId: "coco-project-learning",
+    frameworkVersion: "v1",
+    positioning: value.positioning,
+    learningValue: value.learningValue,
+    systemModel: value.systemModel,
+    recommendedFocusNodeIds: [...value.recommendedFocusNodeIds],
+    generatedQuestionCount: value.generatedQuestionCount,
   };
 }
 

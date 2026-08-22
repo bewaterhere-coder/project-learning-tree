@@ -51,15 +51,26 @@ describe("production workspace UI", () => {
     expect(screen.queryByTestId("domain-error")).not.toBeInTheDocument();
   });
 
-  it("creates a project, selects it, and shows the empty-project path", async () => {
+  it("creates a project, selects it, and shows the generated first learning layer", async () => {
     const user = userEvent.setup();
     render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-name-input"), "Agents");
+    await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
-    expect(screen.getByTestId("project-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("project-empty")).not.toBeInTheDocument();
+    expect(screen.getByTestId("bootstrap-summary")).toBeInTheDocument();
     expect(screen.getByTestId("project-list")).toHaveTextContent("Agents");
-    await user.click(screen.getByTestId("project-empty-add-core"));
+    expect(screen.getByTestId("tree-nodes").querySelectorAll("[data-node-id]").length).toBeGreaterThan(
+      0,
+    );
+    const recommended = screen.getByTestId("bootstrap-recommended").querySelector("button");
+    expect(recommended).not.toBeNull();
+    await user.click(recommended!);
+    expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
+    expect(screen.queryByTestId("active-stack")).not.toHaveTextContent(recommended!.textContent ?? "---");
+    await user.click(screen.getByTestId("add-core-question"));
     await user.type(screen.getByTestId("core-question-input"), "How do agents plan?");
     await user.type(screen.getByTestId("core-goal-input"), "Explain the loop");
     await user.click(screen.getByTestId("core-question-submit"));

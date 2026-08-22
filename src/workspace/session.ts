@@ -1,4 +1,5 @@
 import {
+  bootstrapLearningProject,
   dispatchCommand,
   type DomainSnapshot,
   type NodeId,
@@ -6,7 +7,7 @@ import {
   type ProjectId,
   type UiCommand,
 } from "../application/index.js";
-import { createProject, defaultPorts } from "../domain/index.js";
+import { defaultPorts } from "../domain/index.js";
 import {
   clampArchivedPaneHeight,
   clampChatWidth,
@@ -126,10 +127,10 @@ export function applySelectedCommand(
 
 export function createWorkspaceProject(
   workspace: LearningWorkspace,
-  command: { name: string; source?: string },
+  command: { name: string; source?: string; description?: string },
   ports: Ports = defaultPorts(),
 ): LearningWorkspace {
-  const result = createProject(command, ports);
+  const result = bootstrapLearningProject(command, ports);
   if (!result.ok) {
     return {
       ...workspace,
@@ -142,6 +143,7 @@ export function createWorkspaceProject(
     snapshot: result.snapshot,
     layout: defaultProjectLayout(result.snapshot),
     archived: false,
+    bootstrap: result.record,
   };
   return {
     ...workspace,

@@ -43,6 +43,25 @@ function trackingStorage(initial: Record<string, string> = {}) {
 }
 
 describe("semantic persistence", () => {
+  it("round-trips bootstrap records with the generated first layer", () => {
+    const created = createWorkspaceProject(
+      createWorkspace([]),
+      {
+        name: "Vite",
+        source: "vitejs/vite",
+        description: "Frontend tooling with a plugin pipeline",
+      },
+      sequentialFixturePorts(1_000),
+    );
+    const payload = serializeSemanticWorkspace(created);
+    const parsed = parseSemanticWorkspace(JSON.parse(JSON.stringify(payload)));
+    expect(parsed?.projects[0]?.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
+    expect(parsed?.projects[0]?.bootstrap).toEqual(created.projects[0]?.bootstrap);
+    expect(parsed?.projects[0]?.bootstrap?.recommendedFocusNodeIds).toEqual(
+      created.projects[0]?.bootstrap?.recommendedFocusNodeIds,
+    );
+  });
+
   it("round-trips snapshots, archive flags, and selection without layout", () => {
     const { workspace, projectB } = createDemoWorkspaceFixture();
     const archived = archiveProject(workspace, projectB.snapshot.project.id);
@@ -60,6 +79,7 @@ describe("semantic persistence", () => {
       projectB.snapshot.project.id,
     );
     expect(parsed?.selectedProjectId).toBe(workspace.selectedProjectId);
+    expect(parsed?.projects[0]?.bootstrap).toEqual(archived.projects[0]?.bootstrap);
   });
 
   it("falls back to an empty workspace when the store is missing or corrupt", () => {

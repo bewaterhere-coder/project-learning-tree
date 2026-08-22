@@ -33,6 +33,7 @@ export function TreeCanvas({
   savedPositions,
   viewport,
   persistViewport = true,
+  recommendedNodeIds = [],
   onFocusNode,
   onNodeDragStop,
   onViewportChange,
@@ -41,13 +42,14 @@ export function TreeCanvas({
   savedPositions: Record<NodeId, NodePosition>;
   viewport: Viewport;
   persistViewport?: boolean;
+  recommendedNodeIds?: readonly NodeId[];
   onFocusNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
   const derived = useMemo(
-    () => toReactFlow(model, savedPositions),
-    [model, savedPositions],
+    () => toReactFlow(model, savedPositions, recommendedNodeIds),
+    [model, savedPositions, recommendedNodeIds],
   );
   const [nodes, setNodes] = useState(derived.nodes);
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

@@ -12,6 +12,7 @@ export default defineConfig({
           include: [
             "tests/domain/**/*.test.ts",
             "tests/application/**/*.test.ts",
+            "tests/framework/**/*.test.ts",
             "tests/workspace/**/*.test.ts",
             "tests/conversation/**/*.test.ts",
             "tests/ai/**/*.test.ts",

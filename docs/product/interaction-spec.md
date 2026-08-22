@@ -226,3 +226,19 @@ Resume should not regenerate questions or replay AI actions.
 ## M1 product semantics
 
 The seven previously open lifecycle questions are resolved and frozen for M1. Future changes to these semantics should be treated as explicit product/domain changes rather than implementation details.
+
+## M4 project bootstrap
+
+Domain `createProject` still creates an empty Learning Pass. Workspace project creation then runs a Project Learning Bootstrap from the versioned Coco Project Learning Contract:
+
+```text
+Repository evidence
+→ positioning, learning value, system model
+→ at most five project-specific Core Questions
+→ recommend 1–2 current-focus candidates
+```
+
+The first visible tree is that generated first layer. Questions are added only through Domain `addCoreQuestion` / `addCriterion`. Recommended focus is navigation, not activation. Manual core-question authoring remains available when slots remain.
+
+Adjacent discoveries still follow the Blocking Question Gate: only questions that block the current Definition of Done become Blocking Children; the rest belong in Frontier.
+

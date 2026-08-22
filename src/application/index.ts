@@ -1,5 +1,11 @@
 export { dispatchCommand, type UiCommand } from "./commands.js";
 export {
+  bootstrapLearningProject,
+  isEmptyFirstLayer,
+  type BootstrapProjectResult,
+  type ProjectLearningBootstrapRecord,
+} from "./bootstrap.js";
+export {
   isAuthoringCommand,
   isClosePrerequisiteError,
   isGlobalDomainError,

@@ -116,4 +116,26 @@ describe("import and state boundaries", () => {
     expect(source).not.toContain("from \"../domain");
     expect(source).not.toContain("from \"../../domain");
   });
+
+  it("keeps the learning framework free of UI, Domain mutation, and GitHub/network APIs", () => {
+    const source = readAll(join(ROOT, "src/framework"));
+    expect(source).not.toContain("from \"react\"");
+    expect(source).not.toContain("@xyflow/react");
+    expect(source).not.toContain("from \"../domain");
+    expect(source).not.toContain("addCoreQuestion");
+    expect(source).not.toContain("createProject");
+    expect(source).not.toContain("fetch(");
+    expect(source).not.toContain("localStorage");
+  });
+
+  it("does not let UI become the source of truth for learning methodology", () => {
+    const uiFiles = collectSourceFiles(join(ROOT, "src/ui")).filter(
+      (file) => !file.endsWith(".css"),
+    );
+    const source = uiFiles.map((file) => readFileSync(file, "utf8")).join("\n");
+    expect(source).not.toContain("from \"../framework");
+    expect(source).not.toContain("from \"../../framework");
+    expect(source).not.toContain("EXPLORATION_BUDGET");
+    expect(source).not.toContain("runProjectLearningBootstrap");
+  });
 });
