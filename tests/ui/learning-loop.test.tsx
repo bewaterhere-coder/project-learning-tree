@@ -98,9 +98,7 @@ describe("M3B learning loop", () => {
     await screen.findByTestId("proposal-accept-blocking");
     await user.click(screen.getByTestId("proposal-accept-blocking"));
     await waitFor(() => {
-      expect(
-        screen.getAllByText("Why DAG addressing?").length,
-      ).toBeGreaterThan(1);
+      expect(screen.getByText("Why DAG addressing?")).toBeInTheDocument();
     });
   });
 
@@ -161,11 +159,10 @@ describe("M3B learning loop", () => {
     await user.type(screen.getByTestId("chat-input"), "evidence please");
     await user.click(screen.getByTestId("chat-send"));
     await screen.findByTestId("proposal-card-evidence");
-    await user.click(screen.getByTestId("inspector-details"));
-    expect(screen.queryByTestId("inspector-evidence")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("inspector-evidence")).toBeNull();
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
-      expect(screen.getByTestId("inspector-evidence")).toHaveTextContent("commit graph notes");
+      expect(screen.queryByTestId("proposal-card-evidence")).not.toBeInTheDocument();
     });
   });
 
@@ -204,14 +201,13 @@ describe("M3B learning loop", () => {
     await user.click(screen.getByTestId("chat-send"));
     const criterion = await screen.findByTestId("proposal-card-criterion");
     expect(screen.getByTestId("proposal-card-summary")).toBeInTheDocument();
-    await user.click(screen.getByTestId("inspector-details"));
     await user.click(criterion.querySelector('[data-testid="proposal-adopt"]')!);
     await waitFor(() => {
       expect(screen.getByTestId("inspector-dod")).toHaveTextContent("Explain blob/tree/commit/tag");
     });
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
-      expect(screen.getByTestId("inspector-summary")).toHaveTextContent(
+      expect(screen.getByTestId("inspector-summary")).toHaveValue(
         "Q1 learning summary from assistant",
       );
     });

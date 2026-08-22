@@ -103,7 +103,7 @@ export function selectCloseReadiness(
   }
 
   return {
-    allowed: node.lifecycle === "active" && canClose,
+    allowed: node.lifecycle !== "closed" && canClose,
     requirements,
   };
 }

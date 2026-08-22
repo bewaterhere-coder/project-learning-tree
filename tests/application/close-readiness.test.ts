@@ -130,7 +130,7 @@ describe("selectCloseReadiness", () => {
     ).toBe(false);
   });
 
-  it("keeps allowed false when convergence passes but the node is not active", () => {
+  it("allows complete when convergence passes even if the node is not active", () => {
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
     const closable = createClosableNodeFixture(
@@ -143,7 +143,7 @@ describe("selectCloseReadiness", () => {
       nodeId: branch.ids.childB,
     });
     expect(evaluation.ok && evaluation.evaluation.canClose).toBe(true);
-    expect(selectCloseReadiness(closable, branch.ids.childB).allowed).toBe(false);
+    expect(selectCloseReadiness(closable, branch.ids.childB).allowed).toBe(true);
   });
 
   it("includes met requirements when only summary is missing", () => {

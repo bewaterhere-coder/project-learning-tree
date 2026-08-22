@@ -48,7 +48,9 @@ test("creating a GitHub project generates a hierarchical first layer under a Pro
 
   await page.getByTestId("bootstrap-recommended").locator("button").first().click();
   await expect(page.getByTestId("node-inspector")).toBeVisible();
-  await expect(page.getByTestId("inspector-lifecycle")).toHaveText("To start");
+  await expect(page.getByTestId("inspector-dod-heading")).toBeVisible();
+  await expect(page.getByTestId("inspector-summary-heading")).toBeVisible();
+  await expect(page.getByTestId("action-activate")).toHaveCount(0);
   await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);
 });
 

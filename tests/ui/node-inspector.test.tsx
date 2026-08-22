@@ -13,41 +13,43 @@ import {
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("node inspector", () => {
-  it("shows focused node fields without treating blocked as a lifecycle", async () => {
+  it("shows focused question details without Start Learning ceremony", async () => {
     const user = userEvent.setup();
     const { snapshot, ids } = createDemoTreeFixture();
     render(<App initialSnapshot={snapshot} />);
 
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
-    expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Enter this question",
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
+      "Completion criteria",
     );
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent(
+      "Reflection",
+    );
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.queryByTestId("action-park")).toBeNull();
+    expect(screen.queryByTestId("chat-open")).toBeNull();
+    expect(screen.queryByTestId("action-add-sub-question")).toBeNull();
+    expect(screen.queryByTestId("action-return-to-parent")).toBeNull();
+    expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
 
     await user.click(screen.getByTestId(`node-${ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
-    expect(screen.getByTestId("action-activate")).toHaveClass("ui-button-ghost");
-    expect(screen.getByTestId("action-park")).toHaveClass("ui-button-secondary");
-    expect(screen.getByTestId("action-close")).toHaveClass("ui-button-primary");
-    expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
-      "1 open sub-questions",
-    );
-    expect(screen.getByTestId("inspector-lifecycle")).not.toHaveTextContent(
-      "blocked",
-    );
+    expect(screen.getByTestId(`node-chat-${ids.q1}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`node-add-child-${ids.q1}`)).toBeInTheDocument();
+    expect(screen.getByTestId(`node-complete-${ids.q1}`)).toBeInTheDocument();
   });
 
-  it("uses Enter this question for a blocking child", () => {
+  it("keeps chat and add-child on the Question node for a blocking child", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
       nodeId: ids.childA,
     });
     render(<App initialSnapshot={focused.snapshot} />);
-    expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Enter this question",
-    );
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.getByTestId(`node-chat-${ids.childA}`)).toBeInTheDocument();
+    expect(
+      screen.getByTestId(`node-add-child-${ids.childA}`),
+    ).toBeInTheDocument();
   });
 });

@@ -5,7 +5,7 @@ import type {
 } from "../../application/index.js";
 import type { NodeConversation } from "../../conversation/index.js";
 import type { ChatPlacement, WorkspaceLocale } from "../../workspace/index.js";
-import { lifecycleMessageKey, t } from "../i18n/index.js";
+import { t } from "../i18n/index.js";
 
 export function ChatHeader({
   locale,
@@ -51,11 +51,6 @@ export function ChatHeader({
             <h2 data-testid="chat-title">
               {node?.question ?? inspector?.question ?? talkingId}
             </h2>
-            <p data-testid="chat-lifecycle">
-              {node?.lifecycle
-                ? t(locale, lifecycleMessageKey(node.lifecycle))
-                : ""}
-            </p>
             {node?.parentQuestion ? (
               <p className="chat-parent" data-testid="chat-parent">
                 {t(locale, "chat.parent")}: {node.parentQuestion}

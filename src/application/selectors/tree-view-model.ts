@@ -5,6 +5,7 @@ import {
   type NodeId,
   type NodeLifecycle,
 } from "../../domain/index.js";
+import { selectCloseReadiness } from "./close-readiness.js";
 
 export interface TreeNodeView {
   id: NodeId;
@@ -18,6 +19,8 @@ export interface TreeNodeView {
   isActiveStackLeaf: boolean;
   isCurrentFocus: boolean;
   isProjectRoot: boolean;
+  /** True when convergence/readiness allows Complete (not merely non-closed). */
+  canComplete: boolean;
 }
 
 export interface TreeEdgeView {
@@ -75,6 +78,7 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       isActiveStackLeaf: leaf === node.id,
       isCurrentFocus: snapshot.pass.currentFocusNodeId === node.id,
       isProjectRoot: snapshot.pass.projectRootNodeId === node.id,
+      canComplete: selectCloseReadiness(snapshot, node.id).allowed,
     });
     for (const childId of node.childIds) {
       const child = snapshot.nodes[childId];

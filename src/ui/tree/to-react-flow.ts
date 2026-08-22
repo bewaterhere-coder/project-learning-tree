@@ -10,6 +10,8 @@ import { computeLayout, NODE_HEIGHT, NODE_WIDTH } from "./layout.js";
 type LearningNodeData = TreeNodeView & {
   isRecommended?: boolean;
   onOpenChatForNode?: (nodeId: NodeId) => void;
+  onAddChildForNode?: (nodeId: NodeId) => void;
+  onCompleteNode?: (nodeId: NodeId) => void;
 } & Record<string, unknown>;
 export type LearningFlowNode = Node<LearningNodeData, "learningNode">;
 
