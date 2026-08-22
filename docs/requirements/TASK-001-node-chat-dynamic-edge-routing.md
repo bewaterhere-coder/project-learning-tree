@@ -2,13 +2,13 @@
 task_id: TASK-001
 title: Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: human
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-001-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/17
@@ -260,6 +260,6 @@ Relevant existing automated tests must continue to pass, and new tests must cove
 
 This task is not Done when the Plan is written.
 
-Current Gate is `planning`. The canonical plan is in `docs/plans/TASK-001-plan.md` and is awaiting Plan review.
+Current Gate is `plan_review`. The canonical plan is in `docs/plans/TASK-001-plan.md` and awaits review by the next actor (`chatgpt`).
 
 Implementation is forbidden until `plan_approved=true` is recorded after Plan review.

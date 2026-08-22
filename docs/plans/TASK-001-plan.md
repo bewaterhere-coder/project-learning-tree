@@ -1,7 +1,7 @@
 ---
 task_id: TASK-001
 title: Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
-status: awaiting_plan_review
+status: plan_review
 requirement: ../requirements/TASK-001-node-chat-dynamic-edge-routing.md
 ---
 
@@ -9,7 +9,7 @@ requirement: ../requirements/TASK-001-node-chat-dynamic-edge-routing.md
 
 This is the canonical implementation plan for TASK-001. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** planning complete; awaiting `plan_approved=true`.
+**Gate:** `plan_review` — awaiting `plan_approved=true` from the next actor (`chatgpt`).
 
 Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
 
@@ -221,6 +221,6 @@ No new e2e required for the first slice: handle geometry is unit-tested. Add e2e
 | --- | --- |
 | Requirement ready | true |
 | Canonical plan written | this file |
-| Plan approved | false — human review |
+| Plan approved | false — awaiting review |
 | Implementation | blocked until `plan_approved=true` |
-| Next expected actor | human (Plan review) |
+| Next expected actor | chatgpt (Plan review) |
