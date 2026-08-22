@@ -230,12 +230,12 @@ Plan approved after revision. The approved plan explicitly removes hidden `activ
 
 ## Cursor Handoff
 
-Implementation is authorized on this same TASK-006 branch / PR #27.
+Implementation is complete on this same TASK-006 branch / PR #27. Awaiting ChatGPT **acceptance** review (`acceptance_approved=true`). Do not merge before acceptance.
 
-1. Read this Requirement and the approved `docs/plans/TASK-006-plan.md`.
-2. Implement the approved slices only; do not absorb TASK-005 scope.
-3. Completion must never call `activateNode` as a hidden precondition.
-4. Add the required regression proving completing Question B does not mutate an unrelated Question A active path / `activeStack`.
-5. Keep Node operations on the node and Details centered on `达成条件` + `心得`.
-6. Commit and push implementation to this same branch / PR.
-7. After implementation/tests are complete, advance to Acceptance and hand back to ChatGPT; do not merge before acceptance.
+Implemented:
+
+1. Direct completion (`open`/`parked`/`active` → `closed`) without `activateNode` precondition.
+2. A/B regression: completing Question B does not mutate Question A `activeStack` / lifecycles.
+3. Node owns Chat, Add child (`createChild` only), and Complete (`已完成`).
+4. Details is knowledge/reflection: `达成条件` + `心得` (editable); duplicate Details actions removed.
+5. Start Learning / learning-status ceremony removed from primary UI (including chat header).
