@@ -29,6 +29,7 @@ import {
   focusAndOpenInspector,
   hydrateSemanticWorkspace,
   hydrateWorkspacePreferences,
+  openChat,
   reconcileThemeHint,
   resolveColorScheme,
   restoreProject,
@@ -46,6 +47,9 @@ import {
   type PreferenceStorage,
   type Viewport,
 } from "../workspace/index.js";
+import type { ChatProvider } from "../ai/index.js";
+import type { ConversationStore } from "../conversation/index.js";
+import { ChatHost } from "./chat/ChatHost.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
 import { NodeInspector } from "./inspector/NodeInspector.js";
@@ -79,10 +83,14 @@ export function App({
   initialSnapshot,
   initialWorkspace,
   preferenceStorage,
+  conversationStore,
+  chatProvider,
 }: {
   initialSnapshot?: DomainSnapshot;
   initialWorkspace?: LearningWorkspace;
   preferenceStorage?: PreferenceStorage;
+  conversationStore?: ConversationStore;
+  chatProvider?: ChatProvider;
 }) {
   const storage = useMemo(
     () => preferenceStorage ?? createBrowserPreferenceStorage(),
@@ -98,6 +106,7 @@ export function App({
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
   const [inspectorDragWidth, setInspectorDragWidth] = useState<number>();
   const inspectorDragRef = useRef<number | null>(null);
+  const [assistInput, setAssistInput] = useState<string>();
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const resolvedTheme = resolveColorScheme(workspace.shell.colorScheme, systemDark);
 
@@ -214,16 +223,31 @@ export function App({
     [storage],
   );
 
-  const dispatch = useCallback(
-    (command: UiCommand): boolean => {
+  const runCommand = useCallback(
+    (command: UiCommand): { ok: boolean; errorMessage?: string } => {
       const currentWorkspace = workspaceRef.current;
       const next = applySelectedCommand(currentWorkspace, command);
       const before = selectedProject(currentWorkspace)?.snapshot;
       const after = selectedProject(next)?.snapshot;
       commit(next, before !== after);
-      return next.lastError === undefined;
+      if (next.lastError) {
+        return {
+          ok: false,
+          errorMessage: formatPresentedError(
+            currentWorkspace.shell.locale,
+            next.lastError,
+            after ?? before,
+          ),
+        };
+      }
+      return { ok: true };
     },
     [commit],
+  );
+
+  const dispatch = useCallback(
+    (command: UiCommand): boolean => runCommand(command).ok,
+    [runCommand],
   );
 
   const handleFocusNode = useCallback(
@@ -280,6 +304,22 @@ export function App({
             )}
           </div>
           <div className="header-tools">
+            {current ? (
+              <Button
+                variant="secondary"
+                data-testid="chat-open-header"
+                onClick={() =>
+                  commit(openChat(workspaceRef.current), false)
+                }
+              >
+                {t(
+                  locale,
+                  current.snapshot.pass.currentFocusNodeId
+                    ? "chat.open"
+                    : "chat.openProject",
+                )}
+              </Button>
+            ) : null}
             <div className="settings-anchor">
               <button
                 ref={settingsTriggerRef}
@@ -576,6 +616,13 @@ export function App({
                       onClose={() =>
                         commit(setInspectorOpen(workspaceRef.current, false), false)
                       }
+                      onOpenChat={() =>
+                        commit(openChat(workspaceRef.current), false)
+                      }
+                      onAskSummary={() => {
+                        commit(openChat(workspaceRef.current), false);
+                        setAssistInput("整理当前学习结果");
+                      }}
                     />
                     <PaneDivider
                       invert
@@ -618,6 +665,21 @@ export function App({
                   >
                     {t(locale, "inspector.open")}
                   </button>
+                ) : null}
+                {current ? (
+                  <ChatHost
+                    locale={locale}
+                    current={current}
+                    inspector={inspector}
+                    workspace={workspace}
+                    storage={storage}
+                    conversationStore={conversationStore}
+                    chatProvider={chatProvider}
+                    assistInput={assistInput}
+                    onAssistConsumed={() => setAssistInput(undefined)}
+                    onWorkspace={(next, semantic) => commit(next, semantic)}
+                    runCommand={runCommand}
+                  />
                 ) : null}
               </>
             )}

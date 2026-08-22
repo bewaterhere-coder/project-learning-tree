@@ -9,12 +9,15 @@ import {
 import { createProject, defaultPorts } from "../domain/index.js";
 import {
   clampArchivedPaneHeight,
+  clampChatWidth,
   clampInspectorWidth,
   clampSidebarWidth,
   defaultProjectLayout,
   defaultShell,
+  initialFloatingChatPosition,
 } from "./defaults.js";
 import type {
+  ChatBinding,
   LearningWorkspace,
   NodePosition,
   ProjectWorkspace,
@@ -272,7 +275,10 @@ export function updateSelectedLayout(
       if (patch.inspectorWidth !== undefined) {
         layout.inspectorWidth = clampInspectorWidth(patch.inspectorWidth);
       }
-      return { ...project, layout };
+      if (patch.chatWidth !== undefined) {
+        layout.chatWidth = clampChatWidth(patch.chatWidth);
+      }
+      return { ...project, layout: normalizeLayoutBinding(project.snapshot, layout) };
     }),
   };
 }
@@ -296,6 +302,112 @@ export function setInspectorOpen(
   inspectorOpen: boolean,
 ): LearningWorkspace {
   return updateSelectedLayout(workspace, { inspectorOpen });
+}
+
+export function openChat(workspace: LearningWorkspace): LearningWorkspace {
+  const current = selectedProject(workspace);
+  if (!current) {
+    return workspace;
+  }
+  const patch: Partial<ProjectWorkspaceLayout> = {
+    chatOpen: true,
+    chatBinding: { mode: "follow-focus" },
+  };
+  if (
+    current.layout.chatPositionOrigin === "auto" &&
+    current.layout.chatPosition === undefined
+  ) {
+    const focusId = current.snapshot.pass.currentFocusNodeId;
+    const nodePosition =
+      focusId === undefined ? undefined : current.layout.nodePositions[focusId];
+    patch.chatPosition = initialFloatingChatPosition(
+      nodePosition,
+      current.layout.viewport,
+    );
+  }
+  return updateSelectedLayout(workspace, patch);
+}
+
+export function closeChat(workspace: LearningWorkspace): LearningWorkspace {
+  return updateSelectedLayout(workspace, { chatOpen: false });
+}
+
+export function pinChatToNode(
+  workspace: LearningWorkspace,
+  nodeId: NodeId,
+): LearningWorkspace {
+  const current = selectedProject(workspace);
+  if (!current) {
+    return workspace;
+  }
+  return updateSelectedLayout(workspace, {
+    chatBinding: {
+      mode: "pinned",
+      projectId: current.projectId,
+      nodeId,
+    },
+  });
+}
+
+export function followCurrentNode(workspace: LearningWorkspace): LearningWorkspace {
+  return updateSelectedLayout(workspace, {
+    chatBinding: { mode: "follow-focus" },
+  });
+}
+
+export function setChatPlacement(
+  workspace: LearningWorkspace,
+  chatPlacement: ProjectWorkspaceLayout["chatPlacement"],
+): LearningWorkspace {
+  return updateSelectedLayout(workspace, { chatPlacement });
+}
+
+export function moveFloatingChat(
+  workspace: LearningWorkspace,
+  chatPosition: { x: number; y: number },
+): LearningWorkspace {
+  return updateSelectedLayout(workspace, {
+    chatPosition: { ...chatPosition },
+    chatPositionOrigin: "user",
+  });
+}
+
+export function normalizeChatBindings(
+  workspace: LearningWorkspace,
+): LearningWorkspace {
+  return {
+    ...workspace,
+    projects: workspace.projects.map((project) => ({
+      ...project,
+      layout: normalizeLayoutBinding(project.snapshot, project.layout),
+    })),
+  };
+}
+
+function normalizeLayoutBinding(
+  snapshot: DomainSnapshot,
+  layout: ProjectWorkspaceLayout,
+): ProjectWorkspaceLayout {
+  return {
+    ...layout,
+    chatBinding: resolveStoredBinding(snapshot, layout.chatBinding),
+  };
+}
+
+export function resolveStoredBinding(
+  snapshot: DomainSnapshot,
+  binding: ChatBinding,
+): ChatBinding {
+  if (binding.mode !== "pinned") {
+    return { mode: "follow-focus" };
+  }
+  if (binding.projectId !== snapshot.project.id) {
+    return { mode: "follow-focus" };
+  }
+  if (snapshot.nodes[binding.nodeId] === undefined) {
+    return { mode: "follow-focus" };
+  }
+  return binding;
 }
 
 function resolveInitialSelection(

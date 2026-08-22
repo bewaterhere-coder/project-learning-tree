@@ -1,15 +1,19 @@
 import {
   activateNode,
   addCoreQuestion,
+  addCriterion,
+  addEvidence,
   closeNode,
   createBlockingChild,
   createChild,
   defaultPorts,
   focusNode,
   markChildBlocking,
+  moveCandidateToFrontier,
   parkNode,
   resumeNode,
   returnToParent,
+  setNodeSummary,
   unmarkChildBlocking,
   type DomainResult,
   type DomainSnapshot,
@@ -47,6 +51,32 @@ export type UiCommand =
       question: string;
       goal: string;
       targetDepth?: LearningDepth;
+    }
+  | {
+      type: "moveCandidateToFrontier";
+      sourceNodeId: NodeId;
+      question: string;
+      reason?: string;
+    }
+  | {
+      type: "addEvidence";
+      nodeId: NodeId;
+      evidenceType: string;
+      reference: string;
+      note?: string;
+    }
+  | {
+      type: "addCriterion";
+      nodeId: NodeId;
+      description: string;
+      required: boolean;
+      evidenceRequired: boolean;
+      notes?: string;
+    }
+  | {
+      type: "setNodeSummary";
+      nodeId: NodeId;
+      summary: string;
     }
   | { type: "dismissError" };
 
@@ -130,5 +160,43 @@ function runDomainCommand(
         },
         ports,
       );
+    case "moveCandidateToFrontier":
+      return moveCandidateToFrontier(
+        snapshot,
+        {
+          sourceNodeId: command.sourceNodeId,
+          question: command.question,
+          reason: command.reason,
+        },
+        ports,
+      );
+    case "addEvidence":
+      return addEvidence(
+        snapshot,
+        {
+          nodeId: command.nodeId,
+          type: command.evidenceType,
+          reference: command.reference,
+          note: command.note,
+        },
+        ports,
+      );
+    case "addCriterion":
+      return addCriterion(
+        snapshot,
+        {
+          nodeId: command.nodeId,
+          description: command.description,
+          required: command.required,
+          evidenceRequired: command.evidenceRequired,
+          notes: command.notes,
+        },
+        ports,
+      );
+    case "setNodeSummary":
+      return setNodeSummary(snapshot, {
+        nodeId: command.nodeId,
+        summary: command.summary,
+      });
   }
 }

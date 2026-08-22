@@ -85,6 +85,8 @@ export function NodeActions({
   locale,
   actionError,
   onCommand,
+  onOpenChat,
+  onAskSummary,
 }: {
   nodeId: string;
   availability: ActionAvailability;
@@ -92,6 +94,8 @@ export function NodeActions({
   locale: WorkspaceLocale;
   actionError?: string;
   onCommand: (command: UiCommand) => boolean | void;
+  onOpenChat?: () => void;
+  onAskSummary?: () => void;
 }) {
   const unmet = readiness.requirements.filter((requirement) => !requirement.met);
 
@@ -148,6 +152,15 @@ export function NodeActions({
           {t(locale, "actions.returnToParent")}
         </button>
       ) : null}
+      {onOpenChat ? (
+        <button
+          type="button"
+          data-testid="chat-open"
+          onClick={onOpenChat}
+        >
+          {t(locale, "chat.open")}
+        </button>
+      ) : null}
       {availability.canClose && unmet.length > 0 ? (
         <div className="close-unmet" data-testid="close-unmet">
           <p>{t(locale, "close.stillNeeded")}</p>
@@ -166,6 +179,15 @@ export function NodeActions({
               return [
                 <li key={`${requirement.kind}-${index}`}>
                   * {unmetLabel(locale, requirement)}
+                  {requirement.kind === "summary" && onAskSummary ? (
+                    <button
+                      type="button"
+                      data-testid="close-ask-ai-summary"
+                      onClick={onAskSummary}
+                    >
+                      {t(locale, "close.askAiSummary")}
+                    </button>
+                  ) : null}
                 </li>,
               ];
             })}
@@ -191,6 +213,8 @@ export function NodeInspector({
   authoringError,
   onCommand,
   onClose,
+  onOpenChat,
+  onAskSummary,
 }: {
   inspector: InspectorViewModel;
   availability?: ActionAvailability;
@@ -201,6 +225,8 @@ export function NodeInspector({
   authoringError?: string;
   onCommand: (command: UiCommand) => boolean | void;
   onClose: () => void;
+  onOpenChat?: () => void;
+  onAskSummary?: () => void;
 }) {
   if (!inspector.hasFocus || inspector.nodeId === undefined) {
     return (
@@ -274,6 +300,8 @@ export function NodeInspector({
           locale={locale}
           actionError={actionError}
           onCommand={onCommand}
+          onOpenChat={onOpenChat}
+          onAskSummary={onAskSummary}
         />
       ) : null}
       {authoring ? (

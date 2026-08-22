@@ -98,7 +98,7 @@ npm run test:e2e
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented. M2.4 Product Workspace & UI Foundation is implemented: project create/archive/restore, semantic local persistence, core question authoring, light/dark/system, and the product UI foundation. M2.5 adds a Playwright Chromium acceptance harness (`e2e/`) on top of Vitest.
+M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented. M2.4 Product Workspace & UI Foundation is implemented: project create/archive/restore, semantic local persistence, core question authoring, light/dark/system, and the product UI foundation. M2.5 adds a Playwright Chromium acceptance harness (`e2e/`) on top of Vitest. **M3 COMPLETE:** Node Conversation + AI Learning Loop (`docs/milestones/M3-node-conversation.md`).
 
 ## License
 

@@ -25,6 +25,11 @@ const PREFERENCE_ONLY_KEYS = [
   "archivedPaneHeight",
   "locale",
   "colorScheme",
+  "chatOpen",
+  "chatPlacement",
+  "chatWidth",
+  "chatPosition",
+  "chatBinding",
 ] as const;
 
 export function serializeSemanticWorkspace(

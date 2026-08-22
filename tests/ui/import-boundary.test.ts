@@ -103,4 +103,17 @@ describe("import and state boundaries", () => {
     expect(canvas).not.toContain("activateNode");
     expect(canvas).not.toContain("createBlockingChild");
   });
+
+  it("keeps the AI layer free of Domain mutation", () => {
+    const source = readAll(join(ROOT, "src/ai"));
+    expect(source).not.toContain("createBlockingChild");
+    expect(source).not.toContain("moveCandidateToFrontier");
+    expect(source).not.toContain("addEvidence");
+    expect(source).not.toContain("addCriterion");
+    expect(source).not.toContain("setNodeSummary");
+    expect(source).not.toContain("closeNode");
+    expect(source).not.toContain("dispatchCommand");
+    expect(source).not.toContain("from \"../domain");
+    expect(source).not.toContain("from \"../../domain");
+  });
 });
