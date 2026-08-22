@@ -1,7 +1,5 @@
 import {
   applyNodeChanges,
-  Handle,
-  Position,
   ReactFlow,
   type NodeMouseHandler,
   type NodeProps,
@@ -14,14 +12,25 @@ import type { NodeId, TreeViewModel } from "../../application/index.js";
 import type { NodePosition, Viewport } from "../../workspace/index.js";
 import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
 import { LearningNode } from "./LearningNode.js";
-import { toReactFlow, type LearningFlowNode } from "./to-react-flow.js";
+import { LearningNodeHandles } from "./node-handles.js";
+import {
+  routeEdgesForNodes,
+  toReactFlow,
+  type LearningFlowNode,
+} from "./to-react-flow.js";
 
 function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
   return (
     <>
-      <Handle type="target" position={Position.Top} isConnectable={false} />
-      <LearningNode data={data} />
-      <Handle type="source" position={Position.Bottom} isConnectable={false} />
+      <LearningNodeHandles />
+      <LearningNode
+        data={data}
+        onOpenChat={
+          data.onOpenChatForNode
+            ? () => data.onOpenChatForNode?.(data.id)
+            : undefined
+        }
+      />
     </>
   );
 }
@@ -35,6 +44,7 @@ export function TreeCanvas({
   persistViewport = true,
   recommendedNodeIds = [],
   onFocusNode,
+  onOpenChatForNode,
   onNodeDragStop,
   onViewportChange,
 }: {
@@ -44,6 +54,7 @@ export function TreeCanvas({
   persistViewport?: boolean;
   recommendedNodeIds?: readonly NodeId[];
   onFocusNode: (nodeId: NodeId) => void;
+  onOpenChatForNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
@@ -51,12 +62,28 @@ export function TreeCanvas({
     () => toReactFlow(model, savedPositions, recommendedNodeIds),
     [model, savedPositions, recommendedNodeIds],
   );
-  const [nodes, setNodes] = useState(derived.nodes);
+  const enrichNodes = useCallback(
+    (base: LearningFlowNode[]) =>
+      base.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onOpenChatForNode,
+        },
+      })),
+    [onOpenChatForNode],
+  );
+  const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);
   if (derived.nodes !== derivedNodes) {
     setDerivedNodes(derived.nodes);
-    setNodes(derived.nodes);
+    setNodes(enrichNodes(derived.nodes));
   }
+
+  const edges = useMemo(
+    () => routeEdgesForNodes(derived.edges, nodes),
+    [derived.edges, nodes],
+  );
 
   const handleNodeClick: NodeMouseHandler<LearningFlowNode> = useCallback(
     (_event, node) => {
@@ -71,9 +98,11 @@ export function TreeCanvas({
       if (layoutChanges.length === 0) {
         return;
       }
-      setNodes((current) => applyNodeChanges(layoutChanges, current));
+      setNodes((current) =>
+        enrichNodes(applyNodeChanges(layoutChanges, current)),
+      );
     },
-    [],
+    [enrichNodes],
   );
 
   const handleNodeDragStop: OnNodeDrag<LearningFlowNode> = useCallback(
@@ -122,7 +151,7 @@ export function TreeCanvas({
       </svg>
       <ReactFlow<LearningFlowNode>
         nodes={nodes}
-        edges={derived.edges}
+        edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         onNodesChange={handleNodesChange}

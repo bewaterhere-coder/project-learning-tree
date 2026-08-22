@@ -12,6 +12,7 @@ export {
   normalizeChatBindings,
   normalizeWorkspaceSelection,
   openChat,
+  openChatForNode,
   pinChatToNode,
   restoreProject,
   selectProject,

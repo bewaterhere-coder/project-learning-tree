@@ -343,6 +343,17 @@ export function openChat(workspace: LearningWorkspace): LearningWorkspace {
   return updateSelectedLayout(workspace, patch);
 }
 
+export function openChatForNode(
+  workspace: LearningWorkspace,
+  nodeId: NodeId,
+): LearningWorkspace {
+  const focused = applySelectedCommand(workspace, {
+    type: "focusNode",
+    nodeId,
+  });
+  return openChat(focused);
+}
+
 export function closeChat(workspace: LearningWorkspace): LearningWorkspace {
   return updateSelectedLayout(workspace, { chatOpen: false });
 }
