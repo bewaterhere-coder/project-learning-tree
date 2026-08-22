@@ -408,6 +408,7 @@ First paint: `main.tsx` / boot path already applies theme hint where used; ensur
 | `system` still tracks OS independently of recipe | extend theme-resolution tests |
 | zh-CN Settings shows `配色方案` | i18n / product-workspace style UI test |
 | `PREFERENCE_ONLY_KEYS` rejects semantic smuggling of `themeRecipeId` | semantic persistence test if pattern exists |
+| `docs/third-party/theme-palettes.md` exists and includes all four upstream copyright notices | `tests/ui/theme-palette-notices.test.ts` (or equivalent) |
 
 ### E2E / visual A/B
 
