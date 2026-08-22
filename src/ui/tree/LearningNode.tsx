@@ -47,9 +47,12 @@ export function LearningNode({
         {data.goal}
       </p>
       {data.isRecommended ? (
-        <p className="node-recommended" data-testid={`recommended-badge-${data.id}`}>
-          {t(locale, "bootstrap.nodeRecommended")}
-        </p>
+        <span
+          className="node-recommended"
+          data-testid={`recommended-badge-${data.id}`}
+          aria-label={t(locale, "bootstrap.nodeRecommended")}
+          title={t(locale, "bootstrap.nodeRecommended")}
+        />
       ) : null}
       {data.isBlocked ? (
         <span

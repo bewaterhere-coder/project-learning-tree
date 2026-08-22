@@ -164,7 +164,9 @@ describe("M3A contextual chat UI", () => {
     const closedInspector = updateSelectedLayout(workspace, { inspectorOpen: false });
     renderChat(closedInspector);
     expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
-    await user.click(screen.getByTestId(`node-chat-${projectA.ids.q1}`));
+    const chatAction = screen.getByTestId(`node-chat-${projectA.ids.q1}`);
+    expect(chatAction).toHaveClass("node-chat-action");
+    await user.click(chatAction);
     expect(screen.getByTestId("chat-panel")).toBeInTheDocument();
     expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-node-id", projectA.ids.q1);
     expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();

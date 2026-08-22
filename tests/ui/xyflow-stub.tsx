@@ -4,10 +4,12 @@ import { LearningNode } from "../../src/ui/tree/LearningNode.js";
 
 interface StubNode {
   id: string;
+  type?: string;
   position?: { x: number; y: number };
   data: TreeNodeView & {
     isRecommended?: boolean;
     onOpenChatForNode?: (nodeId: string) => void;
+    region?: { rootId: string; title: string };
   };
 }
 
@@ -62,7 +64,9 @@ export function ReactFlow({
       data-viewport-y={String(viewport.y)}
       data-viewport-zoom={String(viewport.zoom)}
     >
-      {nodes.map((node) => (
+      {nodes
+        .filter((node) => node.type !== "clusterRegion" && !String(node.id).startsWith("cluster:"))
+        .map((node) => (
         <div key={node.id}>
           <div
             role="button"
@@ -117,6 +121,15 @@ export function ReactFlow({
           </button>
         </div>
       ))}
+      {nodes
+        .filter((node) => node.type === "clusterRegion" || String(node.id).startsWith("cluster:"))
+        .map((node) => (
+          <div
+            key={node.id}
+            data-testid={`knowledge-cluster-${String(node.id).replace(/^cluster:/, "")}`}
+            data-cluster="true"
+          />
+        ))}
       <button
         type="button"
         data-testid="viewport-nudge"

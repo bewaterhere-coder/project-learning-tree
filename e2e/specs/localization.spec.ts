@@ -23,11 +23,15 @@ test("switching to zh-CN keeps the core authoring workflow usable", async ({
     "代理如何规划？",
     "能讲清主循环",
   );
-  await expect(page.getByText("代理如何规划？")).toBeVisible();
+  await expect(
+    page.locator(".node-question", { hasText: "代理如何规划？" }),
+  ).toBeVisible();
 
   await openSettings(page);
   await page.getByTestId("locale-en").click();
   await expect(page.locator("html")).toHaveAttribute("lang", "en-US");
   await expect(page.getByTestId("sidebar-title")).toHaveText("Projects");
-  await expect(page.getByText("代理如何规划？")).toBeVisible();
+  await expect(
+    page.locator(".node-question", { hasText: "代理如何规划？" }),
+  ).toBeVisible();
 });
