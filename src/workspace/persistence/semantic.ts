@@ -35,6 +35,7 @@ const PREFERENCE_ONLY_KEYS = [
   "archivedPaneHeight",
   "locale",
   "colorScheme",
+  "themeRecipeId",
   "chatOpen",
   "chatPlacement",
   "chatWidth",

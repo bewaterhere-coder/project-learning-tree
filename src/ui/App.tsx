@@ -51,6 +51,7 @@ import {
   type NodePosition,
   type PreferenceStorage,
   type ProjectId,
+  type ThemeRecipeId,
   type Viewport,
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
@@ -71,7 +72,8 @@ import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
 import { BootstrapSummary } from "./projects/BootstrapSummary.js";
 import { permanentlyDeleteArchivedProject } from "./projects/permanent-delete.js";
-import { applyResolvedTheme, systemPrefersDark } from "./theme/apply-theme.js";
+import { applyThemeStyleVars, systemPrefersDark } from "./theme/apply-theme.js";
+import { THEME_RECIPES } from "./theme/theme-recipe.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 
@@ -156,9 +158,15 @@ export function App({
   }, [storage, workspace]);
 
   useLayoutEffect(() => {
-    applyResolvedTheme(resolvedTheme);
+    applyThemeStyleVars(workspace.shell.themeRecipeId, resolvedTheme);
     reconcileThemeHint(storage, workspace.shell.colorScheme, systemDark);
-  }, [resolvedTheme, storage, systemDark, workspace.shell.colorScheme]);
+  }, [
+    resolvedTheme,
+    storage,
+    systemDark,
+    workspace.shell.colorScheme,
+    workspace.shell.themeRecipeId,
+  ]);
 
   useEffect(() => {
     const media = globalThis.matchMedia?.("(prefers-color-scheme: dark)");
@@ -472,6 +480,29 @@ export function App({
                             ? "app.themeLight"
                             : "app.themeDark",
                       )}
+                    </button>
+                  ))}
+                </div>
+                <p className="settings-label">{t(locale, "app.themeRecipe")}</p>
+                <div className="theme-switch" data-testid="theme-recipe-switch">
+                  {THEME_RECIPES.map((recipe) => (
+                    <button
+                      key={recipe.id}
+                      type="button"
+                      data-testid={`theme-recipe-${recipe.id}`}
+                      data-active={
+                        workspace.shell.themeRecipeId === recipe.id ? "true" : "false"
+                      }
+                      onClick={() =>
+                        commit(
+                          updateShell(workspaceRef.current, {
+                            themeRecipeId: recipe.id as ThemeRecipeId,
+                          }),
+                          false,
+                        )
+                      }
+                    >
+                      {t(locale, recipe.labelKey)}
                     </button>
                   ))}
                 </div>

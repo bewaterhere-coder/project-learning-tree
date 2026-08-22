@@ -5,13 +5,13 @@ task_id: TASK-007
 title: UI Theme Recipe System
 
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/TASK-007-ui-theme-recipe-system.md

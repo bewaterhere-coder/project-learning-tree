@@ -145,4 +145,42 @@ describe("theme resolution", () => {
     expectTheme("dark");
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
   });
+
+  it("switches theme recipe without mutating the semantic store or colorScheme", async () => {
+    const user = userEvent.setup();
+    const storage = trackingStorage();
+    const { workspace } = createDemoWorkspaceFixture();
+    render(
+      <App
+        initialWorkspace={updateShell(workspace, {
+          colorScheme: "light",
+          themeRecipeId: "rose-pine",
+        })}
+        preferenceStorage={storage}
+      />,
+    );
+    expect(document.documentElement.dataset.themeRecipe).toBe("rose-pine");
+    storage.writes.length = 0;
+    await user.click(screen.getByTestId("settings-open"));
+    await user.click(screen.getByTestId("theme-recipe-catppuccin"));
+    expect(document.documentElement.dataset.themeRecipe).toBe("catppuccin");
+    expect(document.documentElement.dataset.theme).toBe("light");
+    expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
+    expect(
+      storage.writes.some((key) => key === "plt.workspace.layout.v2"),
+    ).toBe(true);
+  });
+
+  it("shows zh-CN color recipe label in Settings", async () => {
+    const user = userEvent.setup();
+    const { workspace } = createDemoWorkspaceFixture();
+    render(
+      <App
+        initialWorkspace={updateShell(workspace, { locale: "zh-CN" })}
+        preferenceStorage={createMemoryPreferenceStorage()}
+      />,
+    );
+    await user.click(screen.getByTestId("settings-open"));
+    expect(screen.getByText("配色方案")).toBeTruthy();
+  });
 });
