@@ -197,7 +197,12 @@ describe("persistence write channels", () => {
   it("writes the semantic store when creating a project", async () => {
     const user = userEvent.setup();
     const storage = trackingStorage();
-    render(<App preferenceStorage={storage} />);
+    render(
+      <App
+        preferenceStorage={storage}
+        evidenceProvider={createRejectingRepositoryEvidenceProvider()}
+      />,
+    );
     storage.writes.length = 0;
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-source-input"), "openai/agents");
