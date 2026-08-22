@@ -1,7 +1,7 @@
 ---
 task_id: TASK-004
 title: Archived Project Restore and Permanent Delete
-status: plan_review
+status: acceptance
 requirement: ../requirements/TASK-004-archived-project-delete-restore.md
 ---
 
@@ -9,9 +9,7 @@ requirement: ../requirements/TASK-004-archived-project-delete-restore.md
 
 This is the canonical implementation plan for TASK-004. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `plan_review` — revised per PR #22 blocking finding; awaiting re-review (`plan_approved=true`).
-
-Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
+**Gate:** `acceptance` — implementation complete on PR #22; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 ## Review revisions (PR #22)
 
@@ -367,6 +365,7 @@ Create Project → Archive → Delete permanently → Cancel
 | --- | --- |
 | Requirement ready | true |
 | Canonical plan written | this file |
-| Plan approved | false — revised; awaiting re-review |
-| Implementation | blocked until `plan_approved=true` |
-| Next expected actor | chatgpt (Plan re-review) |
+| Plan approved | true |
+| Implementation | complete on this branch |
+| Acceptance approved | false — awaiting ChatGPT acceptance review |
+| Next expected actor | chatgpt (acceptance review) |
