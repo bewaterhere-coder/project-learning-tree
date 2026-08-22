@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  isAuthoringCommand,
   isGlobalDomainError,
   selectActionAvailability,
+  selectAuthoringAvailability,
   selectCloseReadiness,
   selectInspectorViewModel,
   selectProjectSummary,
@@ -92,6 +94,12 @@ export function App({
     }
     return selectCloseReadiness(current.snapshot, inspector.nodeId);
   }, [inspector.nodeId, current.snapshot]);
+  const authoring = useMemo(() => {
+    if (inspector.nodeId === undefined) {
+      return undefined;
+    }
+    return selectAuthoringAvailability(current.snapshot, inspector.nodeId);
+  }, [inspector.nodeId, current.snapshot]);
   const summaries = useMemo(
     () =>
       workspace.projects.map((project) => selectProjectSummary(project.snapshot)),
@@ -103,9 +111,15 @@ export function App({
     isGlobalDomainError(workspace.lastError, workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
+  const authoringError =
+    workspace.lastError &&
+    isAuthoringCommand(workspace.lastErrorCommand)
+      ? workspace.lastError
+      : undefined;
   const actionError =
     workspace.lastError &&
-    !isGlobalDomainError(workspace.lastError, workspace.lastErrorCommand)
+    !isGlobalDomainError(workspace.lastError, workspace.lastErrorCommand) &&
+    !isAuthoringCommand(workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
 
@@ -236,12 +250,22 @@ export function App({
                   inspector={inspector}
                   availability={availability}
                   readiness={readiness}
+                  authoring={authoring}
                   locale={locale}
                   actionError={
                     actionError
                       ? formatPresentedError(
                           locale,
                           actionError,
+                          current.snapshot,
+                        )
+                      : undefined
+                  }
+                  authoringError={
+                    authoringError
+                      ? formatPresentedError(
+                          locale,
+                          authoringError,
                           current.snapshot,
                         )
                       : undefined

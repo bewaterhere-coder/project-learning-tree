@@ -1,5 +1,6 @@
 export { dispatchCommand, type UiCommand } from "./commands.js";
 export {
+  isAuthoringCommand,
   isClosePrerequisiteError,
   isGlobalDomainError,
   presentDomainError,
@@ -12,12 +13,19 @@ export {
   type ActivateLabel,
 } from "./selectors/action-availability.js";
 export {
+  selectAuthoringAvailability,
+  validateChildDraft,
+  type AuthoringAvailability,
+  type ChildDraftValidation,
+} from "./selectors/child-authoring.js";
+export {
   selectCloseReadiness,
   type CloseReadiness,
   type CloseRequirement,
 } from "./selectors/close-readiness.js";
 export {
   selectInspectorViewModel,
+  type InspectorChildView,
   type InspectorViewModel,
 } from "./selectors/inspector-view-model.js";
 export {
@@ -40,5 +48,6 @@ export type {
   LearningDepth,
   NodeId,
   NodeLifecycle,
+  Ports,
   ProjectId,
 } from "../domain/index.js";

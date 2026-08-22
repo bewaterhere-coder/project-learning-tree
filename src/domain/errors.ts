@@ -31,4 +31,7 @@ export type DomainError =
   | { kind: "PassNotCompletable"; reason: string }
   | { kind: "NotActiveStackLeaf"; nodeId: NodeId }
   | { kind: "CannotReturnToParent"; reason: string }
-  | { kind: "CriterionNotFound"; nodeId: NodeId; criterionId: CriterionId };
+  | { kind: "CriterionNotFound"; nodeId: NodeId; criterionId: CriterionId }
+  | { kind: "QuestionRequired" }
+  | { kind: "GoalRequired" }
+  | { kind: "NotADirectChild"; parentId: NodeId; childId: NodeId };

@@ -21,6 +21,13 @@ const NODE_ACTION_COMMANDS: ReadonlySet<UiCommand["type"]> = new Set([
   "returnToParent",
 ]);
 
+const AUTHORING_COMMANDS: ReadonlySet<UiCommand["type"]> = new Set([
+  "createChild",
+  "createBlockingChild",
+  "markChildBlocking",
+  "unmarkChildBlocking",
+]);
+
 const ACTIVE_STACK_REASON_KEYS: Record<string, string> = {
   "cycle in parent chain": "error.InvalidActiveStack.cycle",
   "path does not start at a pass root": "error.InvalidActiveStack.notRoot",
@@ -47,6 +54,12 @@ export function isClosePrerequisiteError(kind: DomainError["kind"]): boolean {
   return CLOSE_PREREQUISITE_KINDS.has(kind);
 }
 
+export function isAuthoringCommand(
+  command?: UiCommand["type"],
+): boolean {
+  return command !== undefined && AUTHORING_COMMANDS.has(command);
+}
+
 export function isGlobalDomainError(
   error: DomainError,
   command?: UiCommand["type"],
@@ -55,6 +68,9 @@ export function isGlobalDomainError(
     return false;
   }
   if (command !== undefined && NODE_ACTION_COMMANDS.has(command)) {
+    return false;
+  }
+  if (isAuthoringCommand(command)) {
     return false;
   }
   return true;
@@ -141,5 +157,11 @@ export function presentDomainError(
       };
     case "CriterionNotFound":
       return { key: "error.CriterionNotFound", params: {} };
+    case "QuestionRequired":
+      return { key: "error.QuestionRequired", params: {} };
+    case "GoalRequired":
+      return { key: "error.GoalRequired", params: {} };
+    case "NotADirectChild":
+      return { key: "error.NotADirectChild", params: {} };
   }
 }

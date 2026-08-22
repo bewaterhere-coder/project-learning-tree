@@ -14,6 +14,7 @@ import {
 import {
   activateRoot,
   assertActiveBijection,
+  closePrepared,
   createActivatedChild,
   createProjectWithRoots,
   expectError,
@@ -71,7 +72,11 @@ describe("frontier and parking", () => {
     }
 
     const promoted = unwrap(
-      promoteFrontierItem(withFrontier, { frontierItemId: itemId }, ports),
+      promoteFrontierItem(
+        withFrontier,
+        { frontierItemId: itemId, placement: { kind: "root" } },
+        ports,
+      ),
     );
     const newRoot = promoted.pass.rootNodeIds.find((id) => id !== rootId);
     if (!newRoot) {
@@ -83,12 +88,16 @@ describe("frontier and parking", () => {
     expect(promoted.pass.activeStack).toEqual([rootId]);
 
     expectError(
-      promoteFrontierItem(promoted, { frontierItemId: itemId }, ports),
+      promoteFrontierItem(
+        promoted,
+        { frontierItemId: itemId, placement: { kind: "root" } },
+        ports,
+      ),
       "FrontierItemNotFound",
     );
   });
 
-  it("promotes a Frontier item as a blocking child when parentId is supplied", () => {
+  it("promotes a Frontier item as a blocking child when placement is blockingChild", () => {
     const ports = sequentialPorts();
     const { snapshot: active, rootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
@@ -107,7 +116,10 @@ describe("frontier and parking", () => {
     const promoted = unwrap(
       promoteFrontierItem(
         withFrontier,
-        { frontierItemId: itemId, parentId: rootId },
+        {
+          frontierItemId: itemId,
+          placement: { kind: "blockingChild", parentId: rootId },
+        },
         ports,
       ),
     );
@@ -115,6 +127,82 @@ describe("frontier and parking", () => {
     expect(childId).toBeDefined();
     expect(promoted.nodes[rootId]?.blockingChildIds).toEqual([childId]);
     expect(isBlocked(promoted, rootId)).toBe(true);
+  });
+
+  it("promotes a Frontier item as an ordinary child without blocking the parent", () => {
+    const ports = sequentialPorts();
+    const { snapshot: active, rootId } = activateRoot(
+      createProjectWithRoots(ports, ["Q1"]),
+    );
+    const withFrontier = unwrap(
+      moveCandidateToFrontier(
+        active,
+        { sourceNodeId: rootId, question: "Side exploration", reason: "later" },
+        ports,
+      ),
+    );
+    const itemId = withFrontier.pass.frontier[0]?.id;
+    if (!itemId) {
+      throw new Error("missing item");
+    }
+    const promoted = unwrap(
+      promoteFrontierItem(
+        withFrontier,
+        {
+          frontierItemId: itemId,
+          placement: { kind: "child", parentId: rootId },
+        },
+        ports,
+      ),
+    );
+    const childId = promoted.nodes[rootId]?.childIds[0];
+    if (!childId) {
+      throw new Error("missing child");
+    }
+    expect(promoted.nodes[childId]?.parentId).toBe(rootId);
+    expect(promoted.nodes[rootId]?.blockingChildIds).toEqual([]);
+    expect(isBlocked(promoted, rootId)).toBe(false);
+  });
+
+  it("rejects promoting onto a closed parent for both child placements", () => {
+    const ports = sequentialPorts();
+    const { snapshot: active, rootId } = activateRoot(
+      createProjectWithRoots(ports, ["Q1"]),
+    );
+    const closed = closePrepared(active, rootId, ports);
+    const withFrontier = unwrap(
+      moveCandidateToFrontier(
+        closed,
+        { sourceNodeId: rootId, question: "Too late", reason: "closed" },
+        ports,
+      ),
+    );
+    const itemId = withFrontier.pass.frontier[0]?.id;
+    if (!itemId) {
+      throw new Error("missing item");
+    }
+    expectError(
+      promoteFrontierItem(
+        withFrontier,
+        {
+          frontierItemId: itemId,
+          placement: { kind: "child", parentId: rootId },
+        },
+        ports,
+      ),
+      "InvalidLifecycleTransition",
+    );
+    expectError(
+      promoteFrontierItem(
+        withFrontier,
+        {
+          frontierItemId: itemId,
+          placement: { kind: "blockingChild", parentId: rootId },
+        },
+        ports,
+      ),
+      "InvalidLifecycleTransition",
+    );
   });
 
   it("13-14. parks the stack leaf and resumes it back onto the Active Stack", () => {

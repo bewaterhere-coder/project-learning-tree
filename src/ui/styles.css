@@ -338,6 +338,94 @@ body,
   color: #b42318;
 }
 
+.child-authoring {
+  margin: 0 0 16px;
+}
+
+.child-authoring h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+
+.inspector-children {
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.inspector-children li {
+  margin-bottom: 8px;
+  padding: 8px;
+  border: 1px solid #e3ddd3;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.child-lifecycle {
+  display: inline-block;
+  margin-left: 8px;
+  color: #6b7380;
+  font-size: 12px;
+}
+
+.child-blocking,
+.authoring-blocking {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 13px;
+}
+
+.authoring-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.authoring-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #5b6573;
+}
+
+.authoring-form input[type="text"] {
+  border: 1px solid #c5cdd6;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font: inherit;
+}
+
+.authoring-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.authoring-actions button,
+.child-authoring > button {
+  border: 1px solid #2f5d50;
+  background: #2f5d50;
+  color: white;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.authoring-actions button[data-testid="authoring-cancel"] {
+  background: #fff;
+  color: #2f5d50;
+}
+
+.field-error,
+.authoring-error {
+  margin: 0;
+  color: #8a1f1f;
+  font-size: 13px;
+}
+
 .domain-error {
   display: flex;
   justify-content: space-between;

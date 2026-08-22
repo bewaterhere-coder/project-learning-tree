@@ -32,6 +32,9 @@ const errorExamples: DomainError[] = [
   { kind: "CannotReturnToParent", reason: "no current focus" },
   { kind: "CannotReturnToParent", reason: "unknown return problem" },
   { kind: "CriterionNotFound", nodeId: "n1", criterionId: "c1" },
+  { kind: "QuestionRequired" },
+  { kind: "GoalRequired" },
+  { kind: "NotADirectChild", parentId: "n1", childId: "n2" },
 ];
 
 describe("i18n message catalogs", () => {
@@ -57,6 +60,9 @@ describe("i18n message catalogs", () => {
       "inspector.dod",
       "inspector.summary",
       "actions.close",
+      "actions.addSubQuestion",
+      "authoring.title",
+      "children.title",
       "app.activeStack",
       "lifecycle.open",
       "error.dismiss",

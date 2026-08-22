@@ -2,6 +2,7 @@ import {
   dispatchCommand,
   type DomainSnapshot,
   type NodeId,
+  type Ports,
   type ProjectId,
   type UiCommand,
 } from "../application/index.js";
@@ -85,6 +86,7 @@ export function selectProject(
 export function applySelectedCommand(
   workspace: LearningWorkspace,
   command: UiCommand,
+  ports?: Ports,
 ): LearningWorkspace {
   const current = selectedProject(workspace);
   const nextSession = dispatchCommand(
@@ -94,6 +96,7 @@ export function applySelectedCommand(
       lastErrorCommand: workspace.lastErrorCommand,
     },
     command,
+    ports,
   );
   return {
     ...workspace,
