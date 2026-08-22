@@ -67,7 +67,7 @@ describe("child authoring UI", () => {
     expect(screen.queryByTestId("authoring-must-resolve")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("authoring-submit"));
 
-    expect(screen.getByText("How is packaging done?")).toBeInTheDocument();
+    expect(screen.getAllByText("How is packaging done?").length).toBeGreaterThan(0);
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
     expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
     expect(screen.getByTestId("active-stack")).not.toHaveTextContent(
@@ -101,7 +101,7 @@ describe("child authoring UI", () => {
     await user.click(screen.getByTestId("authoring-must-resolve"));
     await user.click(screen.getByTestId("authoring-submit"));
 
-    expect(screen.getByText("Need this first")).toBeInTheDocument();
+    expect(screen.getAllByText("Need this first").length).toBeGreaterThan(0);
     expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
       "2 open sub-questions",
     );

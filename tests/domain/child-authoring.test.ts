@@ -9,6 +9,7 @@ import {
   isBlocked,
   markChildBlocking,
   parkNode,
+  resumeNode,
   unmarkChildBlocking,
 } from "../../src/domain/index.js";
 import {
@@ -109,7 +110,7 @@ describe("ordinary child authoring", () => {
     expect(fromParked.nodes[rootId]?.blockingChildIds).toEqual([]);
 
     const closed = closePrepared(
-      unwrap(activateNode(fromParked, { nodeId: rootId })),
+      unwrap(resumeNode(fromParked, { nodeId: rootId })),
       rootId,
       ports,
     );
