@@ -1,23 +1,28 @@
 import { classifyDiscovery } from "./classify.js";
 import {
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
   defaultDefinitionOfDone,
   EXPLORATION_BUDGET,
-  PROJECT_LEARNING_FRAMEWORK_ID,
-  PROJECT_LEARNING_FRAMEWORK_VERSION,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
   type CoreQuestionRole,
   type DefinitionOfDoneTemplate,
   type LearningDepth,
   type QuestionContract,
 } from "./contract.js";
-import type { RepositoryEvidence } from "./evidence.js";
+import type { EvidenceStatus, RepositoryEvidence } from "./evidence.js";
 
 export interface ProposedCoreQuestion extends QuestionContract {
   criteria: DefinitionOfDoneTemplate[];
 }
 
 export interface ProjectLearningProposal {
-  frameworkId: typeof PROJECT_LEARNING_FRAMEWORK_ID;
-  frameworkVersion: typeof PROJECT_LEARNING_FRAMEWORK_VERSION;
+  frameworkId: typeof LEARNING_TREE_ADAPTER_ID;
+  frameworkVersion: typeof LEARNING_TREE_ADAPTER_VERSION;
+  canonicalContractId: typeof CANONICAL_CONTRACT_ID;
+  canonicalContractVersion: typeof CANONICAL_CONTRACT_VERSION;
+  evidenceStatus: EvidenceStatus;
   positioning: string;
   learningValue: string;
   systemModel: string;
@@ -36,8 +41,11 @@ export function runProjectLearningBootstrap(
     evidence.name,
   );
   return {
-    frameworkId: PROJECT_LEARNING_FRAMEWORK_ID,
-    frameworkVersion: PROJECT_LEARNING_FRAMEWORK_VERSION,
+    frameworkId: LEARNING_TREE_ADAPTER_ID,
+    frameworkVersion: LEARNING_TREE_ADAPTER_VERSION,
+    canonicalContractId: CANONICAL_CONTRACT_ID,
+    canonicalContractVersion: CANONICAL_CONTRACT_VERSION,
+    evidenceStatus: evidence.evidenceStatus,
     positioning,
     learningValue,
     systemModel,

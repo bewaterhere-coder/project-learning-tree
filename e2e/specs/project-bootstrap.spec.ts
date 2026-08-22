@@ -1,14 +1,13 @@
 import { expect, test } from "../fixtures/test.js";
+import { mockGitHubRepository } from "../helpers/github.js";
 import { createProject, openApp } from "../helpers/project.js";
 
 test("creating a GitHub project generates a bounded, project-specific first layer", async ({
   page,
 }) => {
+  await mockGitHubRepository(page);
   await openApp(page);
-  await createProject(page, "Vite", {
-    source: "vitejs/vite",
-    description: "Next generation frontend tooling with a plugin pipeline and dev server",
-  });
+  await createProject(page, "Vite", { source: "vitejs/vite" });
 
   await expect(page.getByTestId("project-empty")).toHaveCount(0);
   const nodes = page.locator("[data-node-id]");
@@ -18,6 +17,11 @@ test("creating a GitHub project generates a bounded, project-specific first laye
   await expect(page.getByText(/Vite/).first()).toBeVisible();
   await expect(page.getByTestId("bootstrap-summary")).toContainText("Vite");
   await expect(page.getByTestId("bootstrap-recommended")).toBeVisible();
+  await page.getByTestId("bootstrap-summary").locator("summary").click();
+  await expect(page.getByTestId("bootstrap-evidence-status")).toContainText(
+    "GitHub metadata, README, and repository root",
+  );
+  await expect(page.getByText(/plugin pipeline|dev server/i).first()).toBeVisible();
 
   const recommended = page.locator("[data-recommended='true']");
   await expect(recommended.first()).toBeVisible();

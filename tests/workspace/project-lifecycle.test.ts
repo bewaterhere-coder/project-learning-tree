@@ -31,9 +31,9 @@ describe("zero-active workspace", () => {
 });
 
 describe("create / archive / restore", () => {
-  it("creates a project through Domain, selects it, and leaves it unarchived", () => {
+  it("creates a project through Domain, selects it, and leaves it unarchived", async () => {
     const workspace = createWorkspace([]);
-    const next = createWorkspaceProject(
+    const next = await createWorkspaceProject(
       workspace,
       { name: "  Agents  " },
       sequentialFixturePorts(500),

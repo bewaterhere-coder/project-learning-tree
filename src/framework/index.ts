@@ -1,10 +1,19 @@
 export {
   BOOTSTRAP_PIPELINE,
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
   defaultDefinitionOfDone,
   EXPLORATION_BUDGET,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+  LEGACY_FRAMEWORK_ID,
   PROJECT_LEARNING_FRAMEWORK_ID,
   PROJECT_LEARNING_FRAMEWORK_VERSION,
+  type AdapterId,
+  type AdapterVersion,
   type BootstrapPipelineStage,
+  type CanonicalContractId,
+  type CanonicalContractVersion,
   type CoreQuestionRole,
   type DefinitionOfDoneTemplate,
   type ExplorationBudget,
@@ -15,10 +24,17 @@ export {
 } from "./contract.js";
 export {
   deriveRepositoryEvidence,
+  EVIDENCE_STATUSES,
+  isEvidenceStatus,
+  normalizeRepositoryEvidence,
   parseGitHubSource,
   type EvidenceInput,
+  type EvidenceStatus,
   type GitHubRepositoryRef,
+  type PackageJsonEvidence,
   type RepositoryEvidence,
+  type RepositoryEvidenceSource,
+  type RepositoryMetadata,
 } from "./evidence.js";
 export {
   classifyDiscovery,

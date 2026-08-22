@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 import { App } from "../../src/ui/App.js";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
 import { createDemoWorkspaceFixture } from "../../src/fixtures/demo-workspace.js";
+import { createRejectingRepositoryEvidenceProvider } from "../fixtures/repository-evidence.js";
 import {
   applyNodeDragStop,
   archiveProject,
@@ -53,13 +54,17 @@ describe("production workspace UI", () => {
 
   it("creates a project, selects it, and shows the generated first learning layer", async () => {
     const user = userEvent.setup();
-    render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
+    render(
+      <App
+        preferenceStorage={createMemoryPreferenceStorage()}
+        evidenceProvider={createRejectingRepositoryEvidenceProvider()}
+      />,
+    );
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-name-input"), "Agents");
     await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
-    expect(screen.queryByTestId("project-empty")).not.toBeInTheDocument();
-    expect(screen.getByTestId("bootstrap-summary")).toBeInTheDocument();
+    expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
     expect(screen.getByTestId("project-list")).toHaveTextContent("Agents");
     expect(screen.getByTestId("tree-nodes").querySelectorAll("[data-node-id]").length).toBeGreaterThan(
       0,
@@ -133,12 +138,13 @@ describe("persistence write channels", () => {
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-name-input"), "Persist me");
     await user.click(screen.getByTestId("project-create-submit"));
+    expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(true);
   });
 
-  it("rehydrates created and archived projects from the semantic store", () => {
+  it("rehydrates created and archived projects from the semantic store", async () => {
     const storage = createMemoryPreferenceStorage();
-    let workspace = createWorkspaceProject(
+    let workspace = await createWorkspaceProject(
       createWorkspace([]),
       { name: "Kept" },
       sequentialFixturePorts(40),

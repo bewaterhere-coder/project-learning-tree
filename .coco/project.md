@@ -19,13 +19,15 @@ The tree is progressively materialized: blocking questions become child nodes; a
 
 ## Current Goal
 
-Continue evolving the Learning Tree MVP beyond M3 Node Conversation, including M4 Project Learning Bootstrap from the Coco Project Learning Contract, while preserving the domain/state boundaries established by the existing product and architecture documents.
+Continue evolving the Learning Tree MVP beyond M3 Node Conversation, including M4 Project Learning Bootstrap. The Coco Project Learning Contract remains the canonical methodology; Learning Tree executes it through a versioned adapter rather than becoming a second contract. Preserve the domain/state boundaries established by the existing product and architecture documents.
 
 ## Important Architecture Context
 
 - React + TypeScript + Vite.
 - `@xyflow/react` renders the Tree UI from `DomainSnapshot`; the graph UI is not the source of truth.
 - The pure domain engine owns state transitions and has no dependency on React, persistence, LLM providers, GitHub, or network APIs.
+- Repository evidence is loaded through an injected application port; `src/framework` only normalizes that evidence and does not fetch.
+- The Coco Project Learning Contract is the canonical methodology. `src/framework` is Learning Tree's versioned executable adapter of that contract.
 - `DomainSnapshot` is the semantic source of truth.
 - Workspace/UI preferences are separate from semantic persistence.
 - AI is an advisor; the domain engine remains authoritative.

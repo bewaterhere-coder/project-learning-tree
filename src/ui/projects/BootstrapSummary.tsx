@@ -55,6 +55,16 @@ export function BootstrapSummary({
         <p className="bootstrap-positioning" data-testid="bootstrap-positioning">
           {record.positioning}
         </p>
+        <p className="bootstrap-evidence" data-testid="bootstrap-evidence-status">
+          {t(
+            locale,
+            record.evidenceStatus === "verified"
+              ? "bootstrap.evidence.verified"
+              : record.evidenceStatus === "partial"
+                ? "bootstrap.evidence.partial"
+                : "bootstrap.evidence.fallback",
+          )}
+        </p>
       </details>
     </aside>
   );

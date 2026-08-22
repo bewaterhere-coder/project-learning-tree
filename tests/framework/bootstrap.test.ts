@@ -1,22 +1,37 @@
 import { describe, expect, it } from "vitest";
 import {
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
   classifyDiscovery,
-  deriveRepositoryEvidence,
   EXPLORATION_BUDGET,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+  normalizeRepositoryEvidence,
   parseGitHubSource,
-  PROJECT_LEARNING_FRAMEWORK_ID,
-  PROJECT_LEARNING_FRAMEWORK_VERSION,
   runProjectLearningBootstrap,
 } from "../../src/framework/index.js";
 import { CORE_QUESTION_LIMIT } from "../../src/domain/index.js";
+import { REACT_GITHUB_FIXTURE, VITE_GITHUB_FIXTURE } from "../fixtures/github-api.js";
+import { evidenceSourceFromGitHubFixture } from "../fixtures/repository-evidence.js";
 
-describe("Coco Project Learning Contract", () => {
-  it("keeps exploration budgets aligned with the domain core-question limit", () => {
+describe("Coco Project Learning adapter", () => {
+  it("keeps projected runtime budgets aligned with the domain core-question limit", () => {
     expect(EXPLORATION_BUDGET.coreQuestions).toBe(CORE_QUESTION_LIMIT);
     expect(EXPLORATION_BUDGET.coreQuestions).toBeLessThanOrEqual(5);
     expect(EXPLORATION_BUDGET.concurrentFocus).toBeLessThanOrEqual(2);
     expect(EXPLORATION_BUDGET.branchDepth).toBeLessThanOrEqual(3);
     expect(EXPLORATION_BUDGET.l3Implementation).toBe(1);
+  });
+
+  it("identifies the adapter against the canonical Coco contract", () => {
+    const proposal = runProjectLearningBootstrap(
+      normalizeRepositoryEvidence(evidenceSourceFromGitHubFixture(VITE_GITHUB_FIXTURE, "Vite")),
+    );
+    expect(proposal.canonicalContractId).toBe(CANONICAL_CONTRACT_ID);
+    expect(proposal.canonicalContractVersion).toBe(CANONICAL_CONTRACT_VERSION);
+    expect(proposal.frameworkId).toBe(LEARNING_TREE_ADAPTER_ID);
+    expect(proposal.frameworkVersion).toBe(LEARNING_TREE_ADAPTER_VERSION);
+    expect(proposal.evidenceStatus).toBe("verified");
   });
 
   it("parses GitHub owner/repo from URL, short form, and #项目学习", () => {
@@ -34,41 +49,25 @@ describe("Coco Project Learning Contract", () => {
     });
   });
 
-  it("generates a bounded first layer that is project-specific, not a copied checklist", () => {
+  it("generates a bounded first layer from GitHub README/tree/topics, not a copied checklist", () => {
     const vite = runProjectLearningBootstrap(
-      deriveRepositoryEvidence({
-        name: "Vite",
-        source: "vitejs/vite",
-        description: "Next generation frontend tooling with a plugin pipeline and dev server",
-      }),
+      normalizeRepositoryEvidence(evidenceSourceFromGitHubFixture(VITE_GITHUB_FIXTURE, "Vite")),
     );
     const react = runProjectLearningBootstrap(
-      deriveRepositoryEvidence({
-        name: "React",
-        source: "facebook/react",
-        description: "A JavaScript library for building user interfaces with reconciliation",
-      }),
+      normalizeRepositoryEvidence(evidenceSourceFromGitHubFixture(REACT_GITHUB_FIXTURE, "React")),
     );
 
-    expect(vite.frameworkId).toBe(PROJECT_LEARNING_FRAMEWORK_ID);
-    expect(vite.frameworkVersion).toBe(PROJECT_LEARNING_FRAMEWORK_VERSION);
     expect(vite.coreQuestions.length).toBeGreaterThan(0);
     expect(vite.coreQuestions.length).toBeLessThanOrEqual(EXPLORATION_BUDGET.coreQuestions);
-    expect(vite.coreQuestions.every((question) => question.question.includes("Vite"))).toBe(
-      true,
-    );
-    expect(react.coreQuestions.every((question) => question.question.includes("React"))).toBe(
-      true,
-    );
+    expect(vite.coreQuestions.every((question) => question.question.includes("Vite"))).toBe(true);
+    expect(react.coreQuestions.every((question) => question.question.includes("React"))).toBe(true);
     expect(vite.coreQuestions.map((question) => question.question)).not.toEqual(
       react.coreQuestions.map((question) => question.question),
     );
-    expect(vite.coreQuestions.some((question) => /plugin pipeline|dev server/i.test(question.question))).toBe(
-      true,
-    );
-    expect(react.coreQuestions.some((question) => /reconcil/i.test(question.question))).toBe(
-      true,
-    );
+    expect(
+      vite.coreQuestions.some((question) => /plugin pipeline|dev server/i.test(question.question)),
+    ).toBe(true);
+    expect(react.coreQuestions.some((question) => /reconcil/i.test(question.question))).toBe(true);
     expect(
       vite.coreQuestions.filter((question) => question.targetDepth === "L3").length,
     ).toBeLessThanOrEqual(EXPLORATION_BUDGET.l3Implementation);
@@ -78,18 +77,46 @@ describe("Coco Project Learning Contract", () => {
     );
   });
 
+  it("keeps mechanism questions project-specific when the display name is generic", () => {
+    const vite = runProjectLearningBootstrap(
+      normalizeRepositoryEvidence(
+        evidenceSourceFromGitHubFixture(VITE_GITHUB_FIXTURE, "Frontend Tool"),
+      ),
+    );
+    const react = runProjectLearningBootstrap(
+      normalizeRepositoryEvidence(
+        evidenceSourceFromGitHubFixture(REACT_GITHUB_FIXTURE, "Frontend Tool"),
+      ),
+    );
+    expect(vite.coreQuestions.map((question) => question.question)).not.toEqual(
+      react.coreQuestions.map((question) => question.question),
+    );
+    expect(
+      vite.coreQuestions.some((question) => /plugin pipeline|dev server/i.test(question.question)),
+    ).toBe(true);
+    expect(react.coreQuestions.some((question) => /reconcil/i.test(question.question))).toBe(true);
+  });
+
+  it("does not treat a user description as verified repository evidence", () => {
+    const evidence = normalizeRepositoryEvidence({
+      name: "Mystery",
+      source: "acme/mystery",
+      userDescription: "plugin pipeline and reconciliation",
+      evidenceStatus: "fallback",
+    });
+    expect(evidence.evidenceStatus).toBe("fallback");
+    const proposal = runProjectLearningBootstrap(evidence);
+    expect(proposal.evidenceStatus).toBe("fallback");
+  });
+
   it("does not eagerly generate child questions", () => {
     const proposal = runProjectLearningBootstrap(
-      deriveRepositoryEvidence({
-        name: "Learning Tree",
-        source: "bewaterhere-coder/project-learning-tree",
-        description: "Node-centered learning with a domain engine and workspace session",
-      }),
+      normalizeRepositoryEvidence(evidenceSourceFromGitHubFixture(VITE_GITHUB_FIXTURE, "Vite")),
     );
     expect(proposal.coreQuestions.length).toBeGreaterThan(1);
     expect(
       proposal.coreQuestions.every(
-        (question) => question.role === "positioning" || question.question.includes("Learning Tree"),
+        (question) => question.role === "positioning" || question.question.includes("Vite"),
       ),
     ).toBe(true);
   });

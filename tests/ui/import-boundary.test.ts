@@ -128,6 +128,35 @@ describe("import and state boundaries", () => {
     expect(source).not.toContain("localStorage");
   });
 
+  it("keeps Domain free of methodology budgets", () => {
+    const source = readAll(join(ROOT, "src/domain"));
+    expect(source).not.toContain("concurrentFocus");
+    expect(source).not.toContain("branchDepth");
+    expect(source).not.toContain("coreMechanisms");
+    expect(source).not.toContain("EXPLORATION_BUDGET");
+  });
+
+  it("defines EXPLORATION_BUDGET only in the Learning Tree Coco adapter", () => {
+    const files = collectSourceFiles(join(ROOT, "src")).filter((file) =>
+      file.endsWith(".ts") || file.endsWith(".tsx"),
+    );
+    const definitions = files.filter((file) =>
+      /export const EXPLORATION_BUDGET/.test(readFileSync(file, "utf8")),
+    );
+    expect(definitions).toEqual([join(ROOT, "src/framework/contract.ts")]);
+  });
+
+  it("keeps infrastructure free of Domain mutation and React", () => {
+    const source = readAll(join(ROOT, "src/infrastructure"));
+    expect(source).not.toContain("from \"react\"");
+    expect(source).not.toContain("@xyflow/react");
+    expect(source).not.toContain("from \"../domain");
+    expect(source).not.toContain("from \"../../domain");
+    expect(source).not.toContain("addCoreQuestion");
+    expect(source).not.toContain("createProject");
+    expect(source).not.toContain("dispatchCommand");
+  });
+
   it("does not let UI become the source of truth for learning methodology", () => {
     const uiFiles = collectSourceFiles(join(ROOT, "src/ui")).filter(
       (file) => !file.endsWith(".css"),

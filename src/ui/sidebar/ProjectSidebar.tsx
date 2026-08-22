@@ -30,6 +30,7 @@ export function ProjectSidebar({
   onArchiveProject,
   onRestoreProject,
   onOpenCreate,
+  createPending = false,
 }: {
   locale: WorkspaceLocale;
   open: boolean;
@@ -48,16 +49,18 @@ export function ProjectSidebar({
     name: string;
     source?: string;
     description?: string;
-  }) => boolean;
+  }) => boolean | Promise<boolean>;
   onArchiveProject: (projectId: ProjectId) => void;
   onRestoreProject: (projectId: ProjectId) => void;
   onOpenCreate?: () => void;
+  createPending?: boolean;
 }) {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [source, setSource] = useState("");
   const [description, setDescription] = useState("");
   const [nameError, setNameError] = useState<string>();
+  const [submitting, setSubmitting] = useState(false);
   const [menuId, setMenuId] = useState<string>();
   const [dragWidth, setDragWidth] = useState<number>();
   const [dragHeight, setDragHeight] = useState<number>();
@@ -68,23 +71,32 @@ export function ProjectSidebar({
   const displayWidth = dragWidth ?? width;
   const displayHeight = dragHeight ?? archivedHeight;
   const dragging = dragWidth !== undefined || dragHeight !== undefined;
+  const createBusy = createPending || submitting;
 
-  const submitCreate = (): void => {
+  const submitCreate = async (): Promise<void> => {
+    if (createBusy) {
+      return;
+    }
     if (name.trim() === "") {
       setNameError(t(locale, "sidebar.projectNameEmpty"));
       return;
     }
-    const ok = onCreateProject({
-      name,
-      source: source.trim() || undefined,
-      description: description.trim() || undefined,
-    });
-    if (ok) {
-      setName("");
-      setSource("");
-      setDescription("");
-      setNameError(undefined);
-      setCreating(false);
+    setSubmitting(true);
+    try {
+      const ok = await onCreateProject({
+        name,
+        source: source.trim() || undefined,
+        description: description.trim() || undefined,
+      });
+      if (ok) {
+        setName("");
+        setSource("");
+        setDescription("");
+        setNameError(undefined);
+        setCreating(false);
+      }
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -133,7 +145,7 @@ export function ProjectSidebar({
           data-testid="project-create-form"
           onSubmit={(event) => {
             event.preventDefault();
-            submitCreate();
+            void submitCreate();
           }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
@@ -180,8 +192,14 @@ export function ProjectSidebar({
             </p>
           ) : null}
           <div className="authoring-actions">
-            <Button variant="primary" type="submit" data-testid="project-create-submit">
-              {t(locale, "project.create")}
+            <Button
+              variant="primary"
+              type="submit"
+              data-testid="project-create-submit"
+              disabled={createBusy}
+              aria-busy={createBusy}
+            >
+              {createBusy ? t(locale, "project.creating") : t(locale, "project.create")}
             </Button>
             <Button
               variant="ghost"

@@ -51,6 +51,8 @@ import {
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
 import type { ConversationStore } from "../conversation/index.js";
+import type { RepositoryEvidenceProvider } from "../application/index.js";
+import { createGitHubRepositoryEvidenceProvider } from "../infrastructure/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
@@ -88,12 +90,14 @@ export function App({
   preferenceStorage,
   conversationStore,
   chatProvider,
+  evidenceProvider,
 }: {
   initialSnapshot?: DomainSnapshot;
   initialWorkspace?: LearningWorkspace;
   preferenceStorage?: PreferenceStorage;
   conversationStore?: ConversationStore;
   chatProvider?: ChatProvider;
+  evidenceProvider?: RepositoryEvidenceProvider;
 }) {
   const storage = useMemo(
     () => preferenceStorage ?? createBrowserPreferenceStorage(),
@@ -106,6 +110,11 @@ export function App({
   workspaceRef.current = workspace;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coreFormOpen, setCoreFormOpen] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const resolvedEvidenceProvider = useMemo(
+    () => evidenceProvider ?? createGitHubRepositoryEvidenceProvider(),
+    [evidenceProvider],
+  );
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
   const [inspectorDragWidth, setInspectorDragWidth] = useState<number>();
   const inspectorDragRef = useRef<number | null>(null);
@@ -501,14 +510,22 @@ export function App({
                 false,
               )
             }
-            onCreateProject={(input) => {
-              const next = createWorkspaceProject(workspaceRef.current, input);
-              const failed = isProjectCreateCommand(next.lastErrorCommand);
-              commit(next, !failed);
-              if (!failed) {
-                setCoreFormOpen(false);
+            createPending={creatingProject}
+            onCreateProject={async (input) => {
+              setCreatingProject(true);
+              try {
+                const next = await createWorkspaceProject(workspaceRef.current, input, {
+                  provider: resolvedEvidenceProvider,
+                });
+                const failed = isProjectCreateCommand(next.lastErrorCommand);
+                commit(next, !failed);
+                if (!failed) {
+                  setCoreFormOpen(false);
+                }
+                return !failed;
+              } finally {
+                setCreatingProject(false);
               }
-              return !failed;
             }}
           />
           <div className="workspace-body">

@@ -9,16 +9,26 @@ import {
   type Ports,
 } from "../domain/index.js";
 import {
-  deriveRepositoryEvidence,
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
   EXPLORATION_BUDGET,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+  normalizeRepositoryEvidence,
+  parseGitHubSource,
   runProjectLearningBootstrap,
   type EvidenceInput,
-  type ProjectLearningProposal,
+  type EvidenceStatus,
+  type RepositoryEvidenceSource,
 } from "../framework/index.js";
+import type { RepositoryEvidenceProvider } from "./repository-evidence.js";
 
 export interface ProjectLearningBootstrapRecord {
-  frameworkId: ProjectLearningProposal["frameworkId"];
-  frameworkVersion: ProjectLearningProposal["frameworkVersion"];
+  frameworkId: string;
+  frameworkVersion: string;
+  canonicalContractId: string;
+  canonicalContractVersion: string;
+  evidenceStatus: EvidenceStatus;
   positioning: string;
   learningValue: string;
   systemModel: string;
@@ -35,10 +45,11 @@ export type BootstrapProjectResult =
     }
   | { ok: false; error: import("../domain/errors.js").DomainError };
 
-export function bootstrapLearningProject(
+export async function bootstrapLearningProject(
   input: EvidenceInput,
   ports: Ports,
-): BootstrapProjectResult {
+  provider?: RepositoryEvidenceProvider,
+): Promise<BootstrapProjectResult> {
   const created = createProject(
     { name: input.name, source: input.source?.trim() || undefined },
     ports,
@@ -47,11 +58,15 @@ export function bootstrapLearningProject(
     return created;
   }
 
-  const evidence = deriveRepositoryEvidence({
-    name: created.snapshot.project.name,
-    source: created.snapshot.project.source,
-    description: input.description,
-  });
+  const source = await loadEvidenceSource(
+    {
+      name: created.snapshot.project.name,
+      source: created.snapshot.project.source,
+      description: input.description,
+    },
+    provider,
+  );
+  const evidence = normalizeRepositoryEvidence(source);
   const proposal = runProjectLearningBootstrap(evidence);
   const questions = proposal.coreQuestions.slice(
     0,
@@ -108,6 +123,9 @@ export function bootstrapLearningProject(
     record: {
       frameworkId: proposal.frameworkId,
       frameworkVersion: proposal.frameworkVersion,
+      canonicalContractId: proposal.canonicalContractId,
+      canonicalContractVersion: proposal.canonicalContractVersion,
+      evidenceStatus: proposal.evidenceStatus,
       positioning: proposal.positioning,
       learningValue: proposal.learningValue,
       systemModel: proposal.systemModel,
@@ -120,8 +138,43 @@ export function bootstrapLearningProject(
   };
 }
 
+async function loadEvidenceSource(
+  input: EvidenceInput,
+  provider?: RepositoryEvidenceProvider,
+): Promise<RepositoryEvidenceSource> {
+  const repository = input.source ? parseGitHubSource(input.source) : undefined;
+  const fallback: RepositoryEvidenceSource = {
+    name: input.name,
+    source: input.source,
+    userDescription: input.description,
+    repository,
+    evidenceStatus: "fallback",
+  };
+  if (!repository || !provider) {
+    return fallback;
+  }
+  try {
+    const loaded = await provider.load(repository);
+    return {
+      ...loaded,
+      name: input.name,
+      source: input.source,
+      userDescription: input.description,
+      repository: loaded.repository ?? repository,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
 export function isEmptyFirstLayer(snapshot: DomainSnapshot): boolean {
   return snapshot.pass.rootNodeIds.length === 0;
 }
 
-export type { EvidenceInput };
+export type { EvidenceInput, EvidenceStatus };
+export {
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+};

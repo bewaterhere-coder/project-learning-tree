@@ -229,14 +229,16 @@ The seven previously open lifecycle questions are resolved and frozen for M1. Fu
 
 ## M4 project bootstrap
 
-Domain `createProject` still creates an empty Learning Pass. Workspace project creation then runs a Project Learning Bootstrap from the versioned Coco Project Learning Contract:
+Domain `createProject` still creates an empty Learning Pass. Workspace project creation then runs a Project Learning Bootstrap. The canonical methodology is the Coco Project Learning Contract (`coco-project-learning-contract` / `v1`); Learning Tree executes a versioned adapter (`learning-tree-coco-adapter` / `v1`) rather than restating a second contract in the UI.
 
 ```text
-Repository evidence
+GitHub metadata + README + root listing
 → positioning, learning value, system model
 → at most five project-specific Core Questions
 → recommend 1–2 current-focus candidates
 ```
+
+When GitHub evidence cannot be loaded, creation still succeeds from the project name and records `evidenceStatus` as `fallback` or `partial`. User description is only a supplemental hint.
 
 The first visible tree is that generated first layer. Questions are added only through Domain `addCoreQuestion` / `addCriterion`. Recommended focus is navigation, not activation. Manual core-question authoring remains available when slots remain.
 

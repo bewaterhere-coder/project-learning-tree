@@ -16,6 +16,7 @@ export default defineConfig({
             "tests/workspace/**/*.test.ts",
             "tests/conversation/**/*.test.ts",
             "tests/ai/**/*.test.ts",
+            "tests/infrastructure/**/*.test.ts",
           ],
           environment: "node",
           setupFiles: ["tests/setup.ts"],

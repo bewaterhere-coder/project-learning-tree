@@ -1,15 +1,34 @@
 /**
- * Versioned Coco Project Learning Contract.
+ * Learning Tree's versioned executable adapter of the Coco Project Learning
+ * Contract.
  *
- * This module is the methodology source of truth. UI must not restate these
- * budgets or classification rules as competing constants.
+ * Canonical methodology: Coco Project Learning Contract
+ * (`coco-project-learning-contract` / `v1`).
+ *
+ * This module is not a second methodology source of truth. It is the Learning
+ * Tree runtime projection (`learning-tree-coco-adapter` / `v1`) that copies
+ * deterministic defaults so bootstrap can run without a live contract document.
+ * UI must not restate these budgets as competing constants.
  */
 
-export const PROJECT_LEARNING_FRAMEWORK_ID = "coco-project-learning" as const;
-export const PROJECT_LEARNING_FRAMEWORK_VERSION = "v1" as const;
+export const CANONICAL_CONTRACT_ID = "coco-project-learning-contract" as const;
+export const CANONICAL_CONTRACT_VERSION = "v1" as const;
 
-export type FrameworkId = typeof PROJECT_LEARNING_FRAMEWORK_ID;
-export type FrameworkVersion = typeof PROJECT_LEARNING_FRAMEWORK_VERSION;
+export const LEARNING_TREE_ADAPTER_ID = "learning-tree-coco-adapter" as const;
+export const LEARNING_TREE_ADAPTER_VERSION = "v1" as const;
+
+/** Persisted `frameworkId` on pre-adapter bootstrap records. */
+export const LEGACY_FRAMEWORK_ID = "coco-project-learning" as const;
+
+export const PROJECT_LEARNING_FRAMEWORK_ID = LEARNING_TREE_ADAPTER_ID;
+export const PROJECT_LEARNING_FRAMEWORK_VERSION = LEARNING_TREE_ADAPTER_VERSION;
+
+export type CanonicalContractId = typeof CANONICAL_CONTRACT_ID;
+export type CanonicalContractVersion = typeof CANONICAL_CONTRACT_VERSION;
+export type AdapterId = typeof LEARNING_TREE_ADAPTER_ID;
+export type AdapterVersion = typeof LEARNING_TREE_ADAPTER_VERSION;
+export type FrameworkId = AdapterId;
+export type FrameworkVersion = AdapterVersion;
 
 export type LearningDepth = "L1" | "L2" | "L3";
 
@@ -28,6 +47,14 @@ export interface ExplorationBudget {
   l3Implementation: number;
 }
 
+/**
+ * Deterministic runtime defaults projected by this adapter. They copy the
+ * published Coco Project Learning Contract v1 budgets so the adapter can
+ * execute locally. They are not canonical methodology truth.
+ *
+ * Domain `CORE_QUESTION_LIMIT` remains an operational tree cap, not a
+ * methodology constant.
+ */
 export const EXPLORATION_BUDGET: ExplorationBudget = {
   coreQuestions: 5,
   concurrentFocus: 2,

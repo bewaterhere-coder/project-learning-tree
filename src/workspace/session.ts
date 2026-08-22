@@ -5,6 +5,7 @@ import {
   type NodeId,
   type Ports,
   type ProjectId,
+  type RepositoryEvidenceProvider,
   type UiCommand,
 } from "../application/index.js";
 import { defaultPorts } from "../domain/index.js";
@@ -125,12 +126,24 @@ export function applySelectedCommand(
   };
 }
 
-export function createWorkspaceProject(
+export type CreateWorkspaceProjectOptions = {
+  ports?: Ports;
+  provider?: RepositoryEvidenceProvider;
+};
+
+export async function createWorkspaceProject(
   workspace: LearningWorkspace,
   command: { name: string; source?: string; description?: string },
-  ports: Ports = defaultPorts(),
-): LearningWorkspace {
-  const result = bootstrapLearningProject(command, ports);
+  portsOrOptions: Ports | CreateWorkspaceProjectOptions = {},
+): Promise<LearningWorkspace> {
+  const options = isPorts(portsOrOptions)
+    ? { ports: portsOrOptions }
+    : portsOrOptions;
+  const result = await bootstrapLearningProject(
+    command,
+    options.ports ?? defaultPorts(),
+    options.provider,
+  );
   if (!result.ok) {
     return {
       ...workspace,
@@ -429,6 +442,13 @@ function resolveInitialSelection(
     return selectedProjectId;
   }
   return nextActiveProjectId(projects, -1);
+}
+
+function isPorts(value: Ports | CreateWorkspaceProjectOptions): value is Ports {
+  return (
+    typeof (value as Ports).now === "function" &&
+    typeof (value as Ports).id === "function"
+  );
 }
 
 function nextActiveProjectId(
