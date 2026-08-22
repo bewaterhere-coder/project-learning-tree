@@ -8,7 +8,11 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:update-snapshots": "E2E_VISUAL=1 playwright test --update-snapshots changed",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.e2e.json"
   },
   "dependencies": {
     "@xyflow/react": "^12.8.2",
@@ -16,6 +20,7 @@
     "react-dom": "^19.1.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@testing-library/jest-dom": "^6.8.0",
     "@testing-library/react": "^16.3.0",
     "@testing-library/user-event": "^14.6.1",
