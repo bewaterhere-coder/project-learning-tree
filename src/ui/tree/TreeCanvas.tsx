@@ -1,6 +1,5 @@
 import {
   applyNodeChanges,
-  Background,
   Handle,
   Position,
   ReactFlow,
@@ -33,6 +32,7 @@ export function TreeCanvas({
   model,
   savedPositions,
   viewport,
+  persistViewport = true,
   onFocusNode,
   onNodeDragStop,
   onViewportChange,
@@ -40,6 +40,7 @@ export function TreeCanvas({
   model: TreeViewModel;
   savedPositions: Record<NodeId, NodePosition>;
   viewport: Viewport;
+  persistViewport?: boolean;
   onFocusNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
@@ -82,7 +83,7 @@ export function TreeCanvas({
 
   const handleMoveEnd: OnMove = useCallback(
     (event, nextViewport) => {
-      if (event === null) {
+      if (event === null || !persistViewport) {
         return;
       }
       onViewportChange({
@@ -91,11 +92,32 @@ export function TreeCanvas({
         zoom: nextViewport.zoom,
       });
     },
-    [onViewportChange],
+    [onViewportChange, persistViewport],
   );
 
   return (
     <div className="tree-canvas-host">
+      <svg className="edge-marker-defs" aria-hidden="true">
+        <defs>
+          <marker
+            id="blocking-tick"
+            markerWidth="10"
+            markerHeight="10"
+            refX="6"
+            refY="5"
+            orient="auto"
+          >
+            <rect
+              x="2"
+              y="1.5"
+              width="3.5"
+              height="7"
+              rx="0.5"
+              fill="var(--color-warning)"
+            />
+          </marker>
+        </defs>
+      </svg>
       <ReactFlow<LearningFlowNode>
         nodes={nodes}
         edges={derived.edges}
@@ -115,9 +137,7 @@ export function TreeCanvas({
         minZoom={0.4}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
-      >
-        <Background />
-      </ReactFlow>
+      />
     </div>
   );
 }

@@ -124,8 +124,8 @@ describe("project sidebar", () => {
   });
 });
 
-describe("inspector overlay", () => {
-  it("renders as an overlay inside the tree canvas, not a layout column", () => {
+describe("inspector column", () => {
+  it("renders as a layout sibling of the tree canvas, not an overlay", () => {
     const { workspace } = createDemoWorkspaceFixture();
     render(
       <App
@@ -134,9 +134,10 @@ describe("inspector overlay", () => {
       />,
     );
     const canvas = screen.getByTestId("tree-canvas");
-    const overlay = screen.getByTestId("inspector-overlay");
-    expect(canvas).toContainElement(overlay);
-    expect(screen.queryByTestId("inspector-pane")).toBeNull();
+    const pane = screen.getByTestId("inspector-pane");
+    expect(canvas).not.toContainElement(pane);
+    expect(canvas.parentElement).toContainElement(pane);
+    expect(screen.queryByTestId("inspector-overlay")).toBeNull();
   });
 
   it("can close without changing Current Focus and reopen on the same focus", async () => {
@@ -183,7 +184,7 @@ describe("inspector overlay", () => {
     expect(screen.queryByTestId("node-inspector")).toBeNull();
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("inspector-overlay")).toHaveAttribute(
+    expect(screen.getByTestId("inspector-pane")).toHaveAttribute(
       "data-width",
       "360",
     );
@@ -191,7 +192,7 @@ describe("inspector overlay", () => {
     await user.click(
       screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
     );
-    expect(screen.getByTestId("inspector-overlay")).toHaveAttribute(
+    expect(screen.getByTestId("inspector-pane")).toHaveAttribute(
       "data-width",
       "400",
     );

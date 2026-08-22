@@ -47,6 +47,11 @@ const enUS = {
   "inspector.optional": "optional",
   "inspector.evidenceRequired": "evidence required",
   "inspector.details": "Details",
+  "inspector.identity": "Identity",
+  "inspector.status": "Status",
+  "inspector.actions": "Actions",
+  "inspector.structure": "Structure",
+  "inspector.record": "Learning record",
   "inspector.state": "Learning state",
   "workspace.emptyTitle": "Start a project",
   "workspace.emptyBody":
@@ -250,6 +255,11 @@ const zhCN: Record<MessageKey, string> = {
   "inspector.optional": "可选",
   "inspector.evidenceRequired": "需要证据",
   "inspector.details": "更多信息",
+  "inspector.identity": "身份",
+  "inspector.status": "状态",
+  "inspector.actions": "操作",
+  "inspector.structure": "结构",
+  "inspector.record": "学习记录",
   "inspector.state": "学习状态",
   "workspace.emptyTitle": "开始一个项目",
   "workspace.emptyBody":

@@ -27,6 +27,10 @@ describe("node inspector", () => {
     await user.click(screen.getByTestId(`node-${ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
+    expect(screen.getByTestId("action-activate")).toHaveClass("ui-button-ghost");
+    expect(screen.getByTestId("action-park")).toHaveClass("ui-button-secondary");
+    expect(screen.getByTestId("action-close")).toHaveClass("ui-button-primary");
+    expect(screen.getByTestId("action-close")).toBeDisabled();
     expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
       "1 open sub-questions",
     );
