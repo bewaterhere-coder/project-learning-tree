@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: open
 development:
-  stage: planning
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-006-plan.md
 transport:
@@ -224,15 +224,18 @@ This task does not include:
 - [ ] Existing Question parent/child graph behavior is not regressed.
 - [ ] New/changed zh-CN copy is fully localized.
 
+## Plan Review Decision
+
+Plan approved after revision. The approved plan explicitly removes hidden `activateNode()` as a completion precondition and defines direct completion (`open -> closed` when convergence/readiness is satisfied) with an A/B active-stack isolation regression. Node Add Child uses ordinary `createChild` only; TASK-006 does not introduce hidden activation for blocking-child authoring.
+
 ## Cursor Handoff
 
-Start in **Plan mode**.
+Implementation is authorized on this same TASK-006 branch / PR #27.
 
-1. Read this Requirement as the canonical TASK-006 scope.
-2. Inspect the current Question node/card, Details/Contextual Workspace, node actions, lifecycle UI, conversation binding, completion/readiness UI, and semantic persistence.
-3. Write `docs/plans/TASK-006-plan.md` on this same branch.
-4. Explicitly identify which current Start/Active/Learning-state UI can be removed without changing Domain semantics.
-5. Identify where `达成条件` maps to the current criterion/DoD model and where `心得` maps to the current summary/learning-record model.
-6. Identify any overlap/conflict with other active PRs, but do not reuse another task or PR and do not change TASK-006 identity.
-7. Do not implement production code until Plan review approves `plan_approved=true`.
-8. Commit and push the Plan to this same branch / PR. Do not work on `main` and do not create another PR for TASK-006.
+1. Read this Requirement and the approved `docs/plans/TASK-006-plan.md`.
+2. Implement the approved slices only; do not absorb TASK-005 scope.
+3. Completion must never call `activateNode` as a hidden precondition.
+4. Add the required regression proving completing Question B does not mutate an unrelated Question A active path / `activeStack`.
+5. Keep Node operations on the node and Details centered on `达成条件` + `心得`.
+6. Commit and push implementation to this same branch / PR.
+7. After implementation/tests are complete, advance to Acceptance and hand back to ChatGPT; do not merge before acceptance.
