@@ -17,6 +17,7 @@ import {
   openChat,
   pinChatToNode,
   selectedProject,
+  updateSelectedLayout,
   WORKSPACE_PREFERENCES_KEY,
   WORKSPACE_SEMANTIC_KEY,
 } from "../../src/workspace/index.js";
@@ -155,5 +156,27 @@ describe("M3A contextual chat UI", () => {
     expect(body).toHaveTextContent(/Current question|当前问题/);
     expect(body).not.toHaveTextContent("system prompt");
     expect(body).not.toHaveTextContent("You are");
+  });
+
+  it("opens chat from the node action without opening the inspector", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    const closedInspector = updateSelectedLayout(workspace, { inspectorOpen: false });
+    renderChat(closedInspector);
+    expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId(`node-chat-${projectA.ids.q1}`));
+    expect(screen.getByTestId("chat-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-node-id", projectA.ids.q1);
+    expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
+  });
+
+  it("still opens the inspector when clicking the node body", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    const closedInspector = updateSelectedLayout(workspace, { inspectorOpen: false });
+    renderChat(closedInspector);
+    await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
+    expect(screen.queryByTestId("chat-panel")).not.toBeInTheDocument();
+    expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
   });
 });

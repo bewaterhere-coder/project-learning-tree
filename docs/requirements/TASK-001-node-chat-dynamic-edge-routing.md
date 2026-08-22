@@ -2,16 +2,16 @@
 task_id: TASK-001
 title: Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
 development:
-  stage: implementation
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
-    merge_verified: false
-  next_expected_actor: cursor
+    acceptance_approved: true
+    merge_verified: true
+  next_expected_actor: none
 artifacts:
   plan: ../plans/TASK-001-plan.md
-  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/17
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/18
 ---
 
 # TASK-001 — Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
@@ -131,8 +131,16 @@ Existing behavior remains valid for project switching, Focus, per-project pinnin
 
 Relevant automated tests must remain green and new tests must cover the material behavior introduced by this task.
 
-## Gate
+## Completion Evidence
 
-Plan approved on re-review. Implementation is now authorized according to `docs/plans/TASK-001-plan.md`.
+Acceptance review passed for PR #18 with repository-visible evidence:
 
-The task is not complete after implementation code is written. It must later enter Acceptance with repository-visible implementation and verification evidence; `acceptance_approved` remains false until that review passes.
+- implementation matches the approved plan and acceptance criteria;
+- GitHub Actions CI run #54 completed successfully;
+- `check` passed typecheck, unit tests, and build;
+- `e2e` passed the Playwright acceptance suite;
+- PR #18 merged successfully into `main`;
+- merge commit: `e1a775ba2c9905d82332fb9f1c0c1922a639253c`;
+- `main` was re-read after merge before `merge_verified` was set.
+
+TASK-001 is complete.

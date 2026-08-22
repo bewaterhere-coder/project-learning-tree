@@ -10,6 +10,7 @@ export interface TreeNodeView {
   id: NodeId;
   parentId?: NodeId;
   question: string;
+  goal: string;
   lifecycle: NodeLifecycle;
   isBlocked: boolean;
   unresolvedBlockerCount: number;
@@ -64,6 +65,7 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       id: node.id,
       parentId: node.parentId,
       question: node.question,
+      goal: node.goal,
       lifecycle: node.lifecycle,
       isBlocked: isBlocked(snapshot, node.id),
       unresolvedBlockerCount: unresolvedBlockingChildIds(snapshot, node.id)

@@ -31,6 +31,7 @@ import {
   hydrateSemanticWorkspace,
   hydrateWorkspacePreferences,
   openChat,
+  openChatForNode,
   reconcileThemeHint,
   resolveColorScheme,
   restoreProject,
@@ -286,6 +287,17 @@ export function App({
     (nodeId: string) => {
       const currentWorkspace = workspaceRef.current;
       const next = focusAndOpenInspector(currentWorkspace, nodeId);
+      const before = selectedProject(currentWorkspace)?.snapshot;
+      const after = selectedProject(next)?.snapshot;
+      commit(next, before !== after);
+    },
+    [commit],
+  );
+
+  const handleOpenChatForNode = useCallback(
+    (nodeId: string) => {
+      const currentWorkspace = workspaceRef.current;
+      const next = openChatForNode(currentWorkspace, nodeId);
       const before = selectedProject(currentWorkspace)?.snapshot;
       const after = selectedProject(next)?.snapshot;
       commit(next, before !== after);
@@ -618,6 +630,7 @@ export function App({
                           current.bootstrap?.recommendedFocusNodeIds ?? []
                         }
                         onFocusNode={handleFocusNode}
+                        onOpenChatForNode={handleOpenChatForNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
                       />

@@ -8,6 +8,7 @@ import {
   initialFloatingChatPosition,
   moveFloatingChat,
   openChat,
+  openChatForNode,
   pinChatToNode,
   selectProject,
   selectedProject,
@@ -15,6 +16,7 @@ import {
   serializeSemanticWorkspace,
   serializeWorkspacePreferences,
   createMemoryPreferenceStorage,
+  updateSelectedLayout,
 } from "../../src/workspace/index.js";
 
 describe("workspace chat chrome", () => {
@@ -114,5 +116,17 @@ describe("workspace chat chrome", () => {
       nodeId: projectA.ids.q1,
     });
     expect(selectedProject(focused)?.layout.chatOpen).toBe(false);
+  });
+
+  it("openChatForNode focuses, opens chat, and does not open the inspector", () => {
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    const closedInspector = updateSelectedLayout(workspace, { inspectorOpen: false });
+    const opened = openChatForNode(closedInspector, projectA.ids.q1);
+    const current = selectedProject(opened);
+    expect(current?.layout.chatOpen).toBe(true);
+    expect(current?.layout.inspectorOpen).toBe(false);
+    expect(current?.layout.chatBinding).toEqual({ mode: "follow-focus" });
+    expect(current?.snapshot.pass.currentFocusNodeId).toBe(projectA.ids.q1);
+    expect(JSON.stringify(serializeSemanticWorkspace(opened))).not.toContain("chatOpen");
   });
 });
