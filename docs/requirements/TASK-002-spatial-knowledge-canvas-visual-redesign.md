@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: null
@@ -450,13 +450,13 @@ Visual evidence should cover at least:
 
 **Do not start implementation yet.**
 
-Cursor’s next action is:
+Planning handoff (completed on `task/TASK-002-spatial-knowledge-canvas-visual-redesign`):
 
-1. checkout/pull `task/TASK-002-spatial-knowledge-canvas-visual-redesign`;
-2. read this Requirement and referenced design/product docs;
-3. inspect current implementation;
-4. create/update `docs/plans/TASK-002-plan.md` on the same task branch;
-5. commit and push the Plan;
-6. stop and return the branch, commit SHA, plan path, findings/risks and verification receipt for **ChatGPT Review TASK-002**.
+1. Requirement + referenced design/product docs read;
+2. current implementation inspected (post TASK-001);
+3. canonical Plan written at `docs/plans/TASK-002-plan.md`;
+4. `development.stage` advanced to `plan_review`;
+5. `next_expected_actor: chatgpt`;
+6. `plan_approved` remains **false** until ChatGPT Plan review records approval.
 
-Implementation begins only after the Plan gate is approved.
+Implementation begins only after the Plan gate is approved (`plan_approved=true`).
