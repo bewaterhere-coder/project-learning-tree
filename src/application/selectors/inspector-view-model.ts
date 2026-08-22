@@ -1,5 +1,6 @@
 import {
   isBlocked,
+  unresolvedBlockingChildIds,
   type Criterion,
   type DomainSnapshot,
   type Evidence,
@@ -17,6 +18,7 @@ export interface InspectorViewModel {
   targetDepth?: LearningDepth;
   lifecycle?: NodeLifecycle;
   isBlocked?: boolean;
+  unresolvedBlockerCount?: number;
   definitionOfDone: Criterion[];
   evidence: Evidence[];
   summary?: string;
@@ -42,6 +44,8 @@ export function selectInspectorViewModel(
     targetDepth: node.targetDepth,
     lifecycle: node.lifecycle,
     isBlocked: isBlocked(snapshot, node.id),
+    unresolvedBlockerCount: unresolvedBlockingChildIds(snapshot, node.id)
+      .length,
     definitionOfDone: node.definitionOfDone.map((criterion) => ({
       ...criterion,
       evidenceIds: [...criterion.evidenceIds],

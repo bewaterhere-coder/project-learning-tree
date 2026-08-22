@@ -42,7 +42,7 @@ describe("project sidebar", () => {
     ).toHaveTextContent("Q1");
     expect(
       screen.getByTestId(`project-blocked-${projectA.snapshot.project.id}`),
-    ).toHaveTextContent("Blocked");
+    ).toHaveTextContent("1 open sub-questions");
     expect(
       screen.getByTestId(`project-active-${projectB.snapshot.project.id}`),
     ).toHaveTextContent("Alpha");
@@ -333,10 +333,14 @@ describe("i18n catalogs", () => {
       within(screen.getByTestId("node-inspector")).getByRole("heading", {
         level: 2,
       }),
-    ).toHaveTextContent("Node Inspector");
+    ).toHaveTextContent("Question details");
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
       "Start learning",
     );
+    expect(screen.getByTestId("active-stack")).toHaveTextContent(
+      "Current learning path:",
+    );
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
 
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
@@ -344,7 +348,23 @@ describe("i18n catalogs", () => {
       within(screen.getByTestId("node-inspector")).getByRole("heading", {
         level: 2,
       }),
-    ).toHaveTextContent("节点检视器");
+    ).toHaveTextContent("问题详情");
     expect(screen.getByTestId("action-activate")).toHaveTextContent("开始学习");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("待开始");
+    expect(document.documentElement.lang).toBe("zh-CN");
+
+    const chrome = document.body.textContent ?? "";
+    for (const forbidden of [
+      "Open",
+      "Active",
+      "Parked",
+      "Closed",
+      "Blocked",
+      "Dismiss",
+      "Cannot close",
+      "without a summary",
+    ]) {
+      expect(chrome).not.toContain(forbidden);
+    }
   });
 });

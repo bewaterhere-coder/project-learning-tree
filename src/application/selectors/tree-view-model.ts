@@ -1,5 +1,6 @@
 import {
   isBlocked,
+  unresolvedBlockingChildIds,
   type DomainSnapshot,
   type NodeId,
   type NodeLifecycle,
@@ -11,6 +12,7 @@ export interface TreeNodeView {
   question: string;
   lifecycle: NodeLifecycle;
   isBlocked: boolean;
+  unresolvedBlockerCount: number;
   isOnActiveStack: boolean;
   isActiveStackLeaf: boolean;
   isCurrentFocus: boolean;
@@ -62,6 +64,8 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       question: node.question,
       lifecycle: node.lifecycle,
       isBlocked: isBlocked(snapshot, node.id),
+      unresolvedBlockerCount: unresolvedBlockingChildIds(snapshot, node.id)
+        .length,
       isOnActiveStack: onStack.has(node.id),
       isActiveStackLeaf: leaf === node.id,
       isCurrentFocus: snapshot.pass.currentFocusNodeId === node.id,

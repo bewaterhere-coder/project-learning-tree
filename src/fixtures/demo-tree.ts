@@ -47,6 +47,9 @@ export interface ClosableNodeOptions {
   evidenceType?: string;
   evidenceReference?: string;
   summary?: string;
+  includeSummary?: boolean;
+  includeEvidence?: boolean;
+  satisfyCriterion?: boolean;
 }
 
 function unwrap(result: DomainResult<DomainSnapshot>, context: string): DomainSnapshot {
@@ -71,6 +74,9 @@ export function createClosableNodeFixture(
   options: ClosableNodeOptions = {},
 ): DomainSnapshot {
   const evidenceRequired = options.evidenceRequired ?? true;
+  const includeEvidence = options.includeEvidence ?? evidenceRequired;
+  const includeSummary = options.includeSummary ?? true;
+  const satisfyCriterion = options.satisfyCriterion ?? true;
   let next = unwrap(
     addCriterion(
       snapshot,
@@ -89,7 +95,7 @@ export function createClosableNodeFixture(
     throw new Error("createClosableNodeFixture: missing criterion");
   }
 
-  if (evidenceRequired) {
+  if (includeEvidence) {
     next = unwrap(
       addEvidence(
         next,
@@ -112,10 +118,17 @@ export function createClosableNodeFixture(
     );
   }
 
-  next = unwrap(
-    declareCriterionSatisfied(next, { nodeId, criterionId }),
-    "declareCriterionSatisfied",
-  );
+  if (satisfyCriterion) {
+    next = unwrap(
+      declareCriterionSatisfied(next, { nodeId, criterionId }),
+      "declareCriterionSatisfied",
+    );
+  }
+
+  if (!includeSummary) {
+    return next;
+  }
+
   return unwrap(
     setNodeSummary(next, {
       nodeId,

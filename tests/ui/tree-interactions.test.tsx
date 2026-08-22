@@ -23,7 +23,7 @@ describe("tree interactions", () => {
     await user.click(screen.getByTestId(`node-${ids.q11}`));
 
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1.1");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("closed");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
     expect(screen.getByTestId(`node-${ids.q1}`)).toHaveAttribute(
       "data-on-stack",
       "true",
@@ -79,8 +79,7 @@ describe("tree interactions", () => {
     );
   });
 
-  it("shows a DomainError when Close fails and leaves lifecycle unchanged", async () => {
-    const user = userEvent.setup();
+  it("shows unmet close requirements before click and leaves lifecycle unchanged", async () => {
     const { snapshot, ids } = createDemoTreeFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
@@ -88,11 +87,10 @@ describe("tree interactions", () => {
     });
     render(<App initialSnapshot={focused.snapshot} />);
 
-    await user.click(screen.getByTestId("action-close"));
-    expect(screen.getByTestId("domain-error")).toHaveTextContent(
-      "unresolved blocking children",
-    );
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("active");
+    expect(screen.getByTestId("action-close")).toBeDisabled();
+    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Q1.2");
+    expect(screen.queryByTestId("domain-error")).toBeNull();
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
   });
 
   it("closes a prepared leaf and updates lifecycle and stack from Domain", async () => {
@@ -116,7 +114,7 @@ describe("tree interactions", () => {
 
     await user.click(screen.getByTestId("action-close"));
     expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("closed");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
     expect(screen.getByTestId(`node-${branch.ids.childA}`)).toHaveAttribute(
       "data-lifecycle",
       "closed",

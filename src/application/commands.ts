@@ -30,7 +30,11 @@ export function dispatchCommand(
 
   const result = runDomainCommand(session.snapshot, command);
   if (!result.ok) {
-    return { snapshot: session.snapshot, lastError: result.error };
+    return {
+      snapshot: session.snapshot,
+      lastError: result.error,
+      lastErrorCommand: command.type,
+    };
   }
   return { snapshot: result.snapshot };
 }

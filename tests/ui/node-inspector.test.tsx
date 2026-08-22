@@ -19,15 +19,17 @@ describe("node inspector", () => {
     render(<App initialSnapshot={snapshot} />);
 
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("open");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
       "Start learning",
     );
 
     await user.click(screen.getByTestId(`node-${ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("active");
-    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent("Yes");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
+    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
+      "1 open sub-questions",
+    );
     expect(screen.getByTestId("inspector-lifecycle")).not.toHaveTextContent(
       "blocked",
     );

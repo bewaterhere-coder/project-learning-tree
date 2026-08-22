@@ -1,12 +1,14 @@
 import type { MouseEvent } from "react";
+import { lifecycleMessageKey, t, useLocale } from "../../src/ui/i18n/index.js";
 
 interface StubNode {
   id: string;
   position?: { x: number; y: number };
   data: {
     question: string;
-    lifecycle: string;
+    lifecycle: "open" | "active" | "parked" | "closed";
     isBlocked: boolean;
+    unresolvedBlockerCount?: number;
     isOnActiveStack: boolean;
     isCurrentFocus: boolean;
     parentId?: string;
@@ -17,6 +19,22 @@ interface StubViewport {
   x: number;
   y: number;
   zoom: number;
+}
+
+function StubNodeBadges({ data }: { data: StubNode["data"] }) {
+  const locale = useLocale();
+  return (
+    <div className="node-badges">
+      <span className="lifecycle-badge">{t(locale, lifecycleMessageKey(data.lifecycle))}</span>
+      {data.isBlocked ? (
+        <span className="blocked-badge">
+          {t(locale, "node.blocked", {
+            count: data.unresolvedBlockerCount ?? 0,
+          })}
+        </span>
+      ) : null}
+    </div>
+  );
 }
 
 export function ReactFlow({
@@ -78,6 +96,7 @@ export function ReactFlow({
             data-y={String(node.position?.y ?? 0)}
             onClick={(event) => onNodeClick?.(event, node)}
           >
+            <StubNodeBadges data={node.data} />
             {node.data.question}
           </button>
           <button

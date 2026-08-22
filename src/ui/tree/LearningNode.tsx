@@ -1,20 +1,9 @@
 import { Handle, Position, type NodeProps } from "@xyflow/react";
 import type { LearningFlowNode } from "./to-react-flow.js";
-
-function lifecycleLabel(lifecycle: LearningFlowNode["data"]["lifecycle"]): string {
-  switch (lifecycle) {
-    case "open":
-      return "Open";
-    case "active":
-      return "Active";
-    case "parked":
-      return "Parked";
-    case "closed":
-      return "Closed";
-  }
-}
+import { lifecycleMessageKey, t, useLocale } from "../i18n/index.js";
 
 export function LearningNode({ data }: NodeProps<LearningFlowNode>) {
+  const locale = useLocale();
   const className = [
     "learning-node",
     `lifecycle-${data.lifecycle}`,
@@ -37,8 +26,14 @@ export function LearningNode({ data }: NodeProps<LearningFlowNode>) {
       <Handle type="target" position={Position.Top} isConnectable={false} />
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <div className="node-badges">
-        <span className="lifecycle-badge">{lifecycleLabel(data.lifecycle)}</span>
-        {data.isBlocked ? <span className="blocked-badge">Blocked</span> : null}
+        <span className="lifecycle-badge" data-testid={`lifecycle-badge-${data.id}`}>
+          {t(locale, lifecycleMessageKey(data.lifecycle))}
+        </span>
+        {data.isBlocked ? (
+          <span className="blocked-badge" data-testid={`blocked-badge-${data.id}`}>
+            {t(locale, "node.blocked", { count: data.unresolvedBlockerCount })}
+          </span>
+        ) : null}
       </div>
       <p className="node-question">{data.question}</p>
       <Handle type="source" position={Position.Bottom} isConnectable={false} />

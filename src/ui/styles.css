@@ -260,7 +260,6 @@ body,
 .inspector-fields dt {
   color: #6b7380;
   font-size: 11px;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
@@ -287,6 +286,56 @@ body,
   border-radius: 6px;
   padding: 6px 10px;
   cursor: pointer;
+}
+
+.node-actions button:disabled {
+  background: #9aa7a3;
+  border-color: #9aa7a3;
+  cursor: not-allowed;
+}
+
+.close-unmet {
+  flex-basis: 100%;
+  margin: 0;
+  color: #8a1f1f;
+  font-size: 13px;
+}
+
+.close-unmet p {
+  margin: 4px 0;
+  font-weight: 600;
+}
+
+.close-unmet ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.node-action-error {
+  flex-basis: 100%;
+  margin: 4px 0 0;
+  color: #8a1f1f;
+  font-size: 13px;
+}
+
+.required-marker {
+  color: #b42318;
+  font-weight: 700;
+}
+
+.requirement-status {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.requirement-status.met {
+  color: #1f7a63;
+}
+
+.requirement-status.unmet {
+  color: #b42318;
 }
 
 .domain-error {
@@ -358,7 +407,6 @@ body,
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.03em;
-  text-transform: uppercase;
   padding: 2px 6px;
   border-radius: 999px;
 }

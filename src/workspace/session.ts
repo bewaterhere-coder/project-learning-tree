@@ -78,6 +78,7 @@ export function selectProject(
     ...workspace,
     selectedProjectId: projectId,
     lastError: undefined,
+    lastErrorCommand: undefined,
   };
 }
 
@@ -87,12 +88,17 @@ export function applySelectedCommand(
 ): LearningWorkspace {
   const current = selectedProject(workspace);
   const nextSession = dispatchCommand(
-    { snapshot: current.snapshot, lastError: workspace.lastError },
+    {
+      snapshot: current.snapshot,
+      lastError: workspace.lastError,
+      lastErrorCommand: workspace.lastErrorCommand,
+    },
     command,
   );
   return {
     ...workspace,
     lastError: nextSession.lastError,
+    lastErrorCommand: nextSession.lastErrorCommand,
     projects: workspace.projects.map((project) =>
       project.projectId === workspace.selectedProjectId
         ? { ...project, snapshot: nextSession.snapshot }
