@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: open
 development:
-  stage: implementation
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-006-plan.md
 transport:

@@ -11,7 +11,7 @@ branch: task/TASK-006-simplify-question-interaction-details
 
 This is the canonical implementation plan for TASK-006. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `implementation` — `plan_approved=true`; implementing approved slices on PR #27.
+**Gate:** `acceptance` — implementation complete on PR #27; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 ## Review revisions (PR #27 plan review)
 
