@@ -81,6 +81,8 @@ describe("general integrity", () => {
       "octokit",
       "from \"node:http\"",
       "from 'node:http'",
+      "from \"node:fs\"",
+      "from 'node:fs'",
     ];
     for (const file of domainSourceFiles()) {
       const source = readFileSync(file, "utf8");

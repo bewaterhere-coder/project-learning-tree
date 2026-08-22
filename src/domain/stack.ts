@@ -1,5 +1,5 @@
 import type { DomainError } from "./errors.js";
-import type { DomainSnapshot, NodeId } from "./types.js";
+import type { DomainSnapshot, LearningNode, NodeId } from "./types.js";
 
 export function pathFromRoot(
   snapshot: DomainSnapshot,
@@ -17,7 +17,7 @@ export function pathFromRoot(
       };
     }
     seen.add(current);
-    const node = snapshot.nodes[current];
+    const node: LearningNode | undefined = snapshot.nodes[current];
     if (!node) {
       return { ok: false, error: { kind: "NodeNotFound", nodeId: current } };
     }
