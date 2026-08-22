@@ -103,8 +103,7 @@ describe("close readiness UI", () => {
     expect(screen.queryByTestId("action-activate")).toBeNull();
   });
 
-  it("surfaces unmet blocking children when Complete is attempted", async () => {
-    const user = userEvent.setup();
+  it("surfaces unmet blocking children by disabling Complete", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
@@ -112,13 +111,12 @@ describe("close readiness UI", () => {
     });
     renderFocused(focused.snapshot);
 
-    await user.click(screen.getByTestId(`node-complete-${ids.parent}`));
-    expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("node-action-error")).toBeInTheDocument();
+    expect(screen.getByTestId(`node-complete-${ids.parent}`)).toBeDisabled();
     expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
-      "data-lifecycle",
-      "active",
+      "data-can-complete",
+      "false",
     );
+    expect(screen.queryByTestId("node-action-error")).toBeNull();
   });
 
   it("places unexpected close failures beside Details instead of the global banner", () => {

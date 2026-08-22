@@ -313,6 +313,17 @@ export function focusAndOpenInspector(
   return updateSelectedLayout(focused, { inspectorOpen: true });
 }
 
+/** Focus a Question without forcing the Details panel open. */
+export function focusSelectedNode(
+  workspace: LearningWorkspace,
+  nodeId: NodeId,
+): LearningWorkspace {
+  return applySelectedCommand(workspace, {
+    type: "focusNode",
+    nodeId,
+  });
+}
+
 export function updateShell(
   workspace: LearningWorkspace,
   patch: Partial<WorkspaceShellLayout>,

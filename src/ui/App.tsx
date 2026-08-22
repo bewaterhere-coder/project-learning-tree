@@ -27,6 +27,7 @@ import {
   createWorkspace,
   createWorkspaceProject,
   focusAndOpenInspector,
+  focusSelectedNode,
   hydrateSemanticWorkspaceWithMigration,
   hydrateWorkspacePreferences,
   openChat,
@@ -308,20 +309,31 @@ export function App({
     [commit],
   );
 
+  const handleFocusNodeOnly = useCallback(
+    (nodeId: string) => {
+      const currentWorkspace = workspaceRef.current;
+      const next = focusSelectedNode(currentWorkspace, nodeId);
+      const before = selectedProject(currentWorkspace)?.snapshot;
+      const after = selectedProject(next)?.snapshot;
+      commit(next, before !== after);
+    },
+    [commit],
+  );
+
   const handleAddChildForNode = useCallback(
     (nodeId: string) => {
-      handleFocusNode(nodeId);
+      handleFocusNodeOnly(nodeId);
       setChildAuthoringParentId(nodeId);
     },
-    [handleFocusNode],
+    [handleFocusNodeOnly],
   );
 
   const handleCompleteNode = useCallback(
     (nodeId: string) => {
-      handleFocusNode(nodeId);
+      handleFocusNodeOnly(nodeId);
       dispatch({ type: "closeNode", nodeId });
     },
-    [dispatch, handleFocusNode],
+    [dispatch, handleFocusNodeOnly],
   );
 
   const handleNodeDragStop = useCallback(

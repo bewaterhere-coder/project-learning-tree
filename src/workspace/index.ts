@@ -9,6 +9,7 @@ export {
   deleteArchivedProject,
   followCurrentNode,
   focusAndOpenInspector,
+  focusSelectedNode,
   moveFloatingChat,
   normalizeChatBindings,
   normalizeWorkspaceSelection,

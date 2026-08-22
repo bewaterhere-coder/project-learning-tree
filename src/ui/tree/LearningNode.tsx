@@ -29,8 +29,12 @@ export function LearningNode({
     count: data.unresolvedBlockerCount,
   });
   const canAddChild = lifecycle !== "closed" && onAddChild;
-  const canComplete = lifecycle !== "closed" && onComplete;
+  const showComplete = lifecycle !== "closed" && onComplete;
+  const completeEnabled = showComplete && data.canComplete === true;
   const isCompleted = lifecycle === "closed";
+  const completeTitle = completeEnabled
+    ? t(locale, "actions.complete")
+    : t(locale, "close.notReady");
 
   return (
     <div
@@ -43,6 +47,7 @@ export function LearningNode({
       data-recommended={data.isRecommended ? "true" : "false"}
       data-project-root={data.isProjectRoot ? "true" : "false"}
       data-completed={isCompleted ? "true" : "false"}
+      data-can-complete={completeEnabled ? "true" : "false"}
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <p className="node-question">{data.question}</p>
@@ -117,16 +122,20 @@ export function LearningNode({
             <span aria-hidden="true">＋</span>
           </Button>
         ) : null}
-        {canComplete ? (
+        {showComplete ? (
           <Button
             type="button"
             variant="ghost"
             className="node-complete-action"
             data-testid={`node-complete-${data.id}`}
-            aria-label={t(locale, "actions.complete")}
-            title={t(locale, "actions.complete")}
+            aria-label={completeTitle}
+            title={completeTitle}
+            disabled={!completeEnabled}
             onClick={(event) => {
               event.stopPropagation();
+              if (!completeEnabled) {
+                return;
+              }
               onComplete();
             }}
           >

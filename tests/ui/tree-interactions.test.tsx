@@ -61,7 +61,7 @@ describe("tree interactions", () => {
     );
   });
 
-  it("leaves lifecycle unchanged when Complete fails readiness", async () => {
+  it("disables Complete on an unready Question instead of using Domain errors", async () => {
     const user = userEvent.setup();
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
@@ -70,16 +70,18 @@ describe("tree interactions", () => {
     });
     render(<App initialSnapshot={focused.snapshot} />);
 
+    const complete = screen.getByTestId(`node-complete-${ids.parent}`);
+    expect(complete).toBeDisabled();
+    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
+      "data-can-complete",
+      "false",
+    );
+    await user.click(complete);
+    expect(screen.queryByTestId("node-action-error")).toBeNull();
     expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
       "data-lifecycle",
       "active",
     );
-    await user.click(screen.getByTestId(`node-complete-${ids.parent}`));
-    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
-      "data-lifecycle",
-      "active",
-    );
-    expect(screen.getByTestId("node-action-error")).toBeInTheDocument();
   });
 
   it("closes a prepared open leaf without activateNode and without mutating stack", async () => {

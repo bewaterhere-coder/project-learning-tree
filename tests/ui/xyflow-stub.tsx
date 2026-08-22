@@ -79,6 +79,7 @@ export function ReactFlow({
             data-on-stack={node.data.isOnActiveStack ? "true" : "false"}
             data-focus={node.data.isCurrentFocus ? "true" : "false"}
             data-parent={node.data.parentId ?? ""}
+            data-can-complete={node.data.canComplete ? "true" : "false"}
             data-x={String(node.position?.x ?? 0)}
             data-y={String(node.position?.y ?? 0)}
             onClick={(event) =>

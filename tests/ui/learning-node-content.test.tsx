@@ -28,6 +28,7 @@ describe("LearningNode content", () => {
       isActiveStackLeaf: false,
       isCurrentFocus: false,
       isProjectRoot: false,
+      canComplete: false,
     });
     expect(screen.getByTestId("node-goal-n1")).toHaveTextContent(
       "Understand component rendering",
@@ -46,6 +47,7 @@ describe("LearningNode content", () => {
       isActiveStackLeaf: false,
       isCurrentFocus: false,
       isProjectRoot: false,
+      canComplete: false,
     });
     const meta = screen.getByTestId("node-goal-n2");
     expect(meta).toHaveClass("node-meta");
