@@ -271,13 +271,15 @@ export function NodeDetails({
   const hasRequiredEvidence = (readiness?.requirements ?? []).some(
     (requirement) => requirement.kind === "evidence",
   );
-  const recordUnmet = (readiness?.requirements ?? []).some(
-    (requirement) =>
-      !requirement.met &&
-      (requirement.kind === "summary" ||
-        requirement.kind === "criterion" ||
-        requirement.kind === "evidence"),
-  );
+  const recordUnmet =
+    showCloseRequirements &&
+    (readiness?.requirements ?? []).some(
+      (requirement) =>
+        !requirement.met &&
+        (requirement.kind === "summary" ||
+          requirement.kind === "criterion" ||
+          requirement.kind === "evidence"),
+    );
 
   return (
     <section className="inspector" data-testid="node-inspector">

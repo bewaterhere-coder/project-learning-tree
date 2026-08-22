@@ -97,6 +97,27 @@ export function TreeCanvas({
 
   return (
     <div className="tree-canvas-host">
+      <svg className="edge-marker-defs" aria-hidden="true">
+        <defs>
+          <marker
+            id="blocking-tick"
+            markerWidth="10"
+            markerHeight="10"
+            refX="6"
+            refY="5"
+            orient="auto"
+          >
+            <rect
+              x="2"
+              y="1.5"
+              width="3.5"
+              height="7"
+              rx="0.5"
+              fill="var(--color-warning)"
+            />
+          </marker>
+        </defs>
+      </svg>
       <ReactFlow<LearningFlowNode>
         nodes={nodes}
         edges={derived.edges}
@@ -116,22 +137,7 @@ export function TreeCanvas({
         minZoom={0.4}
         maxZoom={1.5}
         proOptions={{ hideAttribution: true }}
-      >
-        <svg>
-          <defs>
-            <marker
-              id="blocking-tick"
-              markerWidth="8"
-              markerHeight="8"
-              refX="5"
-              refY="4"
-              orient="auto"
-            >
-              <rect x="1" y="1.5" width="3" height="5" rx="0.5" fill="var(--color-warning)" />
-            </marker>
-          </defs>
-        </svg>
-      </ReactFlow>
+      />
     </div>
   );
 }

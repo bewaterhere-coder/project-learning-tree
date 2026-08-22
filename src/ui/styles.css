@@ -690,7 +690,6 @@ textarea {
 
 .ui-button-primary,
 .authoring-actions button[type="submit"],
-.child-authoring > button,
 .domain-error button {
   border-color: var(--color-accent);
   background: var(--color-accent);
@@ -918,6 +917,14 @@ textarea {
 .tree-canvas-host {
   width: 100%;
   height: 100%;
+  position: relative;
+}
+
+.edge-marker-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .canvas-core-action,
