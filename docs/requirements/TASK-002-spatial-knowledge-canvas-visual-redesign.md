@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: acceptance
+  stage: accepted
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
+    acceptance_approved: true
     merge_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: user
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
@@ -453,11 +453,23 @@ Visual evidence should cover at least:
 - zoomed-out overview;
 - zoomed-in node interaction.
 
+## Acceptance Review
+
+Accepted against PR #19 at implementation head `32a9a80496b2b8c19aa66f86dbf14db3b0799d4d`.
+
+Repository-visible evidence reviewed:
+
+- LearningNode hierarchy is quieter: question-first typography, restrained Focus/Active cues, receded Parked/Closed presentation, hover/focus-revealed Node Chat.
+- Edge strokes are materially reduced while TASK-001 geometry/routing is preserved; blocking tick remains but is softened.
+- Header, sidebar, Details and Chat chrome are visually receded through presentation-layer CSS changes.
+- Presentation-only Knowledge Cluster regions are derived from existing root subtrees, are non-interactive, and do not add domain or persistence semantics.
+- Solid canvas and `minZoom=0.4` decisions are preserved.
+- Visual snapshot / milestone screenshot assets were refreshed on the same PR lineage.
+- Latest GitHub Actions CI for the implementation head passed both `check` and `e2e`, including `typecheck`, unit tests, build and `npm run test:e2e`.
+
+No acceptance-blocking code or workflow regression was found in the reviewed diff/evidence.
+
 ## Cursor Gate
 
-Plan review approved (`plan_approved=true`). Implementation completed on
-`task/TASK-002-spatial-knowledge-canvas-visual-redesign` / PR #19.
-
-**Acceptance handoff:** `development.stage: acceptance`, `next_expected_actor: chatgpt`,
-`acceptance_approved: false`. Please run **ChatGPT Acceptance Review TASK-002**.
-Do not self-approve acceptance. Do not merge PR #19 until acceptance is recorded.
+Acceptance review complete (`acceptance_approved=true`). TASK-002 is now `accepted`.
+PR #19 remains open and unmerged; `merge_verified=false` until an explicit merge is performed and read back.
