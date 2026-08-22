@@ -1,0 +1,12 @@
+---
+description: Architecture boundaries for Project Learning Tree
+alwaysApply: true
+---
+
+# Architecture Rules
+
+- Dependencies point inward: UI/Infrastructure → Application → Domain.
+- Domain must remain framework-independent and browser-independent.
+- Do not add infrastructure for future milestones preemptively.
+- Prefer explicit domain operations over UI-driven state mutation.
+- Keep the first implementation local-first.
