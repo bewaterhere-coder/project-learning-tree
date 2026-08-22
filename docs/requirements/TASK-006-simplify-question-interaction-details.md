@@ -10,11 +10,11 @@ pr:
   base_ref: main
   state: open
 development:
-  stage: acceptance
+  stage: accepted
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
+    acceptance_approved: true
     completion_verified: false
   next_expected_actor: chatgpt
 artifacts:
@@ -208,36 +208,42 @@ This task does not include:
 
 ## Acceptance Criteria
 
-- [ ] A Question has no required “开始学习 / Start Learning” interaction.
-- [ ] Primary UI no longer presents `未开始 / 学习中 / Active Learning` ceremony for Questions.
-- [ ] Clicking/focusing a Question is sufficient to begin interacting with it.
-- [ ] Question node/card exposes direct contextual Chat access.
-- [ ] Question node/card exposes direct child-question creation.
-- [ ] Details panel does not contain a duplicate Chat action.
-- [ ] Details panel does not contain a duplicate Add Child Question action.
-- [ ] Details panel does not contain parent/back navigation that duplicates tree navigation.
-- [ ] Details panel does not contain Start/Pause/Resume learning controls.
-- [ ] Details panel primarily exposes `达成条件` and `心得` in zh-CN.
-- [ ] Completion/progress does not depend on an explicit Start Learning state.
-- [ ] No new persisted state is introduced solely for “learning started / learning active”.
-- [ ] Existing contextual chat persistence is not regressed.
-- [ ] Existing Question parent/child graph behavior is not regressed.
-- [ ] New/changed zh-CN copy is fully localized.
+- [x] A Question has no required “开始学习 / Start Learning” interaction.
+- [x] Primary UI no longer presents `未开始 / 学习中 / Active Learning` ceremony for Questions.
+- [x] Clicking/focusing a Question is sufficient to begin interacting with it.
+- [x] Question node/card exposes direct contextual Chat access.
+- [x] Question node/card exposes direct child-question creation.
+- [x] Details panel does not contain a duplicate Chat action.
+- [x] Details panel does not contain a duplicate Add Child Question action.
+- [x] Details panel does not contain parent/back navigation that duplicates tree navigation.
+- [x] Details panel does not contain Start/Pause/Resume learning controls.
+- [x] Details panel primarily exposes `达成条件` and `心得` in zh-CN.
+- [x] Completion/progress does not depend on an explicit Start Learning state.
+- [x] No new persisted state is introduced solely for “learning started / learning active”.
+- [x] Existing contextual chat persistence is not regressed.
+- [x] Existing Question parent/child graph behavior is not regressed.
+- [x] New/changed zh-CN copy is fully localized.
 
 ## Plan Review Decision
 
 Plan approved after revision. The approved plan explicitly removes hidden `activateNode()` as a completion precondition and defines direct completion (`open -> closed` when convergence/readiness is satisfied) with an A/B active-stack isolation regression. Node Add Child uses ordinary `createChild` only; TASK-006 does not introduce hidden activation for blocking-child authoring.
 
+## Acceptance Decision
+
+Accepted on PR #27 at implementation head `644d3d45b03e3e7caa2a8bc97fb85e6facddcd78`.
+
+Verified:
+
+1. Node Complete is disabled until `selectCloseReadiness.allowed` and becomes enabled when the Question is ready.
+2. Node Add Child and Complete focus the Question without force-opening Details; clicking the card itself still opens Details.
+3. Direct completion does not call `activateNode` and preserves unrelated Active Stack/lifecycle state.
+4. Details is reduced to the knowledge/reflection surface centered on `达成条件` and `心得`.
+5. Node owns Chat, Add Child, and Complete; duplicate Details actions and learning-state ceremony are removed.
+6. Dedicated TASK-006 acceptance regressions cover readiness gating and Details-closed node actions.
+7. GitHub Actions CI run #116 completed successfully on the accepted head.
+
+`acceptance_approved=true`. Completion remains unverified until PR #27 is merged to `main` and merge read-back succeeds.
+
 ## Cursor Handoff
 
-Implementation is complete on this same TASK-006 branch / PR #27. Awaiting ChatGPT **acceptance** review (`acceptance_approved=true`). Do not merge before acceptance.
-
-Implemented:
-
-1. Direct completion (`open`/`parked`/`active` → `closed`) without `activateNode` precondition.
-2. A/B regression: completing Question B does not mutate Question A `activeStack` / lifecycles.
-3. Node owns Chat, Add child (`createChild` only), and Complete (`已完成`).
-4. Details is knowledge/reflection: `达成条件` + `心得` (editable); duplicate Details actions removed.
-5. Start Learning / learning-status ceremony removed from primary UI (including chat header).
-6. Node Complete is disabled until `selectCloseReadiness.allowed` (no Domain-error-as-affordance).
-7. Node Add Child / Complete focus without force-opening Details; card click still opens Details.
+Implementation and Acceptance are complete on this TASK-006 branch / PR #27. Do not create another TASK-006 PR. Merge PR #27 to `main`, then verify the integrated state before claiming TASK-006 done.
