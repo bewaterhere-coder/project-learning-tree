@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: draft
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-004-plan.md
 ---
@@ -335,16 +335,8 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-Canonical Requirement is published on PR #22.
+Canonical implementation plan: `docs/plans/TASK-004-plan.md`.
 
-Development stage is `planning`. `requirement_ready: true`. `plan_approved: false`. Next expected actor: Cursor.
+Development stage is `plan_review`. Next expected actor: ChatGPT (Plan review).
 
-Cursor must inspect current project lifecycle, workspace persistence, conversation persistence, project-scoped preferences/bindings, and the Archived Projects UI, then write the canonical implementation plan to:
-
-```text
-docs/plans/TASK-004-plan.md
-```
-
-on this same task branch and PR.
-
-Do not implement product code before ChatGPT reviews and approves the Plan. Do not create another development PR for planning or implementation.
+Cursor must **not** implement product code until Plan review records `plan_approved=true`. Keep all further work on this same task branch and PR.
