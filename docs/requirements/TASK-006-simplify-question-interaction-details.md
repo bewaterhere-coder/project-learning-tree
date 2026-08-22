@@ -239,3 +239,5 @@ Implemented:
 3. Node owns Chat, Add child (`createChild` only), and Complete (`已完成`).
 4. Details is knowledge/reflection: `达成条件` + `心得` (editable); duplicate Details actions removed.
 5. Start Learning / learning-status ceremony removed from primary UI (including chat header).
+6. Node Complete is disabled until `selectCloseReadiness.allowed` (no Domain-error-as-affordance).
+7. Node Add Child / Complete focus without force-opening Details; card click still opens Details.
