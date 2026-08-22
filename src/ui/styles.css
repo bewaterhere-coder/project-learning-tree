@@ -1,5 +1,4 @@
-:root,
-[data-theme="light"] {
+:root {
   color-scheme: light;
   font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", sans-serif;
   /* Fallback until recipe apply runs (Rosé Pine Dawn evaluation default). */
@@ -49,9 +48,9 @@
   background: var(--color-bg-surface);
 }
 
-[data-theme="dark"] {
+/* Dark fallbacks only on html — never on .shell[data-theme], which would shadow recipe vars. */
+html[data-theme="dark"] {
   color-scheme: dark;
-  /* Fallback until recipe apply runs (Rosé Pine Moon). */
   --color-bg-canvas: #232136;
   --color-bg-surface: #2a273f;
   --color-bg-elevated: #393552;

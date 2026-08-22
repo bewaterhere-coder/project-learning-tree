@@ -1,4 +1,5 @@
-import { mkdirSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { mkdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { Page } from "@playwright/test";
@@ -25,12 +26,9 @@ async function prepareRepresentativeScene(page: Page): Promise<void> {
   const { projectA } = createDemoWorkspaceFixture();
   await page.locator(`[data-node-id="${projectA.ids.q2}"]`).waitFor();
   await page.locator(`[data-node-id="${projectA.ids.q2}"]`).click();
-  const inspector = page.getByTestId("inspector-question");
-  if (await inspector.isVisible().catch(() => false)) {
-    const close = page.getByTestId("inspector-close");
-    if (await close.isVisible().catch(() => false)) {
-      await close.click();
-    }
+  const close = page.getByTestId("inspector-close");
+  if (await close.isVisible().catch(() => false)) {
+    await close.click();
   }
 }
 
@@ -48,6 +46,15 @@ async function applyRecipeAndScheme(
     "data-theme-recipe",
     recipeId,
   );
+  await expect
+    .poll(async () =>
+      page.evaluate(() =>
+        getComputedStyle(document.documentElement)
+          .getPropertyValue("--color-bg-canvas")
+          .trim(),
+      ),
+    )
+    .not.toEqual("");
   await page.getByTestId("shell").waitFor();
 }
 
@@ -63,6 +70,7 @@ test.describe("TASK-007 theme recipe acceptance screenshots", () => {
       await prepareRepresentativeScene(page);
 
       const written: string[] = [];
+      const digests = new Set<string>();
       for (const scheme of SCHEMES) {
         for (const recipeId of RECIPES) {
           await applyRecipeAndScheme(page, recipeId, scheme);
@@ -70,6 +78,9 @@ test.describe("TASK-007 theme recipe acceptance screenshots", () => {
           const target = path.join(outDir, filename);
           await page.screenshot({ path: target, fullPage: false });
           written.push(filename);
+          digests.add(
+            createHash("sha256").update(readFileSync(target)).digest("hex"),
+          );
         }
       }
 
@@ -83,6 +94,7 @@ test.describe("TASK-007 theme recipe acceptance screenshots", () => {
         "dark-everforest.png",
         "dark-nord.png",
       ]);
+      expect(digests.size).toBe(8);
     });
   });
 });

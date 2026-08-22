@@ -1,7 +1,7 @@
 ---
 task_id: TASK-007
 title: UI Theme Recipe System
-status: implementation
+status: acceptance
 requirement: ../requirements/TASK-007-ui-theme-recipe-system.md
 ---
 
@@ -9,7 +9,7 @@ requirement: ../requirements/TASK-007-ui-theme-recipe-system.md
 
 This is the canonical implementation plan for TASK-007. It records code evidence from the Planning Gate and the smallest change that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `implementation` — Plan approved on PR #28; product implementation in progress (`plan_approved=true`).
+**Gate:** `acceptance` — implementation complete on PR #28; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 **Hard constraints (Plan + Implementation):**
 
