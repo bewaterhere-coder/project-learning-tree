@@ -9,9 +9,15 @@ requirement: ../requirements/TASK-004-archived-project-delete-restore.md
 
 This is the canonical implementation plan for TASK-004. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `plan_review` — awaiting ChatGPT Plan review (`plan_approved=true`).
+**Gate:** `plan_review` — revised per PR #22 blocking finding; awaiting re-review (`plan_approved=true`).
 
 Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
+
+## Review revisions (PR #22)
+
+One blocking finding addressed in this revision:
+
+1. **Fail-closed destructive cleanup** — Workspace delete returns a positive `{ workspace, deleted }` (or equivalent removed-project identity). App orchestration runs semantic write, conversation prune, and preference/binding cleanup **only when `deleted === true`**. Active or missing `projectId` must leave semantic, conversations, and preferences entirely unchanged. Orchestration-level tests must prove an active project ID cannot destroy cross-store data.
 
 ## Goal
 
@@ -135,21 +141,25 @@ Archive/restore already call `commit(..., true)`. Delete must do the same.
 
 Do not add `archivedAt`, soft-delete, trash, or a lifecycle enum.
 
-Add workspace op:
+Add workspace op that returns an explicit deletion outcome (not a bare workspace):
 
 ```text
-deleteArchivedProject(workspace, projectId) → LearningWorkspace
+deleteArchivedProject(workspace, projectId)
+  → { workspace: LearningWorkspace; deleted: false }
+  | { workspace: LearningWorkspace; deleted: true; projectId: ProjectId }
 ```
 
 Contract:
 
-1. No-op if project missing or `archived !== true` (active cannot be permanently deleted via this op).
-2. Remove that entry from `workspace.projects` (snapshot, bootstrap, in-memory layout go with it).
-3. If `selectedProjectId === projectId`, set selection to `nextActiveProjectId(...)` or `null` (reuse existing helper).
+1. If project missing or `archived !== true`: return `{ workspace` (same reference / unchanged), `deleted: false }`. Active projects cannot be permanently deleted via this op.
+2. If archived: remove that entry from `workspace.projects` (snapshot, bootstrap, in-memory layout go with it) and return `{ workspace: next, deleted: true, projectId }`.
+3. On successful delete, if `selectedProjectId === projectId`, set selection to `nextActiveProjectId(...)` or `null` (reuse existing helper).
 4. Leave unrelated projects untouched (identity and snapshot references preserved).
-5. Clear `lastError` / `lastErrorCommand` like archive/restore.
+5. On successful delete, clear `lastError` / `lastErrorCommand` like archive/restore.
 
 Export from [`src/workspace/index.ts`](../../src/workspace/index.ts). No Domain or Application API required — project membership is a Workspace concern.
+
+The `deleted` flag is the lifecycle-layer positive confirmation required by Decision C. UI visibility alone is not the safety boundary.
 
 ### B. Confirmation dialog before mutation
 
@@ -179,18 +189,35 @@ UI contract:
 
 Active project menus must **not** gain a delete action.
 
-### C. Cross-store cleanup ownership
+### C. Cross-store cleanup is fail-closed on `deleted === true`
 
-Orchestration lives in App (same place archive/restore are committed), not in React talking to raw `localStorage`:
+Orchestration lives in App (same place archive/restore are committed), not in React talking to raw `localStorage`.
+
+**Required invariant** (enforced in orchestration, not only UI):
+
+```text
+active or missing projectId
+→ no project removal
+→ no semantic deletion write
+→ no conversation prune
+→ no preference/binding cleanup
+```
+
+Canonical confirm handler:
 
 ```text
 onConfirmDelete(projectId):
-  1. next = deleteArchivedProject(workspace, projectId)
-  2. commit(next, true)                         // semantic write
-  3. conversationStore.deleteForProject(projectId)  // conversation prune + persist
+  result = deleteArchivedProject(workspace, projectId)
+  if result.deleted !== true:
+    return   // fail-closed: no commit, no conversation prune, no preference mutation
+  commit(result.workspace, true)                      // semantic write only after removal
+  conversationStore.deleteForProject(result.projectId) // prune only the removed id
   // preferences: existing useEffect autosave drops the project key
   //   because serializeWorkspacePreferences only emits current projects
+  //   — and only runs because commit updated workspace after deleted === true
 ```
+
+Do **not** call `commit(..., true)` or `deleteForProject` when `deleted === false`. A UI bug, stale callback, test hook, or future caller that passes an active `projectId` must not destroy that project’s conversations or rewrite stores as if deletion succeeded.
 
 #### Conversation
 
@@ -199,18 +226,19 @@ Add `deleteForProject(projectId)` on [`ConversationStore`](../../src/conversatio
 - Load registry; remove every entry whose `identity.projectId === projectId` (both `node:` and `project:` kinds).
 - **Always persist** the resulting registry — including when empty.
 - Fix / bypass the current `saveRegistry` empty no-op for this path (either make `deleteForProject` call `writeRegistry` directly, or change empty-registry persistence so delete cannot leave stale bytes under `plt.conversation.v1`).
+- Callers must invoke this **only after** workspace reports `deleted === true`.
 
 Do not invent a global purge abstraction.
 
 #### Preferences / bindings
 
-No separate prune helper required for correctness: after `deleteArchivedProject`, preference autosave rewrites `plt.workspace.layout.v2` without the deleted project key (and therefore without its `chatBinding` / layout). Tests must assert the key is gone after delete + preference save / reload.
+No separate prune helper required for successful delete: after a successful `deleteArchivedProject`, preference autosave rewrites `plt.workspace.layout.v2` without the deleted project key (and therefore without its `chatBinding` / layout).
 
-Optional explicit `omit` in serialize is unnecessary if tests cover the autosave path.
+On `deleted === false`, workspace must not be committed/updated, so preference autosave must not run as a side effect of the failed delete path. Tests must assert the preference key remains for an active target that was incorrectly asked to delete.
 
 #### Semantic
 
-`saveSemanticWorkspace` already serializes only remaining projects + `selectedProjectId`. No schema / version bump.
+`saveSemanticWorkspace` already serializes only remaining projects + `selectedProjectId`. No schema / version bump. Semantic write occurs only inside the `deleted === true` branch.
 
 ### D. Final-project delete → Product Empty Workspace
 
@@ -243,16 +271,16 @@ Restore must not regenerate nodes or clear conversations.
 | --- | --- |
 | Domain | None |
 | Application | None |
-| Workspace | `deleteArchivedProject`; export; selection fallback reuse |
-| Conversation | `deleteForProject`; empty-registry persist on prune |
-| Preferences | Unchanged API; rely on existing autosave rewrite |
-| UI | Archived menu Delete permanently; ConfirmDialog; i18n; App orchestration with `commit(..., true)` + conversation prune |
+| Workspace | `deleteArchivedProject` → `{ workspace, deleted, projectId? }`; export; selection fallback reuse |
+| Conversation | `deleteForProject`; empty-registry persist on prune; invoked only after `deleted === true` |
+| Preferences | Unchanged API; autosave rewrite only after successful workspace commit |
+| UI | Archived menu Delete permanently; ConfirmDialog; i18n; fail-closed App orchestration |
 
 ## Implementation order (after `plan_approved=true`)
 
-1. **Workspace op + unit tests:** `deleteArchivedProject`; selection safety; unrelated projects untouched; final delete → empty.
+1. **Workspace op + unit tests:** `deleteArchivedProject` result shape; `deleted: false` for active/missing; selection safety; unrelated projects untouched; final delete → empty.
 2. **Conversation prune:** `deleteForProject` with durable empty-registry write; unit tests for mixed multi-project registries.
-3. **App orchestration:** wire delete confirm → workspace delete + semantic commit + conversation prune; verify preference autosave drops layout key.
+3. **App orchestration (fail-closed):** confirm handler gates `commit` + conversation prune + preference side effects on `deleted === true`; verify preference autosave drops layout key only on success.
 4. **UI:** ConfirmDialog primitive; archived menu Delete permanently; i18n (en-US / zh-CN); keep active menu Archive-only.
 5. **Tests** below; typecheck / unit / existing e2e smoke; extend project-lifecycle e2e.
 
@@ -262,15 +290,16 @@ Restore must not regenerate nodes or clear conversations.
 
 Extend [`tests/workspace/project-lifecycle.test.ts`](../../tests/workspace/project-lifecycle.test.ts):
 
-- Given archived project, When `deleteArchivedProject`, Then removed from `projects`; other projects unchanged.
-- Given active project, When delete op, Then no-op.
+- Given archived project, When `deleteArchivedProject`, Then `deleted: true` and removed from `projects`; other projects unchanged.
+- Given active project, When delete op, Then `deleted: false` and workspace unchanged (same projects / selection).
+- Given missing projectId, When delete op, Then `deleted: false`.
 - Given `selectedProjectId` equals deleted id (defensive), Then fallback to next active or `null`.
 - Given sole archived project deleted, Then `projects: []` and `selectedProjectId: null`.
 - Archive → Restore preserves project id and snapshot identity (strengthen if needed for AC-A).
 
 Extend [`tests/workspace/semantic-persistence.test.ts`](../../tests/workspace/semantic-persistence.test.ts):
 
-- Delete calls / results in semantic write without the project; reload does not resurrect it.
+- Successful delete results in semantic write without the project; reload does not resurrect it.
 - Unrelated project semantic data unchanged.
 
 ### Conversation / preferences
@@ -282,7 +311,20 @@ Extend [`tests/conversation/store.test.ts`](../../tests/conversation/store.test.
 
 Preferences / bindings (workspace or UI test):
 
-- After delete + preference save, `StoredWorkspacePreferences.projects[deletedId]` is absent; other project layouts remain.
+- After successful delete + preference save, `StoredWorkspacePreferences.projects[deletedId]` is absent; other project layouts remain.
+
+### Orchestration fail-closed (required)
+
+Add an App / product-workspace orchestration test:
+
+- Given an **active** `projectId` (and seeded semantic + conversation + preference records for that project), When the confirm-delete orchestration path is invoked with that id, Then:
+  - workspace projects still contain the active project;
+  - semantic store still contains the project;
+  - conversation records for that projectId remain;
+  - preference/layout/binding for that projectId remain;
+  - no `deleteForProject` side effect and no semantic deletion write occurred.
+
+This proves the safety boundary is not UI-only.
 
 ### UI
 
@@ -325,6 +367,6 @@ Create Project → Archive → Delete permanently → Cancel
 | --- | --- |
 | Requirement ready | true |
 | Canonical plan written | this file |
-| Plan approved | false — awaiting ChatGPT review |
+| Plan approved | false — revised; awaiting re-review |
 | Implementation | blocked until `plan_approved=true` |
-| Next expected actor | chatgpt (Plan review) |
+| Next expected actor | chatgpt (Plan re-review) |
