@@ -111,6 +111,25 @@ export function ReactFlow({
   );
 }
 
+export function applyNodeChanges(
+  changes: Array<{
+    id: string;
+    type: string;
+    position?: { x: number; y: number };
+  }>,
+  nodes: StubNode[],
+): StubNode[] {
+  return nodes.map((node) => {
+    const change = changes.find(
+      (entry) => entry.id === node.id && entry.type === "position",
+    );
+    if (change?.position === undefined) {
+      return node;
+    }
+    return { ...node, position: change.position };
+  });
+}
+
 export function Background() {
   return null;
 }
