@@ -935,7 +935,9 @@ export function closeNode(
   if (!found.ok) {
     return fail(found.error);
   }
-  if (found.node.lifecycle !== "active") {
+  // Completion is 未完成 → 已完成: allow close from open/active/parked when
+  // convergence holds. Do not require Active Stack membership (no activateNode).
+  if (found.node.lifecycle === "closed") {
     return fail({
       kind: "InvalidLifecycleTransition",
       nodeId: command.nodeId,
@@ -954,8 +956,18 @@ export function closeNode(
     return fail({ kind: "NodeNotFound", nodeId: command.nodeId });
   }
   next.nodes[command.nodeId] = { ...node, lifecycle: "closed" };
-  if (currentStackLeaf(snapshot) === command.nodeId) {
-    next.pass.activeStack = next.pass.activeStack.slice(0, -1);
+  const stackIndex = snapshot.pass.activeStack.indexOf(command.nodeId);
+  if (stackIndex >= 0) {
+    // If the completed node was on the active stack, drop it and any deeper
+    // stack members. Do not rewrite unrelated branches (no applyNewStack).
+    const removed = next.pass.activeStack.slice(stackIndex + 1);
+    next.pass.activeStack = next.pass.activeStack.slice(0, stackIndex);
+    for (const id of removed) {
+      const stacked = next.nodes[id];
+      if (stacked?.lifecycle === "active") {
+        next.nodes[id] = { ...stacked, lifecycle: "open" };
+      }
+    }
   }
   return ok(next, [{ type: "NodeClosed", nodeId: command.nodeId }]);
 }

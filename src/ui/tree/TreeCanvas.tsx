@@ -35,6 +35,14 @@ function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
             ? () => data.onOpenChatForNode?.(data.id)
             : undefined
         }
+        onAddChild={
+          data.onAddChildForNode
+            ? () => data.onAddChildForNode?.(data.id)
+            : undefined
+        }
+        onComplete={
+          data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
+        }
       />
     </>
   );
@@ -53,6 +61,8 @@ export function TreeCanvas({
   recommendedNodeIds = [],
   onFocusNode,
   onOpenChatForNode,
+  onAddChildForNode,
+  onCompleteNode,
   onNodeDragStop,
   onViewportChange,
 }: {
@@ -63,6 +73,8 @@ export function TreeCanvas({
   recommendedNodeIds?: readonly NodeId[];
   onFocusNode: (nodeId: NodeId) => void;
   onOpenChatForNode: (nodeId: NodeId) => void;
+  onAddChildForNode: (nodeId: NodeId) => void;
+  onCompleteNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
@@ -77,9 +89,11 @@ export function TreeCanvas({
         data: {
           ...node.data,
           onOpenChatForNode,
+          onAddChildForNode,
+          onCompleteNode,
         },
       })),
-    [onOpenChatForNode],
+    [onOpenChatForNode, onAddChildForNode, onCompleteNode],
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

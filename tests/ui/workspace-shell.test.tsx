@@ -58,11 +58,9 @@ describe("project sidebar", () => {
       />,
     );
 
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
     await user.click(
       screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Alpha");
     expect(screen.getByTestId(`node-${projectB.ids.alpha}`)).toBeInTheDocument();
     expect(screen.getByTestId(`node-${projectB.ids.alpha1}`)).toHaveAttribute(
       "data-focus",
@@ -157,7 +155,6 @@ describe("inspector column", () => {
       "data-focus",
       "true",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
 
     await user.click(screen.getByTestId("inspector-open"));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
@@ -338,28 +335,21 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("Question details");
-    expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Enter this question",
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
+      "Completion criteria",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
-    expect(screen.getByTestId("inspector-depth")).toHaveTextContent("Level 1");
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent(
+      "Reflection",
+    );
+    expect(screen.queryByTestId("action-activate")).toBeNull();
+    expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
+    expect(screen.getByTestId(`node-complete-${projectA.ids.q2}`)).toHaveTextContent(
+      "Mark complete",
+    );
 
-    await user.click(screen.getByTestId(`node-${projectA.ids.q12}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent(
-      "Continue later",
-    );
-    await user.click(screen.getByTestId(`node-${projectA.ids.q11}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
-    expect(screen.getByTestId("action-close")).toHaveTextContent("Complete");
-    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
-      "open sub-questions",
-    );
-    expect(screen.getByTestId(`lifecycle-badge-${projectA.ids.q1}`)).toHaveTextContent(
-      "Learning",
-    );
+    expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
+    expect(screen.getByTestId(`node-add-child-${projectA.ids.q1}`)).toBeInTheDocument();
 
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
@@ -370,8 +360,11 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("问题详情");
-    expect(screen.getByTestId("action-close")).toHaveTextContent("完成问题");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("学习中");
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent("达成条件");
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent("心得");
+    expect(screen.getByTestId(`node-complete-${projectA.ids.q1}`)).toHaveTextContent(
+      "已完成",
+    );
     expect(document.documentElement.lang).toBe("zh-CN");
 
     const inspector = screen.getByTestId("node-inspector").textContent ?? "";
@@ -387,12 +380,15 @@ describe("i18n catalogs", () => {
       "without a summary",
       "unsatisfied",
       "satisfied",
+      "Start learning",
+      "开始学习",
+      "学习中",
     ]) {
       expect(chrome).not.toContain(forbidden);
     }
-    expect(inspector).not.toMatch(/\bopen\b/);
-    expect(inspector).not.toMatch(/\bactive\b/);
-    expect(inspector).not.toMatch(/\bclosed\b/);
-    expect(inspector).not.toMatch(/\bparked\b/);
+    expect(inspector).not.toMatch(/\bopen\b/i);
+    expect(inspector).not.toMatch(/\bactive\b/i);
+    expect(inspector).not.toMatch(/\bclosed\b/i);
+    expect(inspector).not.toMatch(/\bparked\b/i);
   });
 });

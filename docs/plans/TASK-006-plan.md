@@ -1,7 +1,7 @@
 ---
 task_id: TASK-006
 title: Simplify Question Interaction and Details Panel
-status: planning
+status: implementation
 requirement: ../requirements/TASK-006-simplify-question-interaction-details.md
 pr: 27
 branch: task/TASK-006-simplify-question-interaction-details
@@ -11,7 +11,7 @@ branch: task/TASK-006-simplify-question-interaction-details
 
 This is the canonical implementation plan for TASK-006. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `planning` — awaiting ChatGPT plan review (`plan_approved=true`). **Do not implement production code until that gate flips.**
+**Gate:** `implementation` — `plan_approved=true`; implementing approved slices on PR #27.
 
 ## Review revisions (PR #27 plan review)
 

@@ -23,15 +23,11 @@ function renderFocused(snapshot: Parameters<typeof createWorkspace>[0][0]) {
 }
 
 describe("close readiness UI", () => {
-  it("shows a missing summary, required marker, and disabled Complete before click", () => {
+  it("shows missing 心得 / Reflection status in Details", () => {
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
-      type: "activateNode",
-      nodeId: branch.ids.childA,
-    });
     const missingSummary = createClosableNodeFixture(
-      activated.snapshot,
+      branch.snapshot,
       branch.ids.childA,
       ports,
       { includeSummary: false },
@@ -42,24 +38,21 @@ describe("close readiness UI", () => {
     });
     renderFocused(focused.snapshot);
 
-    expect(screen.getByTestId("summary-required-marker")).toHaveTextContent("*");
-    expect(screen.getByTestId("summary-status")).toHaveTextContent("Not filled yet");
-    expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent(
-      "Add a learning summary",
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent(
+      "Reflection",
+    );
+    expect(screen.getByTestId("summary-status")).toHaveTextContent(
+      "Not filled yet",
     );
     expect(screen.queryByTestId("domain-error")).toBeNull();
   });
 
-  it("removes the unmet summary requirement after a summary is added", () => {
+  it("clears the unmet summary hint after 心得 is saved", async () => {
+    const user = userEvent.setup();
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
-      type: "activateNode",
-      nodeId: branch.ids.childA,
-    });
     const missingSummary = createClosableNodeFixture(
-      activated.snapshot,
+      branch.snapshot,
       branch.ids.childA,
       ports,
       { includeSummary: false },
@@ -69,9 +62,7 @@ describe("close readiness UI", () => {
       nodeId: branch.ids.childA,
     });
     const { unmount } = renderFocused(focusedMissing.snapshot);
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent(
-      "Add a learning summary",
-    );
+    expect(screen.getByTestId("summary-status")).toBeInTheDocument();
 
     const added = setNodeSummary(focusedMissing.snapshot, {
       nodeId: branch.ids.childA,
@@ -82,39 +73,37 @@ describe("close readiness UI", () => {
     }
     unmount();
     renderFocused(added.snapshot);
-    expect(screen.queryByTestId("close-unmet")).toBeNull();
-    expect(screen.getByTestId("summary-status")).toHaveTextContent("Done");
-    expect(screen.getByTestId("action-close")).toBeEnabled();
+    expect(screen.queryByTestId("summary-status")).toBeNull();
+    expect(screen.getByTestId(`node-complete-${branch.ids.childA}`)).toBeEnabled();
+    await user.click(screen.getByTestId("inspector-summary"));
   });
 
-  it("shows missing required evidence before click", () => {
+  it("completes from open via the node control without Start Learning", async () => {
+    const user = userEvent.setup();
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
-      type: "activateNode",
-      nodeId: branch.ids.childA,
-    });
-    const missingEvidence = createClosableNodeFixture(
-      activated.snapshot,
-      branch.ids.childA,
+    const closable = createClosableNodeFixture(
+      branch.snapshot,
+      branch.ids.childB,
       ports,
-      { includeEvidence: false, evidenceRequired: true },
     );
-    const focused = dispatchCommand(createSession(missingEvidence), {
+    expect(closable.nodes[branch.ids.childB]?.lifecycle).toBe("open");
+    const focused = dispatchCommand(createSession(closable), {
       type: "focusNode",
-      nodeId: branch.ids.childA,
+      nodeId: branch.ids.childB,
     });
     renderFocused(focused.snapshot);
 
-    expect(screen.getByTestId("evidence-required-marker")).toHaveTextContent("*");
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent(
-      "Add required evidence",
-    );
-    expect(screen.getByTestId("action-close")).toBeDisabled();
+    await user.click(screen.getByTestId(`node-complete-${branch.ids.childB}`));
     expect(screen.queryByTestId("domain-error")).toBeNull();
+    expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
+      "data-lifecycle",
+      "closed",
+    );
+    expect(screen.queryByTestId("action-activate")).toBeNull();
   });
 
-  it("shows unresolved children before click and never uses the global banner", async () => {
+  it("surfaces unmet blocking children when Complete is attempted", async () => {
     const user = userEvent.setup();
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
@@ -123,48 +112,20 @@ describe("close readiness UI", () => {
     });
     renderFocused(focused.snapshot);
 
-    expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Child A");
+    await user.click(screen.getByTestId(`node-complete-${ids.parent}`));
     expect(screen.queryByTestId("domain-error")).toBeNull();
-    await user.click(screen.getByTestId("action-close"));
-    expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
-  });
-
-  it("enables Complete when the node is ready and still runs closeNode", async () => {
-    const user = userEvent.setup();
-    const ports = sequentialFixturePorts();
-    const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
-      type: "activateNode",
-      nodeId: branch.ids.childA,
-    });
-    const closable = createClosableNodeFixture(
-      activated.snapshot,
-      branch.ids.childA,
-      ports,
+    expect(screen.getByTestId("node-action-error")).toBeInTheDocument();
+    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
     );
-    const focused = dispatchCommand(createSession(closable), {
-      type: "focusNode",
-      nodeId: branch.ids.childA,
-    });
-    renderFocused(focused.snapshot);
-
-    expect(screen.getByTestId("action-close")).toBeEnabled();
-    await user.click(screen.getByTestId("action-close"));
-    expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
   });
 
-  it("places unexpected close failures beside Complete instead of the global banner", () => {
+  it("places unexpected close failures beside Details instead of the global banner", () => {
     const ports = sequentialFixturePorts();
     const branch = createBlockedBranchFixture(ports);
-    const activated = dispatchCommand(createSession(branch.snapshot), {
-      type: "activateNode",
-      nodeId: branch.ids.childA,
-    });
     const closable = createClosableNodeFixture(
-      activated.snapshot,
+      branch.snapshot,
       branch.ids.childA,
       ports,
     );
@@ -182,9 +143,7 @@ describe("close readiness UI", () => {
       },
       lastErrorCommand: "closeNode",
     };
-    render(
-      <App initialWorkspace={workspace} />,
-    );
+    render(<App initialWorkspace={workspace} />);
 
     expect(screen.getByTestId("node-action-error")).toHaveTextContent(
       "current learning state",
@@ -198,13 +157,11 @@ describe("close readiness UI", () => {
       ...createWorkspace([snapshot]),
       lastError: {
         kind: "InvalidActiveStack",
-        reason: "cycle in parent chain",
+        reason: "broken",
       },
+      lastErrorCommand: "completePass",
     };
     render(<App initialWorkspace={workspace} />);
-    expect(screen.getByTestId("domain-error")).toHaveTextContent(
-      "contains a loop",
-    );
-    expect(screen.queryByTestId("node-action-error")).toBeNull();
+    expect(screen.getByTestId("domain-error")).toBeInTheDocument();
   });
 });

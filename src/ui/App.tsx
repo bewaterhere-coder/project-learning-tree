@@ -12,8 +12,6 @@ import {
   isGlobalDomainError,
   isProjectCreateCommand,
   isProjectMetadataCommand,
-  selectActionAvailability,
-  selectAuthoringAvailability,
   selectCloseReadiness,
   selectCoreQuestionAuthoring,
   selectInspectorViewModel,
@@ -65,6 +63,7 @@ import { NodeDetails } from "./contextual/NodeDetails.js";
 import { createBrowserPreferenceStorage } from "./persistence/browser-storage.js";
 import { ProjectSidebar } from "./sidebar/ProjectSidebar.js";
 import { TreeCanvas } from "./tree/TreeCanvas.js";
+import { NodeChildAuthoringForm } from "./tree/NodeChildAuthoringForm.js";
 import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
@@ -119,6 +118,9 @@ export function App({
   workspaceRef.current = workspace;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coreFormOpen, setCoreFormOpen] = useState(false);
+  const [childAuthoringParentId, setChildAuthoringParentId] = useState<
+    string | undefined
+  >();
   const [creatingProject, setCreatingProject] = useState(false);
   const resolvedEvidenceProvider = useMemo(
     () => evidenceProvider ?? createGitHubRepositoryEvidenceProvider(),
@@ -188,23 +190,11 @@ export function App({
     () => (current ? selectInspectorViewModel(current.snapshot) : undefined),
     [current],
   );
-  const availability = useMemo(() => {
-    if (!current || inspector?.nodeId === undefined) {
-      return undefined;
-    }
-    return selectActionAvailability(current.snapshot, inspector.nodeId);
-  }, [inspector?.nodeId, current]);
   const readiness = useMemo(() => {
     if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectCloseReadiness(current.snapshot, inspector.nodeId);
-  }, [inspector?.nodeId, current]);
-  const authoring = useMemo(() => {
-    if (!current || inspector?.nodeId === undefined) {
-      return undefined;
-    }
-    return selectAuthoringAvailability(current.snapshot, inspector.nodeId);
   }, [inspector?.nodeId, current]);
   const coreAuthoring = useMemo(
     () => (current ? selectCoreQuestionAuthoring(current.snapshot) : undefined),
@@ -318,6 +308,22 @@ export function App({
     [commit],
   );
 
+  const handleAddChildForNode = useCallback(
+    (nodeId: string) => {
+      handleFocusNode(nodeId);
+      setChildAuthoringParentId(nodeId);
+    },
+    [handleFocusNode],
+  );
+
+  const handleCompleteNode = useCallback(
+    (nodeId: string) => {
+      handleFocusNode(nodeId);
+      dispatch({ type: "closeNode", nodeId });
+    },
+    [dispatch, handleFocusNode],
+  );
+
   const handleNodeDragStop = useCallback(
     (positions: Record<string, NodePosition>) => {
       commit(applyNodeDragStop(workspaceRef.current, positions), false);
@@ -351,12 +357,7 @@ export function App({
     };
   }, []);
 
-  const breadcrumb =
-    tree && tree.activeStack.length > 0
-      ? tree.activeStack
-          .map((id) => tree.nodes.find((node) => node.id === id)?.question ?? id)
-          .join(" › ")
-      : "";
+  const breadcrumb = "";
 
   const emptyProject = current !== undefined && isEmptyFirstLayer(current.snapshot);
 
@@ -667,9 +668,36 @@ export function App({
                         }
                         onFocusNode={handleFocusNode}
                         onOpenChatForNode={handleOpenChatForNode}
+                        onAddChildForNode={handleAddChildForNode}
+                        onCompleteNode={handleCompleteNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
                       />
+                    ) : null}
+                    {childAuthoringParentId ? (
+                      <div className="canvas-child-authoring">
+                        <NodeChildAuthoringForm
+                          parentId={childAuthoringParentId}
+                          locale={locale}
+                          authoringError={
+                            authoringError
+                              ? formatPresentedError(
+                                  locale,
+                                  authoringError,
+                                  current.snapshot,
+                                )
+                              : undefined
+                          }
+                          onCommand={(command) => {
+                            const ok = dispatch(command);
+                            if (ok) {
+                              setChildAuthoringParentId(undefined);
+                            }
+                            return ok;
+                          }}
+                          onCancel={() => setChildAuthoringParentId(undefined)}
+                        />
+                      </div>
                     ) : null}
                     {coreAuthoring?.canAdd ? (
                       <div className="canvas-core-action">
@@ -775,35 +803,17 @@ export function App({
             >
               <NodeDetails
                 inspector={inspector}
-                availability={availability}
                 readiness={readiness}
-                authoring={authoring}
                 locale={locale}
                 actionError={
                   actionError
                     ? formatPresentedError(locale, actionError, current.snapshot)
                     : undefined
                 }
-                authoringError={
-                  authoringError
-                    ? formatPresentedError(
-                        locale,
-                        authoringError,
-                        current.snapshot,
-                      )
-                    : undefined
-                }
                 onCommand={dispatch}
                 onClose={() =>
                   commit(setInspectorOpen(workspaceRef.current, false), false)
                 }
-                onOpenChat={() =>
-                  commit(openChat(workspaceRef.current), false)
-                }
-                onAskSummary={() => {
-                  commit(openChat(workspaceRef.current), false);
-                  setAssistInput("整理当前学习结果");
-                }}
               />
             </ContextualWorkspace>
           ) : null}

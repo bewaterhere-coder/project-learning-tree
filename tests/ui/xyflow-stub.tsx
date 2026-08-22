@@ -9,6 +9,8 @@ interface StubNode {
   data: TreeNodeView & {
     isRecommended?: boolean;
     onOpenChatForNode?: (nodeId: string) => void;
+    onAddChildForNode?: (nodeId: string) => void;
+    onCompleteNode?: (nodeId: string) => void;
     region?: { rootId: string; title: string };
   };
 }
@@ -99,6 +101,16 @@ export function ReactFlow({
               onOpenChat={
                 node.data.onOpenChatForNode
                   ? () => node.data.onOpenChatForNode?.(node.id)
+                  : undefined
+              }
+              onAddChild={
+                node.data.onAddChildForNode
+                  ? () => node.data.onAddChildForNode?.(node.id)
+                  : undefined
+              }
+              onComplete={
+                node.data.onCompleteNode
+                  ? () => node.data.onCompleteNode?.(node.id)
                   : undefined
               }
             />
