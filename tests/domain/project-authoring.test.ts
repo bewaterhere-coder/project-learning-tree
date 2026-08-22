@@ -4,8 +4,10 @@ import {
   CORE_QUESTION_LIMIT,
   createProject,
   defaultPorts,
+  ensureProjectRoot,
 } from "../../src/domain/index.js";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
+import { coreQuestionIds, unwrap } from "./helpers.js";
 
 describe("createProject authoring", () => {
   it("rejects blank and whitespace names", () => {
@@ -32,8 +34,8 @@ describe("addCoreQuestion authoring", () => {
     if (!created.ok) {
       throw new Error("expected project");
     }
-    const snapshot = created.snapshot;
     const ports = sequentialFixturePorts(10);
+    const snapshot = unwrap(ensureProjectRoot(created.snapshot, ports));
     expect(addCoreQuestion(snapshot, { question: "   ", goal: "G" }, ports)).toEqual({
       ok: false,
       error: { kind: "QuestionRequired" },
@@ -42,7 +44,8 @@ describe("addCoreQuestion authoring", () => {
       ok: false,
       error: { kind: "GoalRequired" },
     });
-    expect(snapshot.pass.rootNodeIds).toEqual([]);
+    expect(coreQuestionIds(snapshot)).toEqual([]);
+    expect(snapshot.pass.rootNodeIds).toHaveLength(1);
   });
 
   it("trims question and goal and still enforces the core-question limit", () => {
@@ -50,8 +53,8 @@ describe("addCoreQuestion authoring", () => {
     if (!created.ok) {
       throw new Error("expected project");
     }
-    let snapshot = created.snapshot;
     const ports = sequentialFixturePorts(20);
+    let snapshot = unwrap(ensureProjectRoot(created.snapshot, ports));
     for (let index = 0; index < CORE_QUESTION_LIMIT; index += 1) {
       const next = addCoreQuestion(
         snapshot,
@@ -63,7 +66,8 @@ describe("addCoreQuestion authoring", () => {
         snapshot = next.snapshot;
       }
     }
-    const lastId = snapshot.pass.rootNodeIds[CORE_QUESTION_LIMIT - 1];
+    expect(snapshot.pass.rootNodeIds).toHaveLength(1);
+    const lastId = coreQuestionIds(snapshot)[CORE_QUESTION_LIMIT - 1];
     expect(lastId && snapshot.nodes[lastId]?.question).toBe("Q4");
     const rejected = addCoreQuestion(
       snapshot,

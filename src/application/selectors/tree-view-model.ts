@@ -17,6 +17,7 @@ export interface TreeNodeView {
   isOnActiveStack: boolean;
   isActiveStackLeaf: boolean;
   isCurrentFocus: boolean;
+  isProjectRoot: boolean;
 }
 
 export interface TreeEdgeView {
@@ -73,6 +74,7 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       isOnActiveStack: onStack.has(node.id),
       isActiveStackLeaf: leaf === node.id,
       isCurrentFocus: snapshot.pass.currentFocusNodeId === node.id,
+      isProjectRoot: snapshot.pass.projectRootNodeId === node.id,
     });
     for (const childId of node.childIds) {
       const child = snapshot.nodes[childId];

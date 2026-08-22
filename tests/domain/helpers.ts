@@ -7,6 +7,7 @@ import {
   createBlockingChild,
   createProject,
   declareCriterionSatisfied,
+  ensureProjectRoot,
   setNodeSummary,
   type DomainResult,
   type DomainSnapshot,
@@ -59,11 +60,29 @@ export function assertActiveBijection(snapshot: DomainSnapshot): void {
   }
 }
 
+export function requireProjectRootId(snapshot: DomainSnapshot): NodeId {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (!rootId) {
+    throw new Error("missing project root");
+  }
+  return rootId;
+}
+
+/** Core Questions attached under the Project Root (not pass.rootNodeIds). */
+export function coreQuestionIds(snapshot: DomainSnapshot): NodeId[] {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (!rootId) {
+    return [];
+  }
+  return [...(snapshot.nodes[rootId]?.childIds ?? [])];
+}
+
 export function createProjectWithRoots(
   ports: Ports,
   questions: string[],
 ): DomainSnapshot {
   let snapshot = unwrap(createProject({ name: "Learning Tree" }, ports));
+  snapshot = unwrap(ensureProjectRoot(snapshot, ports));
   for (const question of questions) {
     snapshot = unwrap(
       addCoreQuestion(snapshot, { question, goal: `Understand ${question}` }, ports),
@@ -72,15 +91,28 @@ export function createProjectWithRoots(
   return snapshot;
 }
 
+/**
+ * Activates the Nth Core Question under the Project Root.
+ * `rootId` is the Core Question id (historical test name); stack is [projectRoot, …].
+ */
 export function activateRoot(
   snapshot: DomainSnapshot,
   rootIndex = 0,
-): { snapshot: DomainSnapshot; rootId: NodeId } {
-  const rootId = snapshot.pass.rootNodeIds[rootIndex];
+): {
+  snapshot: DomainSnapshot;
+  rootId: NodeId;
+  projectRootId: NodeId;
+} {
+  const rootId = coreQuestionIds(snapshot)[rootIndex];
   if (!rootId) {
-    throw new Error("missing root");
+    throw new Error("missing core question");
   }
-  return { snapshot: unwrap(activateNode(snapshot, { nodeId: rootId })), rootId };
+  const projectRootId = requireProjectRootId(snapshot);
+  return {
+    snapshot: unwrap(activateNode(snapshot, { nodeId: rootId })),
+    rootId,
+    projectRootId,
+  };
 }
 
 export function prepareCloseable(

@@ -106,6 +106,37 @@ export function githubFilePayload(text: string): { encoding: "base64"; content: 
   };
 }
 
+export const OPENSPEC_GITHUB_FIXTURE: GitHubRepositoryApiFixture = {
+  owner: "Fission-AI",
+  repo: "OpenSpec",
+  metadata: {
+    name: "OpenSpec",
+    full_name: "Fission-AI/OpenSpec",
+    description: "Spec-driven development for AI coding agents.",
+    language: "TypeScript",
+    topics: ["openspec", "ai", "specs"],
+  },
+  readme: `# OpenSpec
+
+Spec-driven development tooling for AI coding agents.
+
+- Change proposals and deltas
+- Spec validation pipeline
+- Agent-friendly project contracts
+`,
+  root: [
+    { name: "docs", type: "dir" },
+    { name: "package.json", type: "file" },
+    { name: "README.md", type: "file" },
+    { name: "src", type: "dir" },
+  ],
+  packageJson: {
+    name: "openspec",
+    private: true,
+    type: "module",
+  },
+};
+
 export function githubJsonResponse(
   fixture: GitHubRepositoryApiFixture,
   pathname: string,

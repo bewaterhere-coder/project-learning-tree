@@ -15,6 +15,7 @@ import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createActivatedChild,
   createProjectWithRoots,
   expectError,
@@ -56,7 +57,7 @@ describe("frontier and parking", () => {
 
   it("12. promotes a Frontier item only through an explicit command", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId } = activateRoot(
+    const { snapshot: active, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
     const withFrontier = unwrap(
@@ -78,14 +79,14 @@ describe("frontier and parking", () => {
         ports,
       ),
     );
-    const newRoot = promoted.pass.rootNodeIds.find((id) => id !== rootId);
+    const newRoot = promoted.pass.rootNodeIds.find((id) => id !== projectRootId);
     if (!newRoot) {
       throw new Error("missing promoted root");
     }
     expect(promoted.pass.frontier).toHaveLength(0);
     expect(promoted.nodes[newRoot]?.question).toBe("Later topic");
     expect(promoted.nodes[newRoot]?.lifecycle).toBe("open");
-    expect(promoted.pass.activeStack).toEqual([rootId]);
+    expect(promoted.pass.activeStack).toEqual([projectRootId, rootId]);
 
     expectError(
       promoteFrontierItem(
@@ -207,7 +208,7 @@ describe("frontier and parking", () => {
 
   it("13-14. parks the stack leaf and resumes it back onto the Active Stack", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId } = activateRoot(
+    const { snapshot: active, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
     let snapshot = unwrap(
@@ -238,7 +239,7 @@ describe("frontier and parking", () => {
 
     const parked = unwrap(parkNode(snapshot, { nodeId: rootId }));
     expect(parked.nodes[rootId]?.lifecycle).toBe("parked");
-    expect(parked.pass.activeStack).toEqual([]);
+    expect(parked.pass.activeStack).toEqual([projectRootId]);
     expect(parked.nodes[rootId]?.conversationThreadId).toBe(threadId);
     expect(parked.nodes[rootId]?.definitionOfDone[0]?.id).toBe(criterion.id);
     expect(parked.nodes[rootId]?.childIds).toEqual([childId]);
@@ -247,7 +248,7 @@ describe("frontier and parking", () => {
 
     const resumed = unwrap(resumeNode(parked, { nodeId: rootId }));
     expect(resumed.nodes[rootId]?.lifecycle).toBe("active");
-    expect(resumed.pass.activeStack).toEqual([rootId]);
+    expect(resumed.pass.activeStack).toEqual([projectRootId, rootId]);
     expect(resumed.nodes[rootId]?.conversationThreadId).toBe(threadId);
     expect(resumed.nodes[rootId]?.definitionOfDone[0]?.description).toBe(
       "Keep this criterion",
@@ -257,7 +258,7 @@ describe("frontier and parking", () => {
 
   it("rejects parking a node that is not the Active Stack leaf", () => {
     const ports = sequentialPorts();
-    const { snapshot: parentActive, rootId } = activateRoot(
+    const { snapshot: parentActive, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
     const { snapshot, childId } = createActivatedChild(
@@ -271,7 +272,11 @@ describe("frontier and parking", () => {
     );
     expectError(parkNode(withLeaf, { nodeId: rootId }), "NotActiveStackLeaf");
     expect(withLeaf.nodes[rootId]?.lifecycle).toBe("active");
-    expect(withLeaf.pass.activeStack).toEqual([rootId, childId]);
+    expect(withLeaf.pass.activeStack).toEqual([
+      projectRootId,
+      rootId,
+      childId,
+    ]);
   });
 
   it("returnToParent only changes Current Focus", () => {
@@ -296,8 +301,7 @@ describe("frontier and parking", () => {
   it("does not change focus when parking or resuming", () => {
     const ports = sequentialPorts();
     const started = createProjectWithRoots(ports, ["Q1", "Q2"]);
-    const first = started.pass.rootNodeIds[0];
-    const second = started.pass.rootNodeIds[1];
+    const [first, second] = coreQuestionIds(started);
     if (!first || !second) {
       throw new Error("missing roots");
     }

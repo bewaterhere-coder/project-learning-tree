@@ -17,6 +17,7 @@ export interface LearningProject {
   id: ProjectId;
   name: string;
   source?: string;
+  description?: string;
   passIds: PassId[];
 }
 
@@ -25,6 +26,8 @@ export interface LearningPass {
   projectId: ProjectId;
   status: PassStatus;
   rootNodeIds: NodeId[];
+  /** Sole structural Project Root when set; must be ∈ rootNodeIds. */
+  projectRootNodeId?: NodeId;
   activeStack: NodeId[];
   currentFocusNodeId?: NodeId;
   frontier: FrontierItem[];
@@ -85,6 +88,8 @@ export interface DomainSnapshot {
 
 export type DomainEvent =
   | { type: "ProjectCreated"; projectId: ProjectId; passId: PassId }
+  | { type: "ProjectRootEnsured"; nodeId: NodeId }
+  | { type: "ProjectMetadataUpdated"; projectId: ProjectId }
   | { type: "CoreQuestionAdded"; nodeId: NodeId }
   | { type: "NodeFocused"; nodeId: NodeId }
   | { type: "NodeActivated"; nodeId: NodeId }
@@ -114,6 +119,18 @@ export type DomainResult<T> =
 export interface CreateProject {
   name: string;
   source?: string;
+  description?: string;
+}
+
+export interface EnsureProjectRoot {
+  /** When set, used as the Project Root node id (migration). Otherwise ports.id(). */
+  nodeId?: NodeId;
+}
+
+export interface UpdateProjectMetadata {
+  name: string;
+  source?: string;
+  description?: string;
 }
 
 export interface AddCoreQuestion {
@@ -121,6 +138,14 @@ export interface AddCoreQuestion {
   goal: string;
   targetDepth?: LearningDepth;
 }
+
+/** Stable Project Root id for legacy semantic migration. */
+export function migratedProjectRootId(projectId: ProjectId): NodeId {
+  return `plt:project-root:${projectId}`;
+}
+
+export const PROJECT_ROOT_ORIENTATION_GOAL =
+  "Orient learning for this project through its Core Questions.";
 
 export interface FocusNode {
   nodeId: NodeId;

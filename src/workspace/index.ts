@@ -23,6 +23,7 @@ export {
   setSelectedViewport,
   updateSelectedLayout,
   updateShell,
+  updateWorkspaceProjectMetadata,
   archivedProjects,
   workspaceFromSnapshot,
 } from "./session.js";
@@ -80,7 +81,9 @@ export {
 } from "./preferences.js";
 export {
   hydrateSemanticWorkspace,
+  hydrateSemanticWorkspaceWithMigration,
   loadSemanticWorkspace,
+  loadSemanticWorkspaceWithMigration,
   parseSemanticWorkspace,
   saveSemanticWorkspace,
   serializeSemanticWorkspace,

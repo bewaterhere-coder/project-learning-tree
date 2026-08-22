@@ -44,7 +44,10 @@ describe("tree view model", () => {
     expect(q2.isCurrentFocus).toBe(true);
     expect(q2.isOnActiveStack).toBe(false);
 
-    expect(model.activeStack).toEqual([ids.q1]);
+    expect(model.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+      ids.q1,
+    ]);
     expect(model.currentFocusNodeId).toBe(ids.q2);
     expect(JSON.stringify(model)).not.toContain('"lifecycle":"blocked"');
     expect(q1.isBlocked).toBe(isBlocked(snapshot, ids.q1));
@@ -124,10 +127,14 @@ describe("inspector and action copy", () => {
     expect(inspector.summary).toContain("Q1.1");
   });
 
-  it("labels root activation as startLearning and child activation as enterQuestion", () => {
+  it("labels project-root activation as startLearning and child activation as enterQuestion", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
-    expect(selectActionAvailability(snapshot, ids.parent).activateLabel).toBe(
+    const projectRootId = snapshot.pass.projectRootNodeId!;
+    expect(selectActionAvailability(snapshot, projectRootId).activateLabel).toBe(
       "startLearning",
+    );
+    expect(selectActionAvailability(snapshot, ids.parent).activateLabel).toBe(
+      "enterQuestion",
     );
     expect(selectActionAvailability(snapshot, ids.childA).activateLabel).toBe(
       "enterQuestion",
@@ -146,7 +153,10 @@ describe("commands", () => {
     });
     expect(next.snapshot).not.toBe(session.snapshot);
     expect(next.snapshot.pass.currentFocusNodeId).toBe(ids.q2);
-    expect(next.snapshot.pass.activeStack).toEqual([ids.q2]);
+    expect(next.snapshot.pass.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+      ids.q2,
+    ]);
     expect(next.snapshot.nodes[ids.q1]?.lifecycle).toBe("open");
     expect(next.snapshot.nodes[ids.q2]?.lifecycle).toBe("active");
     expect(next.lastError).toBeUndefined();
@@ -174,7 +184,11 @@ describe("commands", () => {
       type: "activateNode",
       nodeId: ids.childB,
     });
-    expect(switched.snapshot.pass.activeStack).toEqual([ids.parent, ids.childB]);
+    expect(switched.snapshot.pass.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+      ids.parent,
+      ids.childB,
+    ]);
     expect(switched.snapshot.nodes[ids.childA]?.lifecycle).toBe("open");
     expect(switched.snapshot.nodes[ids.childB]?.lifecycle).toBe("active");
   });
@@ -187,7 +201,9 @@ describe("commands", () => {
     });
     const parked = dispatchCommand(focused, { type: "parkNode", nodeId: ids.q1 });
     expect(parked.snapshot.nodes[ids.q1]?.lifecycle).toBe("parked");
-    expect(parked.snapshot.pass.activeStack).toEqual([]);
+    expect(parked.snapshot.pass.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+    ]);
     expect(parked.snapshot.pass.currentFocusNodeId).toBe(ids.q1);
   });
 
@@ -208,7 +224,10 @@ describe("commands", () => {
       nodeId: ids.childA,
     });
     expect(closed.snapshot.nodes[ids.childA]?.lifecycle).toBe("closed");
-    expect(closed.snapshot.pass.activeStack).toEqual([ids.parent]);
+    expect(closed.snapshot.pass.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+      ids.parent,
+    ]);
     expect(closed.lastError).toBeUndefined();
   });
 
@@ -223,7 +242,11 @@ describe("commands", () => {
       nodeId: ids.q12,
     });
     expect(resumed.snapshot.nodes[ids.q12]?.lifecycle).toBe("active");
-    expect(resumed.snapshot.pass.activeStack).toEqual([ids.q1, ids.q12]);
+    expect(resumed.snapshot.pass.activeStack).toEqual([
+      snapshot.pass.projectRootNodeId,
+      ids.q1,
+      ids.q12,
+    ]);
     expect(resumed.snapshot.pass.currentFocusNodeId).toBe(ids.q12);
   });
 

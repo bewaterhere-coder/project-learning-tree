@@ -9,15 +9,19 @@ import {
   closeNode,
   completePass,
   createProject,
+  ensureProjectRoot,
   parkNode,
   resumeNode,
+  setNodeSummary,
 } from "../../src/domain/index.js";
 import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createProjectWithRoots,
   expectError,
+  requireProjectRootId,
   sequentialPorts,
   unwrap,
 } from "./helpers.js";
@@ -34,7 +38,7 @@ describe("general integrity", () => {
   it("23. rejects invalid lifecycle transitions", () => {
     const ports = sequentialPorts();
     const open = createProjectWithRoots(ports, ["Q1"]);
-    const rootId = open.pass.rootNodeIds[0];
+    const rootId = coreQuestionIds(open)[0];
     if (!rootId) {
       throw new Error("missing root");
     }
@@ -103,11 +107,18 @@ describe("general integrity", () => {
 
   it("completes a pass when every root is closed and the stack is empty", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId } = activateRoot(
+    const { snapshot: active, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
-    const closed = closePrepared(active, rootId, ports);
-    const completed = unwrap(completePass(closed));
+    const closedChild = closePrepared(active, rootId, ports);
+    let ready = unwrap(
+      setNodeSummary(closedChild, {
+        nodeId: projectRootId,
+        summary: "Project oriented.",
+      }),
+    );
+    ready = unwrap(closeNode(ready, { nodeId: projectRootId }));
+    const completed = unwrap(completePass(ready));
     expect(completed.pass.status).toBe("completed");
     expect(completed.pass.activeStack).toEqual([]);
   });
@@ -115,6 +126,7 @@ describe("general integrity", () => {
   it("enforces the five core-question limit", () => {
     const ports = sequentialPorts();
     let snapshot = unwrap(createProject({ name: "Limit" }, ports));
+    snapshot = unwrap(ensureProjectRoot(snapshot, ports));
     for (let index = 0; index < 5; index += 1) {
       snapshot = unwrap(
         addCoreQuestion(
@@ -134,7 +146,12 @@ describe("general integrity", () => {
     const ports = sequentialPorts();
     let snapshot = createProjectWithRoots(ports, ["Q1"]);
     assertActiveBijection(snapshot);
-    snapshot = unwrap(activateNode(snapshot, { nodeId: snapshot.pass.rootNodeIds[0]! }));
+    const q1 = coreQuestionIds(snapshot)[0]!;
+    snapshot = unwrap(activateNode(snapshot, { nodeId: q1 }));
     assertActiveBijection(snapshot);
+    expect(snapshot.pass.activeStack).toEqual([
+      requireProjectRootId(snapshot),
+      q1,
+    ]);
   });
 });

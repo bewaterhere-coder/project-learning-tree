@@ -3,6 +3,7 @@ import {
   addCriterion,
   CORE_QUESTION_LIMIT,
   createProject,
+  ensureProjectRoot,
   type DomainEvent,
   type DomainSnapshot,
   type NodeId,
@@ -45,23 +46,50 @@ export type BootstrapProjectResult =
     }
   | { ok: false; error: import("../domain/errors.js").DomainError };
 
+/** Resolve project name from explicit input or a parseable GitHub source. */
+export function resolveProjectName(input: {
+  name?: string;
+  source?: string;
+}): string | undefined {
+  const trimmed = input.name?.trim() ?? "";
+  if (trimmed !== "") {
+    return trimmed;
+  }
+  const parsed = input.source ? parseGitHubSource(input.source) : undefined;
+  return parsed?.repo;
+}
+
 export async function bootstrapLearningProject(
   input: EvidenceInput,
   ports: Ports,
   provider?: RepositoryEvidenceProvider,
 ): Promise<BootstrapProjectResult> {
+  const name = resolveProjectName(input);
+  if (name === undefined) {
+    return { ok: false, error: { kind: "ProjectNameRequired" } };
+  }
+
   const created = createProject(
-    { name: input.name, source: input.source?.trim() || undefined },
+    {
+      name,
+      source: input.source?.trim() || undefined,
+      description: input.description?.trim() || undefined,
+    },
     ports,
   );
   if (!created.ok) {
     return created;
   }
 
+  const rooted = ensureProjectRoot(created.snapshot, ports);
+  if (!rooted.ok) {
+    return rooted;
+  }
+
   const source = await loadEvidenceSource(
     {
-      name: created.snapshot.project.name,
-      source: created.snapshot.project.source,
+      name: rooted.snapshot.project.name,
+      source: rooted.snapshot.project.source,
       description: input.description,
     },
     provider,
@@ -73,8 +101,8 @@ export async function bootstrapLearningProject(
     Math.min(EXPLORATION_BUDGET.coreQuestions, CORE_QUESTION_LIMIT),
   );
 
-  let snapshot = created.snapshot;
-  const events: DomainEvent[] = [...created.events];
+  let snapshot = rooted.snapshot;
+  const events: DomainEvent[] = [...created.events, ...rooted.events];
   const createdNodeIds: NodeId[] = [];
 
   for (const question of questions) {
@@ -168,7 +196,12 @@ async function loadEvidenceSource(
 }
 
 export function isEmptyFirstLayer(snapshot: DomainSnapshot): boolean {
-  return snapshot.pass.rootNodeIds.length === 0;
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (rootId === undefined) {
+    return snapshot.pass.rootNodeIds.length === 0;
+  }
+  const root = snapshot.nodes[rootId];
+  return root === undefined || root.childIds.length === 0;
 }
 
 export type { EvidenceInput, EvidenceStatus };

@@ -74,6 +74,20 @@ export function evaluateNodeConvergence(
     });
   }
 
+  if (snapshot.pass.projectRootNodeId === nodeId) {
+    const openChildIds = node.childIds.filter((childId) => {
+      const child = snapshot.nodes[childId];
+      return child === undefined || child.lifecycle !== "closed";
+    });
+    if (openChildIds.length > 0) {
+      failures.push({
+        kind: "ProjectRootChildrenOpen",
+        nodeId,
+        openChildIds,
+      });
+    }
+  }
+
   if (node.summary === undefined || node.summary.trim() === "") {
     failures.push({ kind: "SummaryRequired", nodeId });
   }

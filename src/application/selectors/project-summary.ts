@@ -8,6 +8,8 @@ import {
 export interface ProjectSummary {
   projectId: ProjectId;
   name: string;
+  source?: string;
+  description?: string;
   completionLevel: number;
   activeQuestion?: string;
   isBlocked: boolean;
@@ -39,6 +41,8 @@ export function selectProjectSummary(snapshot: DomainSnapshot): ProjectSummary {
   return {
     projectId: snapshot.project.id,
     name: snapshot.project.name,
+    source: snapshot.project.source,
+    description: snapshot.project.description,
     completionLevel,
     activeQuestion,
     isBlocked,

@@ -14,8 +14,10 @@ import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createProjectWithRoots,
   expectError,
+  requireProjectRootId,
   sequentialPorts,
   unwrap,
 } from "./helpers.js";
@@ -25,7 +27,8 @@ describe("activation and focus", () => {
     const ports = sequentialPorts();
     const started = createProjectWithRoots(ports, ["Q1", "Q2"]);
     const focusBefore = started.pass.currentFocusNodeId;
-    const rootId = started.pass.rootNodeIds[0];
+    const projectRootId = requireProjectRootId(started);
+    const rootId = coreQuestionIds(started)[0];
     if (!rootId) {
       throw new Error("missing root");
     }
@@ -33,7 +36,8 @@ describe("activation and focus", () => {
     const snapshot = unwrap(activateNode(started, { nodeId: rootId }));
 
     expect(snapshot.nodes[rootId]?.lifecycle).toBe("active");
-    expect(snapshot.pass.activeStack).toEqual([rootId]);
+    expect(snapshot.nodes[projectRootId]?.lifecycle).toBe("active");
+    expect(snapshot.pass.activeStack).toEqual([projectRootId, rootId]);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
     assertActiveBijection(snapshot);
   });
@@ -43,7 +47,7 @@ describe("activation and focus", () => {
     const { snapshot: active, rootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1", "Q2"]),
     );
-    const otherId = active.pass.rootNodeIds[1];
+    const otherId = coreQuestionIds(active)[1];
     if (!otherId) {
       throw new Error("missing second root");
     }
@@ -69,7 +73,7 @@ describe("activation and focus", () => {
   it("3. rejects invalid Active Stack paths", () => {
     const ports = sequentialPorts();
     let snapshot = createProjectWithRoots(ports, ["Q2"]);
-    const rootId = snapshot.pass.rootNodeIds[0];
+    const rootId = coreQuestionIds(snapshot)[0];
     if (!rootId) {
       throw new Error("missing root");
     }
@@ -82,7 +86,7 @@ describe("activation and focus", () => {
 
     const childPorts = sequentialPorts();
     let tree = createProjectWithRoots(childPorts, ["Parent"]);
-    const parentId = tree.pass.rootNodeIds[0];
+    const parentId = coreQuestionIds(tree)[0];
     if (!parentId) {
       throw new Error("missing parent");
     }
@@ -113,8 +117,8 @@ describe("activation and focus", () => {
   it("focuses Closed and later Parked-capable Open nodes without activating them", () => {
     const ports = sequentialPorts();
     let snapshot = createProjectWithRoots(ports, ["Q1", "Q2"]);
-    const first = snapshot.pass.rootNodeIds[0];
-    const second = snapshot.pass.rootNodeIds[1];
+    const [first, second] = coreQuestionIds(snapshot);
+    const projectRootId = requireProjectRootId(snapshot);
     if (!first || !second) {
       throw new Error("missing roots");
     }
@@ -125,27 +129,27 @@ describe("activation and focus", () => {
     const focusedClosed = unwrap(focusNode(snapshot, { nodeId: first }));
     expect(focusedClosed.pass.currentFocusNodeId).toBe(first);
     expect(focusedClosed.nodes[first]?.lifecycle).toBe("closed");
-    expect(focusedClosed.pass.activeStack).toEqual([]);
+    expect(focusedClosed.pass.activeStack).toEqual([projectRootId]);
     expect(focusedClosed.nodes[second]?.lifecycle).toBe("open");
 
     const focusedAgain = unwrap(focusNode(focusedClosed, { nodeId: second }));
     expect(focusedAgain.nodes[second]?.lifecycle).toBe("open");
-    expect(focusedAgain.pass.activeStack).toEqual([]);
+    expect(focusedAgain.pass.activeStack).toEqual([projectRootId]);
     assertActiveBijection(focusedAgain);
   });
 
   it("does not change Current Focus when activating", () => {
     const ports = sequentialPorts();
     let snapshot = createProjectWithRoots(ports, ["Q1", "Q2"]);
-    const first = snapshot.pass.rootNodeIds[0];
-    const second = snapshot.pass.rootNodeIds[1];
+    const [first, second] = coreQuestionIds(snapshot);
+    const projectRootId = requireProjectRootId(snapshot);
     if (!first || !second) {
       throw new Error("missing roots");
     }
     snapshot = unwrap(focusNode(snapshot, { nodeId: second }));
     snapshot = unwrap(activateNode(snapshot, { nodeId: first }));
     expect(snapshot.pass.currentFocusNodeId).toBe(second);
-    expect(snapshot.pass.activeStack).toEqual([first]);
+    expect(snapshot.pass.activeStack).toEqual([projectRootId, first]);
   });
 
   it("keeps every Active Stack member active and every active node on the stack", () => {

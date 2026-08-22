@@ -46,6 +46,7 @@ export function cloneSnapshot(snapshot: DomainSnapshot): DomainSnapshot {
     pass: {
       ...snapshot.pass,
       rootNodeIds: [...snapshot.pass.rootNodeIds],
+      projectRootNodeId: snapshot.pass.projectRootNodeId,
       activeStack: [...snapshot.pass.activeStack],
       frontier: snapshot.pass.frontier.map((item) => ({ ...item })),
     },

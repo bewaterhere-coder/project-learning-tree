@@ -11,6 +11,7 @@ import {
   isEmptyFirstLayer,
   isGlobalDomainError,
   isProjectCreateCommand,
+  isProjectMetadataCommand,
   selectActionAvailability,
   selectAuthoringAvailability,
   selectCloseReadiness,
@@ -28,7 +29,7 @@ import {
   createWorkspace,
   createWorkspaceProject,
   focusAndOpenInspector,
-  hydrateSemanticWorkspace,
+  hydrateSemanticWorkspaceWithMigration,
   hydrateWorkspacePreferences,
   openChat,
   openChatForNode,
@@ -43,6 +44,7 @@ import {
   setSelectedViewport,
   updateSelectedLayout,
   updateShell,
+  updateWorkspaceProjectMetadata,
   clampInspectorWidth,
   type ColorScheme,
   type LearningWorkspace,
@@ -84,7 +86,11 @@ function bootWorkspace(
   if (initialSnapshot) {
     return hydrateWorkspacePreferences(createWorkspace([initialSnapshot]), storage);
   }
-  return hydrateWorkspacePreferences(hydrateSemanticWorkspace(storage), storage);
+  const { workspace, migratedProjectIds } =
+    hydrateSemanticWorkspaceWithMigration(storage);
+  return hydrateWorkspacePreferences(workspace, storage, {
+    clearPositionsForProjectIds: migratedProjectIds,
+  });
 }
 
 export function App({
@@ -238,11 +244,16 @@ export function App({
     workspace.lastError && isProjectCreateCommand(workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
+  const editError =
+    workspace.lastError && isProjectMetadataCommand(workspace.lastErrorCommand)
+      ? workspace.lastError
+      : undefined;
   const actionError =
     workspace.lastError &&
     !isGlobalDomainError(workspace.lastError, workspace.lastErrorCommand) &&
     !isAuthoringCommand(workspace.lastErrorCommand) &&
-    !isProjectCreateCommand(workspace.lastErrorCommand)
+    !isProjectCreateCommand(workspace.lastErrorCommand) &&
+    !isProjectMetadataCommand(workspace.lastErrorCommand)
       ? workspace.lastError
       : undefined;
 
@@ -487,6 +498,11 @@ export function App({
             createError={
               createError
                 ? formatPresentedError(locale, createError)
+                : undefined
+            }
+            editError={
+              editError
+                ? formatPresentedError(locale, editError)
                 : undefined
             }
             onSelectProject={(projectId) =>

@@ -26,6 +26,7 @@ import {
   type DomainEvent,
   type DomainResult,
   type DomainSnapshot,
+  type EnsureProjectRoot,
   type EvaluateConvergence,
   type FocusNode,
   type LearningNode,
@@ -39,6 +40,8 @@ import {
   type ResumeNode,
   type SetNodeSummary,
   type UnmarkChildBlocking,
+  type UpdateProjectMetadata,
+  PROJECT_ROOT_ORIENTATION_GOAL,
 } from "./types.js";
 
 function ok(
@@ -91,10 +94,11 @@ function createOpenNode(
     goal: string;
     targetDepth?: LearningNode["targetDepth"];
     parentId?: NodeId;
+    id?: NodeId;
   },
 ): LearningNode {
   return {
-    id: ports.id(),
+    id: input.id ?? ports.id(),
     parentId: input.parentId,
     question: input.question,
     goal: input.goal,
@@ -200,11 +204,13 @@ export function createProject(
   }
   const projectId = ports.id();
   const passId = ports.id();
+  const description = command.description?.trim() || undefined;
   const snapshot: DomainSnapshot = {
     project: {
       id: projectId,
       name,
-      source: command.source,
+      source: command.source?.trim() || undefined,
+      description,
       passIds: [passId],
     },
     pass: {
@@ -220,25 +226,101 @@ export function createProject(
   return ok(snapshot, [{ type: "ProjectCreated", projectId, passId }]);
 }
 
+export function ensureProjectRoot(
+  snapshot: DomainSnapshot,
+  ports: Ports,
+  command: EnsureProjectRoot = {},
+): DomainResult<DomainSnapshot> {
+  const existingId = snapshot.pass.projectRootNodeId;
+  if (existingId !== undefined) {
+    const existing = snapshot.nodes[existingId];
+    if (existing && snapshot.pass.rootNodeIds.includes(existingId)) {
+      return ok(cloneSnapshot(snapshot), []);
+    }
+  }
+
+  const nodeId = command.nodeId ?? ports.id();
+  if (snapshot.nodes[nodeId]) {
+    return fail({ kind: "InvalidActiveStack", reason: "project root id already used" });
+  }
+
+  const rootNode = createOpenNode(ports, {
+    id: nodeId,
+    question: snapshot.project.name,
+    goal: PROJECT_ROOT_ORIENTATION_GOAL,
+  });
+
+  const next = putNode(snapshot, rootNode);
+  next.pass.projectRootNodeId = nodeId;
+  if (!next.pass.rootNodeIds.includes(nodeId)) {
+    next.pass.rootNodeIds = [nodeId, ...next.pass.rootNodeIds];
+  }
+  return ok(next, [{ type: "ProjectRootEnsured", nodeId }]);
+}
+
+export function updateProjectMetadata(
+  snapshot: DomainSnapshot,
+  command: UpdateProjectMetadata,
+): DomainResult<DomainSnapshot> {
+  const name = command.name.trim();
+  if (name === "") {
+    return fail({ kind: "ProjectNameRequired" });
+  }
+  const next = cloneSnapshot(snapshot);
+  next.project.name = name;
+  next.project.source =
+    command.source !== undefined
+      ? command.source.trim() || undefined
+      : next.project.source;
+  if (command.description !== undefined) {
+    next.project.description = command.description.trim() || undefined;
+  }
+  const rootId = next.pass.projectRootNodeId;
+  if (rootId !== undefined) {
+    const root = next.nodes[rootId];
+    if (root) {
+      next.nodes[rootId] = { ...root, question: name };
+    }
+  }
+  return ok(next, [{ type: "ProjectMetadataUpdated", projectId: next.project.id }]);
+}
+
 export function addCoreQuestion(
   snapshot: DomainSnapshot,
   command: AddCoreQuestion,
   ports: Ports,
 ): DomainResult<DomainSnapshot> {
-  if (snapshot.pass.rootNodeIds.length >= CORE_QUESTION_LIMIT) {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (rootId === undefined || !snapshot.nodes[rootId]) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  const root = snapshot.nodes[rootId];
+  if (!root) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  if (root.childIds.length >= CORE_QUESTION_LIMIT) {
     return fail({ kind: "CoreQuestionLimitReached", limit: CORE_QUESTION_LIMIT });
   }
   const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
   if (authoringError) {
     return fail(authoringError);
   }
+  const closed = rejectIfClosed(root, "add-core-question");
+  if (closed) {
+    return fail(closed);
+  }
   const node = createOpenNode(ports, {
     question: command.question.trim(),
     goal: command.goal.trim(),
     targetDepth: command.targetDepth,
+    parentId: rootId,
   });
   const next = putNode(snapshot, node);
-  next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
+  const liveRoot = next.nodes[rootId];
+  if (!liveRoot) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  next.nodes[rootId] = attachChild(liveRoot, node.id, { blocking: false });
   return ok(next, [{ type: "CoreQuestionAdded", nodeId: node.id }]);
 }
 

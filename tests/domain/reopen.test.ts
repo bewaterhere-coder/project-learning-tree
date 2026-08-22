@@ -52,7 +52,7 @@ describe("reopen", () => {
 
   it("21-22. reopens with a reason, preserves history, and records a ReopenEvent", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId } = activateRoot(
+    const { snapshot: active, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
     const closed = closePrepared(active, rootId, ports);
@@ -73,7 +73,7 @@ describe("reopen", () => {
     }
 
     expect(reopened.lifecycle).toBe("open");
-    expect(snapshot.pass.activeStack).toEqual([]);
+    expect(snapshot.pass.activeStack).toEqual([projectRootId]);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
     expect(reopened.conversationThreadId).toBe(before.conversationThreadId);
     expect(reopened.summary).toBe(before.summary);
