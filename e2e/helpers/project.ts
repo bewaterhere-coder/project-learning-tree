@@ -52,7 +52,9 @@ export async function addCoreQuestion(
   await page.getByTestId("core-question-input").fill(question);
   await page.getByTestId("core-goal-input").fill(goal);
   await page.getByTestId("core-question-submit").click();
-  await expect(page.getByText(question).first()).toBeVisible();
+  await expect(
+    page.locator(".node-question", { hasText: question }),
+  ).toBeVisible();
 }
 
 export async function openSettings(page: Page): Promise<void> {
