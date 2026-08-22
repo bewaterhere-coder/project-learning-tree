@@ -311,7 +311,10 @@ export function focusAndOpenInspector(
     type: "focusNode",
     nodeId,
   });
-  return updateSelectedLayout(focused, { inspectorOpen: true });
+  return updateSelectedLayout(focused, {
+    inspectorOpen: true,
+    chatOpen: false,
+  });
 }
 
 /** Focus a Question without forcing the Details panel open. */
@@ -397,7 +400,13 @@ export function setInspectorOpen(
   workspace: LearningWorkspace,
   inspectorOpen: boolean,
 ): LearningWorkspace {
-  return updateSelectedLayout(workspace, { inspectorOpen });
+  if (inspectorOpen) {
+    return updateSelectedLayout(workspace, {
+      inspectorOpen: true,
+      chatOpen: false,
+    });
+  }
+  return updateSelectedLayout(workspace, { inspectorOpen: false });
 }
 
 export function openChat(workspace: LearningWorkspace): LearningWorkspace {
@@ -407,6 +416,7 @@ export function openChat(workspace: LearningWorkspace): LearningWorkspace {
   }
   const patch: Partial<ProjectWorkspaceLayout> = {
     chatOpen: true,
+    inspectorOpen: false,
     chatBinding: { mode: "follow-focus" },
   };
   if (

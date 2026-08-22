@@ -152,7 +152,6 @@ export function App({
       viewportUnlockTimer.current = undefined;
     }, 200);
   }, []);
-  const [assistInput, setAssistInput] = useState<string>();
   const settingsTriggerRef = useRef<HTMLButtonElement>(null);
   const resolvedTheme = resolveColorScheme(workspace.shell.colorScheme, systemDark);
 
@@ -298,6 +297,17 @@ export function App({
   const handleFocusNode = useCallback(
     (nodeId: string) => {
       const currentWorkspace = workspaceRef.current;
+      const next = focusSelectedNode(currentWorkspace, nodeId);
+      const before = selectedProject(currentWorkspace)?.snapshot;
+      const after = selectedProject(next)?.snapshot;
+      commit(next, before !== after);
+    },
+    [commit],
+  );
+
+  const handleOpenInspectorForNode = useCallback(
+    (nodeId: string) => {
+      const currentWorkspace = workspaceRef.current;
       const next = focusAndOpenInspector(currentWorkspace, nodeId);
       const before = selectedProject(currentWorkspace)?.snapshot;
       const after = selectedProject(next)?.snapshot;
@@ -377,8 +387,6 @@ export function App({
     };
   }, []);
 
-  const breadcrumb = "";
-
   const emptyProject = current !== undefined && isEmptyFirstLayer(current.snapshot);
 
   return (
@@ -397,15 +405,6 @@ export function App({
                 {current.snapshot.project.name}
               </p>
             ) : null}
-            {breadcrumb ? (
-              <p className="stack-legend" data-testid="active-stack">
-                {breadcrumb}
-              </p>
-            ) : (
-              <p className="stack-legend is-empty" data-testid="active-stack" hidden>
-                {t(locale, "app.activeStackEmpty")}
-              </p>
-            )}
           </div>
           <div className="header-tools">
             {current ? (
@@ -714,6 +713,7 @@ export function App({
                         onOpenChatForNode={handleOpenChatForNode}
                         onAddChildForNode={handleAddChildForNode}
                         onCompleteNode={handleCompleteNode}
+                        onOpenInspectorForNode={handleOpenInspectorForNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
                       />
@@ -808,8 +808,6 @@ export function App({
                     storage={storage}
                     conversationStore={conversationStore}
                     chatProvider={chatProvider}
-                    assistInput={assistInput}
-                    onAssistConsumed={() => setAssistInput(undefined)}
                     onWorkspace={(next, semantic) => commit(next, semantic)}
                     runCommand={runCommand}
                   />

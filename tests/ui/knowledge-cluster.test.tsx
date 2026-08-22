@@ -10,7 +10,7 @@ import { createMemoryPreferenceStorage, WORKSPACE_SEMANTIC_KEY } from "../../src
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("knowledge cluster underlays", () => {
-  it("renders a presentation cluster for each root without domain changes", () => {
+  it("renders a presentation cluster for each top-level question root", () => {
     const { workspace, projectA } = createDemoWorkspaceFixture();
     const storage = createMemoryPreferenceStorage();
     render(

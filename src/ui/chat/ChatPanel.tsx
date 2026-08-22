@@ -42,8 +42,6 @@ export function ChatPanel({
   onQuestionAction,
   onAdopt,
   onIgnore,
-  onReturnToParent,
-  onKeepViewing,
 }: {
   locale: WorkspaceLocale;
   identity: BoundConversationIdentity;
@@ -71,8 +69,6 @@ export function ChatPanel({
   ) => void;
   onAdopt: (proposal: LearningProposal, draft?: string) => void;
   onIgnore: (proposal: LearningProposal) => void;
-  onReturnToParent: () => void;
-  onKeepViewing: () => void;
 }) {
   const floating = placement === "floating";
   return (
@@ -158,12 +154,6 @@ export function ChatPanel({
       {boundNodeClosed ? (
         <div className="chat-closed-notice" data-testid="chat-closed-notice">
           <p>{t(locale, "chat.closedNotice")}</p>
-          <button type="button" data-testid="chat-return-parent" onClick={onReturnToParent}>
-            {t(locale, "chat.returnToParent")}
-          </button>
-          <button type="button" data-testid="chat-keep-viewing" onClick={onKeepViewing}>
-            {t(locale, "chat.keepViewing")}
-          </button>
         </div>
       ) : null}
       <MessageComposer

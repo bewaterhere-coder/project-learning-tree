@@ -64,7 +64,7 @@ describe("i18n message catalogs", () => {
       "actions.addSubQuestion",
       "authoring.title",
       "children.title",
-      "app.activeStack",
+      "actions.more",
       "lifecycle.open",
       "error.dismiss",
     ] as const;

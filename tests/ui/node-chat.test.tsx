@@ -95,11 +95,11 @@ describe("M3A contextual chat UI", () => {
     const storage = createMemoryPreferenceStorage();
     renderChat(openChat(workspace), { storage });
     const panel = screen.getByTestId("chat-panel");
-    expect(panel).toHaveAttribute("data-placement", "floating");
-    await user.click(screen.getByTestId("chat-placement-docked"));
-    expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-placement", "docked");
+    expect(panel).toHaveAttribute("data-placement", "docked");
+    await user.click(screen.getByTestId("chat-placement-floating"));
+    expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-placement", "floating");
     expect(storage.getItem(WORKSPACE_SEMANTIC_KEY)).toBeNull();
-    expect(storage.getItem(WORKSPACE_PREFERENCES_KEY)).toContain("docked");
+    expect(storage.getItem(WORKSPACE_PREFERENCES_KEY)).toContain("floating");
     expect(storage.getItem(CONVERSATION_STORE_KEY) ?? "").not.toContain("chatPlacement");
   });
 
@@ -172,13 +172,31 @@ describe("M3A contextual chat UI", () => {
     expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
   });
 
-  it("still opens the inspector when clicking the node body", async () => {
+  it("selects a node without opening Inspector or Chat", async () => {
     const user = userEvent.setup();
     const { workspace, projectA } = createDemoWorkspaceFixture();
     const closedInspector = updateSelectedLayout(workspace, { inspectorOpen: false });
     renderChat(closedInspector);
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
     expect(screen.queryByTestId("chat-panel")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
+    expect(screen.getByTestId(`node-${projectA.ids.q1}`)).toHaveAttribute(
+      "data-focus",
+      "true",
+    );
+  });
+
+  it("keeps Inspector and Chat mutually exclusive", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    renderChat(workspace);
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
+    await user.click(screen.getByTestId(`node-chat-${projectA.ids.q1}`));
+    expect(screen.getByTestId("chat-panel")).toBeInTheDocument();
+    expect(screen.queryByTestId("node-inspector")).not.toBeInTheDocument();
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q1}`));
+    await user.click(screen.getByTestId(`node-open-inspector-${projectA.ids.q1}`));
+    expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
+    expect(screen.queryByTestId("chat-panel")).not.toBeInTheDocument();
   });
 });

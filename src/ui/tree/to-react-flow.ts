@@ -14,6 +14,7 @@ type LearningNodeData = TreeNodeView & {
   onOpenChatForNode?: (nodeId: NodeId) => void;
   onAddChildForNode?: (nodeId: NodeId) => void;
   onCompleteNode?: (nodeId: NodeId) => void;
+  onOpenInspectorForNode?: (nodeId: NodeId) => void;
 } & Record<string, unknown>;
 export type LearningFlowNode = Node<LearningNodeData, "learningNode">;
 

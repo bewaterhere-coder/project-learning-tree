@@ -9,6 +9,7 @@ import {
   createBlockedBranchFixture,
   createDemoTreeFixture,
 } from "../../src/fixtures/demo-tree.js";
+import { openNodeMore } from "./node-more.js";
 
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
@@ -36,6 +37,7 @@ describe("node inspector", () => {
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
     expect(screen.getByTestId(`node-chat-${ids.q1}`)).toBeInTheDocument();
     expect(screen.getByTestId(`node-add-child-${ids.q1}`)).toBeInTheDocument();
+    await openNodeMore(user, ids.q1);
     expect(screen.getByTestId(`node-complete-${ids.q1}`)).toBeInTheDocument();
   });
 

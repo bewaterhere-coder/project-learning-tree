@@ -32,6 +32,7 @@ describe("TASK-006 acceptance regressions", () => {
       "data-lifecycle",
       "open",
     );
+    await user.click(screen.getByTestId(`node-more-${branch.ids.childB}`));
     expect(screen.getByTestId(`node-complete-${branch.ids.childB}`)).toBeDisabled();
 
     unmount();
@@ -46,6 +47,7 @@ describe("TASK-006 acceptance regressions", () => {
     });
     render(<App initialSnapshot={focusedReady.snapshot} />);
 
+    await user.click(screen.getByTestId(`node-more-${branch.ids.childB}`));
     const complete = screen.getByTestId(`node-complete-${branch.ids.childB}`);
     expect(complete).toBeEnabled();
     expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
@@ -85,6 +87,7 @@ describe("TASK-006 acceptance regressions", () => {
     expect(screen.getByTestId("authoring-form")).toBeInTheDocument();
     await user.click(screen.getByTestId("authoring-cancel"));
 
+    await user.click(screen.getByTestId(`node-more-${branch.ids.childB}`));
     await user.click(screen.getByTestId(`node-complete-${branch.ids.childB}`));
     expect(screen.queryByTestId("node-inspector")).toBeNull();
     expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
@@ -93,7 +96,7 @@ describe("TASK-006 acceptance regressions", () => {
     );
   });
 
-  it("still opens Details when the Question card is clicked", async () => {
+  it("opens Details from More, not from clicking the Question card", async () => {
     const user = userEvent.setup();
     const { snapshot, ids } = createBlockedBranchFixture();
     const closedDetails = setInspectorOpen(createWorkspace([snapshot]), false);
@@ -101,6 +104,14 @@ describe("TASK-006 acceptance regressions", () => {
 
     expect(screen.queryByTestId("node-inspector")).toBeNull();
     await user.click(screen.getByTestId(`node-${ids.childA}`));
+    expect(screen.queryByTestId("node-inspector")).toBeNull();
+    expect(screen.getByTestId(`node-${ids.childA}`)).toHaveAttribute(
+      "data-focus",
+      "true",
+    );
+
+    await user.click(screen.getByTestId(`node-more-${ids.childA}`));
+    await user.click(screen.getByTestId(`node-open-inspector-${ids.childA}`));
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Child A");
   });

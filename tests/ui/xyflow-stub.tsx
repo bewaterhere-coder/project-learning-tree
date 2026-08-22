@@ -1,11 +1,15 @@
-import type { MouseEvent } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import type { TreeNodeView } from "../../src/application/index.js";
-import { LearningNode } from "../../src/ui/tree/LearningNode.js";
+import {
+  LearningNode,
+  LearningNodeToolbarActions,
+} from "../../src/ui/tree/LearningNode.js";
 
 interface StubNode {
   id: string;
   type?: string;
   position?: { x: number; y: number };
+  selected?: boolean;
   data: TreeNodeView & {
     isRecommended?: boolean;
     locale?: "en-US" | "zh-CN";
@@ -13,6 +17,7 @@ interface StubNode {
     onCommand?: (command: import("../../src/application/commands.js").UiCommand) => boolean | void;
     onAddChildForNode?: (nodeId: string) => void;
     onCompleteNode?: (nodeId: string) => void;
+    onOpenInspectorForNode?: (nodeId: string) => void;
     region?: { rootId: string; title: string };
   };
 }
@@ -82,6 +87,7 @@ export function ReactFlow({
             data-focus={node.data.isCurrentFocus ? "true" : "false"}
             data-parent={node.data.parentId ?? ""}
             data-can-complete={node.data.canComplete ? "true" : "false"}
+            data-child-count={String(node.data.childCount ?? 0)}
             data-x={String(node.position?.x ?? 0)}
             data-y={String(node.position?.y ?? 0)}
             onClick={(event) =>
@@ -99,24 +105,32 @@ export function ReactFlow({
               }
             }}
           >
-            <LearningNode
-              data={{ ...node.data }}
-              onOpenChat={
-                node.data.onOpenChatForNode
-                  ? () => node.data.onOpenChatForNode?.(node.id)
-                  : undefined
-              }
-              onAddChild={
-                node.data.onAddChildForNode
-                  ? () => node.data.onAddChildForNode?.(node.id)
-                  : undefined
-              }
-              onComplete={
-                node.data.onCompleteNode
-                  ? () => node.data.onCompleteNode?.(node.id)
-                  : undefined
-              }
-            />
+            <LearningNode data={{ ...node.data }} />
+            <div className="node-toolbar">
+              <LearningNodeToolbarActions
+                data={{ ...node.data }}
+                onOpenChat={
+                  node.data.onOpenChatForNode
+                    ? () => node.data.onOpenChatForNode?.(node.id)
+                    : undefined
+                }
+                onAddChild={
+                  node.data.onAddChildForNode
+                    ? () => node.data.onAddChildForNode?.(node.id)
+                    : undefined
+                }
+                onComplete={
+                  node.data.onCompleteNode
+                    ? () => node.data.onCompleteNode?.(node.id)
+                    : undefined
+                }
+                onOpenInspector={
+                  node.data.onOpenInspectorForNode
+                    ? () => node.data.onOpenInspectorForNode?.(node.id)
+                    : undefined
+                }
+              />
+            </div>
           </div>
           <button
             type="button"
@@ -183,6 +197,22 @@ export function Background() {
 
 export function Handle() {
   return null;
+}
+
+export function NodeToolbar({
+  children,
+  isVisible = true,
+}: {
+  children?: ReactNode;
+  isVisible?: boolean;
+  position?: unknown;
+  offset?: number;
+  className?: string;
+}) {
+  if (!isVisible) {
+    return null;
+  }
+  return <div className="node-toolbar">{children}</div>;
 }
 
 export const Position = {

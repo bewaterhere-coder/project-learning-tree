@@ -201,10 +201,15 @@ describe("M3B learning loop", () => {
     const criterion = await screen.findByTestId("proposal-card-criterion");
     expect(screen.getByTestId("proposal-card-summary")).toBeInTheDocument();
     await user.click(criterion.querySelector('[data-testid="proposal-adopt"]')!);
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q1}`));
+    await user.click(screen.getByTestId(`node-open-inspector-${projectA.ids.q1}`));
     await waitFor(() => {
       expect(screen.getByTestId("inspector-dod")).toHaveTextContent("Explain blob/tree/commit/tag");
     });
+    await user.click(screen.getByTestId("chat-open-header"));
     await user.click(screen.getByTestId("proposal-adopt"));
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q1}`));
+    await user.click(screen.getByTestId(`node-open-inspector-${projectA.ids.q1}`));
     await waitFor(() => {
       expect(screen.getByTestId("inspector-summary")).toHaveValue(
         "Q1 learning summary from assistant",

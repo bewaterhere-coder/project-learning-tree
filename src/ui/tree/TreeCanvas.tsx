@@ -1,5 +1,7 @@
 import {
   applyNodeChanges,
+  NodeToolbar,
+  Position,
   ReactFlow,
   type NodeMouseHandler,
   type NodeProps,
@@ -16,7 +18,10 @@ import {
 } from "./cluster-flow.js";
 import { isClusterNodeId } from "./cluster-regions.js";
 import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
-import { LearningNode } from "./LearningNode.js";
+import {
+  LearningNode,
+  LearningNodeToolbarActions,
+} from "./LearningNode.js";
 import { LearningNodeHandles } from "./node-handles.js";
 import {
   routeEdgesForNodes,
@@ -24,27 +29,47 @@ import {
   type LearningFlowNode,
 } from "./to-react-flow.js";
 
-function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
+function FlowLearningNode({ data, selected }: NodeProps<LearningFlowNode>) {
+  const [hovered, setHovered] = useState(false);
+  const showToolbar = Boolean(selected || data.isCurrentFocus || hovered);
+
   return (
-    <>
+    <div
+      className="learning-node-shell"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
       <LearningNodeHandles />
-      <LearningNode
-        data={data}
-        onOpenChat={
-          data.onOpenChatForNode
-            ? () => data.onOpenChatForNode?.(data.id)
-            : undefined
-        }
-        onAddChild={
-          data.onAddChildForNode
-            ? () => data.onAddChildForNode?.(data.id)
-            : undefined
-        }
-        onComplete={
-          data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
-        }
-      />
-    </>
+      <LearningNode data={data} />
+      <NodeToolbar
+        isVisible={showToolbar}
+        position={Position.Bottom}
+        offset={8}
+        className="node-toolbar"
+      >
+        <LearningNodeToolbarActions
+          data={data}
+          onOpenChat={
+            data.onOpenChatForNode
+              ? () => data.onOpenChatForNode?.(data.id)
+              : undefined
+          }
+          onAddChild={
+            data.onAddChildForNode
+              ? () => data.onAddChildForNode?.(data.id)
+              : undefined
+          }
+          onComplete={
+            data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
+          }
+          onOpenInspector={
+            data.onOpenInspectorForNode
+              ? () => data.onOpenInspectorForNode?.(data.id)
+              : undefined
+          }
+        />
+      </NodeToolbar>
+    </div>
   );
 }
 
@@ -64,6 +89,7 @@ export function TreeCanvas({
   onOpenChatForNode,
   onAddChildForNode,
   onCompleteNode,
+  onOpenInspectorForNode,
   onNodeDragStop,
   onViewportChange,
 }: {
@@ -77,6 +103,7 @@ export function TreeCanvas({
   onOpenChatForNode: (nodeId: NodeId) => void;
   onAddChildForNode: (nodeId: NodeId) => void;
   onCompleteNode: (nodeId: NodeId) => void;
+  onOpenInspectorForNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
@@ -94,9 +121,10 @@ export function TreeCanvas({
           onOpenChatForNode,
           onAddChildForNode,
           onCompleteNode,
+          onOpenInspectorForNode,
         },
       })),
-    [locale, onOpenChatForNode, onAddChildForNode, onCompleteNode],
+    [locale, onOpenChatForNode, onAddChildForNode, onCompleteNode, onOpenInspectorForNode],
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

@@ -22,13 +22,13 @@ function modelFixture(): TreeViewModel {
         lifecycle: "active",
         isBlocked: false,
         unresolvedBlockerCount: 0,
-        isOnActiveStack: true,
-        isActiveStackLeaf: false,
-        isCurrentFocus: false,
         childCount: 1,
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        isOnActiveStack: true,
+        isActiveStackLeaf: false,
+        isCurrentFocus: false,
         canComplete: false,
       },
       {
@@ -39,13 +39,13 @@ function modelFixture(): TreeViewModel {
         lifecycle: "open",
         isBlocked: false,
         unresolvedBlockerCount: 0,
-        isOnActiveStack: true,
-        isActiveStackLeaf: true,
-        isCurrentFocus: true,
         childCount: 0,
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        isOnActiveStack: true,
+        isActiveStackLeaf: true,
+        isCurrentFocus: true,
         canComplete: false,
       },
       {
@@ -55,13 +55,13 @@ function modelFixture(): TreeViewModel {
         lifecycle: "open",
         isBlocked: false,
         unresolvedBlockerCount: 0,
-        isOnActiveStack: false,
-        isActiveStackLeaf: false,
-        isCurrentFocus: false,
         childCount: 0,
         completedChildCount: 0,
         isCompleted: false,
         canCreateChild: true,
+        isOnActiveStack: false,
+        isActiveStackLeaf: false,
+        isCurrentFocus: false,
         canComplete: false,
       },
     ],
@@ -78,7 +78,7 @@ function modelFixture(): TreeViewModel {
 }
 
 describe("cluster regions", () => {
-  it("derives presentation-only underlays from root subtrees", () => {
+  it("derives presentation-only underlays from top-level question subtrees", () => {
     const regions = computeClusterRegions(modelFixture(), {
       "root-a": { x: 0, y: 0 },
       "child-a": { x: 40, y: NODE_HEIGHT + 72 },

@@ -9,10 +9,14 @@ test("switching to zh-CN keeps node child authoring usable", async ({ page }) =>
   await page.getByTestId("locale-zh").click();
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.getByTestId("sidebar-title")).toHaveText("项目");
+  await page.keyboard.press("Escape");
   await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
 
-  const nodeId = await page.locator("[data-node-id]").first().getAttribute("data-node-id");
+  const node = page.locator("[data-node-id]").first();
+  await expect(node).toBeVisible();
+  const nodeId = await node.getAttribute("data-node-id");
   expect(nodeId).toBeTruthy();
+  await node.click();
   await page.getByTestId(`node-add-child-${nodeId}`).click();
   await page.getByTestId("authoring-question").fill("代理如何规划？");
   await page.getByTestId("authoring-goal").fill("能讲清主循环");

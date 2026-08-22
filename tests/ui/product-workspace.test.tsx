@@ -73,6 +73,7 @@ describe("production workspace UI", () => {
     const recommended = screen.getByTestId("bootstrap-recommended").querySelector("button");
     expect(recommended).not.toBeNull();
     await user.click(recommended!);
+    await user.click(screen.getByTestId("inspector-open"));
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
       "Completion criteria",
@@ -80,9 +81,12 @@ describe("production workspace UI", () => {
     expect(screen.getByTestId("inspector-summary-heading")).toBeInTheDocument();
     expect(screen.queryByTestId("action-activate")).toBeNull();
     expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
-    expect(screen.queryByTestId("active-stack")).not.toHaveTextContent(
-      recommended!.textContent ?? "---",
-    );
+    // Recommended focus selects only — does not activate an Active Stack.
+    expect(screen.queryByTestId("active-stack")).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId("tree-nodes").querySelectorAll('[data-on-stack="true"]')
+        .length,
+    ).toBe(0);
     await user.click(screen.getByTestId("add-core-question"));
     await user.type(screen.getByTestId("core-question-input"), "How do agents plan?");
     await user.type(screen.getByTestId("core-goal-input"), "Explain the loop");

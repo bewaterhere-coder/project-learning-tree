@@ -44,8 +44,6 @@ export function ChatHost({
   storage,
   conversationStore,
   chatProvider,
-  assistInput,
-  onAssistConsumed,
   onWorkspace,
   runCommand,
 }: {
@@ -56,8 +54,6 @@ export function ChatHost({
   storage: PreferenceStorage;
   conversationStore?: ConversationStore;
   chatProvider?: ChatProvider;
-  assistInput?: string;
-  onAssistConsumed?: () => void;
   onWorkspace: (next: LearningWorkspace, semantic: boolean) => void;
   runCommand: (command: UiCommand) => { ok: boolean; errorMessage?: string };
 }) {
@@ -161,14 +157,6 @@ export function ChatHost({
     },
     [current.layout.chatBinding, current.projectId, current.snapshot, locale, provider],
   );
-
-  useEffect(() => {
-    if (!assistInput) {
-      return;
-    }
-    void handleSend(assistInput);
-    onAssistConsumed?.();
-  }, [assistInput, handleSend, onAssistConsumed]);
 
   const patchConversation = (conversation: NodeConversation) => {
     persistRegistry(upsertConversation(registryRef.current, conversation));
@@ -331,10 +319,6 @@ export function ChatHost({
       onIgnore={(proposal) =>
         patchConversation(updateProposal(conversation, proposal.id, { status: "ignored" }))
       }
-      onReturnToParent={() => {
-        runCommand({ type: "returnToParent" });
-      }}
-      onKeepViewing={() => undefined}
     />
   );
 }
