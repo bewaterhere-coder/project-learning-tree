@@ -5,7 +5,10 @@ import { LearningNode } from "../../src/ui/tree/LearningNode.js";
 interface StubNode {
   id: string;
   position?: { x: number; y: number };
-  data: TreeNodeView;
+  data: TreeNodeView & {
+    isRecommended?: boolean;
+    onOpenChatForNode?: (nodeId: string) => void;
+  };
 }
 
 interface StubViewport {
@@ -61,8 +64,9 @@ export function ReactFlow({
     >
       {nodes.map((node) => (
         <div key={node.id}>
-          <button
-            type="button"
+          <div
+            role="button"
+            tabIndex={0}
             data-testid={`node-${node.id}`}
             data-lifecycle={node.data.lifecycle}
             data-blocked={node.data.isBlocked ? "true" : "false"}
@@ -71,10 +75,30 @@ export function ReactFlow({
             data-parent={node.data.parentId ?? ""}
             data-x={String(node.position?.x ?? 0)}
             data-y={String(node.position?.y ?? 0)}
-            onClick={(event) => onNodeClick?.(event, node)}
+            onClick={(event) =>
+              onNodeClick?.(
+                event as unknown as MouseEvent<HTMLButtonElement>,
+                node,
+              )
+            }
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                onNodeClick?.(
+                  event as unknown as MouseEvent<HTMLButtonElement>,
+                  node,
+                );
+              }
+            }}
           >
-            <LearningNode data={{ ...node.data }} />
-          </button>
+            <LearningNode
+              data={{ ...node.data }}
+              onOpenChat={
+                node.data.onOpenChatForNode
+                  ? () => node.data.onOpenChatForNode?.(node.id)
+                  : undefined
+              }
+            />
+          </div>
           <button
             type="button"
             data-testid={`node-drag-${node.id}`}

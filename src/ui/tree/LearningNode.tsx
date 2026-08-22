@@ -1,7 +1,14 @@
 import type { LearningFlowNode } from "./to-react-flow.js";
+import { Button } from "../primitives/Button.js";
 import { lifecycleMessageKey, t, useLocale } from "../i18n/index.js";
 
-export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
+export function LearningNode({
+  data,
+  onOpenChat,
+}: {
+  data: LearningFlowNode["data"];
+  onOpenChat?: () => void;
+}) {
   const locale = useLocale();
   const className = [
     "learning-node",
@@ -35,6 +42,9 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
         {t(locale, lifecycleMessageKey(data.lifecycle))}
       </p>
       <p className="node-question">{data.question}</p>
+      <p className="node-meta" data-testid={`node-goal-${data.id}`}>
+        {data.goal}
+      </p>
       {data.isRecommended ? (
         <p className="node-recommended" data-testid={`recommended-badge-${data.id}`}>
           {t(locale, "bootstrap.nodeRecommended")}
@@ -47,6 +57,33 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
           aria-label={blockedLabel}
           title={blockedLabel}
         />
+      ) : null}
+      {onOpenChat ? (
+        <Button
+          type="button"
+          variant="icon"
+          className="node-chat-action nodrag nopan"
+          data-testid={`node-chat-${data.id}`}
+          aria-label={t(locale, "chat.open")}
+          title={t(locale, "chat.open")}
+          onClick={(event) => {
+            event.stopPropagation();
+            onOpenChat();
+          }}
+        >
+          <svg
+            className="node-chat-icon"
+            viewBox="0 0 16 16"
+            width="14"
+            height="14"
+            aria-hidden="true"
+          >
+            <path
+              fill="currentColor"
+              d="M2 3.5A1.5 1.5 0 0 1 3.5 2h9A1.5 1.5 0 0 1 14 3.5v5A1.5 1.5 0 0 1 12.5 10H8.7l-2.4 2.4a.5.5 0 0 1-.85-.35V10H3.5A1.5 1.5 0 0 1 2 8.5v-5Z"
+            />
+          </svg>
+        </Button>
       ) : null}
     </div>
   );

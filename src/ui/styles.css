@@ -947,9 +947,32 @@ textarea {
 }
 
 .node-meta {
-  margin: 6px 0 0;
+  margin: 4px 24px 0 0;
   color: var(--color-text-muted);
   font-size: 11px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.node-chat-action {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  z-index: 1;
+  color: var(--color-text-secondary);
+  border-color: transparent;
+}
+
+.node-chat-action:hover {
+  color: var(--color-accent);
+  border-color: var(--color-border-accent);
+}
+
+.node-chat-icon {
+  display: block;
 }
 
 .react-flow,
