@@ -1,6 +1,8 @@
 import {
+  clampArchivedPaneHeight,
   clampInspectorWidth,
   clampSidebarWidth,
+  DEFAULT_ARCHIVED_PANE_HEIGHT,
   DEFAULT_COLOR_SCHEME,
   resolveColorScheme,
   WORKSPACE_PREFERENCES_KEY,
@@ -56,6 +58,8 @@ export function serializeWorkspacePreferences(
     shell: {
       projectSidebarOpen: workspace.shell.projectSidebarOpen,
       projectSidebarWidth: workspace.shell.projectSidebarWidth,
+      archivedPaneOpen: workspace.shell.archivedPaneOpen,
+      archivedPaneHeight: workspace.shell.archivedPaneHeight,
       locale: workspace.shell.locale,
       colorScheme: workspace.shell.colorScheme,
     },
@@ -204,6 +208,12 @@ function parseShell(
   return {
     projectSidebarOpen: value.projectSidebarOpen,
     projectSidebarWidth: clampSidebarWidth(value.projectSidebarWidth),
+    archivedPaneOpen:
+      typeof value.archivedPaneOpen === "boolean" ? value.archivedPaneOpen : false,
+    archivedPaneHeight:
+      typeof value.archivedPaneHeight === "number"
+        ? clampArchivedPaneHeight(value.archivedPaneHeight)
+        : DEFAULT_ARCHIVED_PANE_HEIGHT,
     locale,
     colorScheme: colorScheme ?? DEFAULT_COLOR_SCHEME,
   };

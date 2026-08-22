@@ -21,6 +21,8 @@ const PREFERENCE_ONLY_KEYS = [
   "inspectorOpen",
   "projectSidebarWidth",
   "projectSidebarOpen",
+  "archivedPaneOpen",
+  "archivedPaneHeight",
   "locale",
   "colorScheme",
 ] as const;

@@ -256,11 +256,11 @@ describe("workspace layout restore", () => {
 
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
-    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
+    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("项目");
     await user.click(
       screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
     );
-    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
+    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("项目");
     await user.click(screen.getByTestId("settings-open"));
     expect(screen.getByTestId("locale-zh")).toHaveAttribute(
       "data-active",
@@ -330,7 +330,8 @@ describe("i18n catalogs", () => {
       />,
     );
 
-    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("Learning projects");
+    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("Projects");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("Learn Tree");
     expect(
       within(screen.getByTestId("node-inspector")).getByRole("heading", {
         level: 2,
@@ -361,7 +362,8 @@ describe("i18n catalogs", () => {
 
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
-    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
+    expect(screen.getByTestId("sidebar-title")).toHaveTextContent("项目");
+    expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent("知识树");
     expect(
       within(screen.getByTestId("node-inspector")).getByRole("heading", {
         level: 2,

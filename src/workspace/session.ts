@@ -8,6 +8,7 @@ import {
 } from "../application/index.js";
 import { createProject, defaultPorts } from "../domain/index.js";
 import {
+  clampArchivedPaneHeight,
   clampInspectorWidth,
   clampSidebarWidth,
   defaultProjectLayout,
@@ -235,6 +236,9 @@ export function updateShell(
   };
   if (patch.projectSidebarWidth !== undefined) {
     next.projectSidebarWidth = clampSidebarWidth(patch.projectSidebarWidth);
+  }
+  if (patch.archivedPaneHeight !== undefined) {
+    next.archivedPaneHeight = clampArchivedPaneHeight(patch.archivedPaneHeight);
   }
   return { ...workspace, shell: next };
 }
