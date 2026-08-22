@@ -80,7 +80,6 @@ Visual priority should be:
 
 ```text
 Canvas
->>>>>>>>>>>>>>>>>>>>>
 Header
 Sidebar
 Contextual workspace
