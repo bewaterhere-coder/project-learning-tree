@@ -1,16 +1,11 @@
 import type { MouseEvent } from "react";
+import type { TreeNodeView } from "../../src/application/index.js";
+import { LearningNode } from "../../src/ui/tree/LearningNode.js";
 
 interface StubNode {
   id: string;
   position?: { x: number; y: number };
-  data: {
-    question: string;
-    lifecycle: string;
-    isBlocked: boolean;
-    isOnActiveStack: boolean;
-    isCurrentFocus: boolean;
-    parentId?: string;
-  };
+  data: TreeNodeView;
 }
 
 interface StubViewport {
@@ -78,7 +73,7 @@ export function ReactFlow({
             data-y={String(node.position?.y ?? 0)}
             onClick={(event) => onNodeClick?.(event, node)}
           >
-            {node.data.question}
+            <LearningNode data={{ ...node.data }} />
           </button>
           <button
             type="button"

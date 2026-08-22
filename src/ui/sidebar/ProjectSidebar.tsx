@@ -87,7 +87,9 @@ export function ProjectSidebar({
                     className="project-blocked-signal"
                     data-testid={`project-blocked-${summary.projectId}`}
                   >
-                    {t(locale, "sidebar.blocked")}
+                    {t(locale, "node.blocked", {
+                      count: summary.unresolvedBlockerCount,
+                    })}
                   </span>
                 ) : null}
               </button>

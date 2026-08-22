@@ -1,4 +1,10 @@
-import type { DomainError, DomainSnapshot, NodeId, ProjectId } from "../application/index.js";
+import type {
+  DomainError,
+  DomainSnapshot,
+  NodeId,
+  ProjectId,
+  UiCommand,
+} from "../application/index.js";
 
 export type WorkspaceLocale = "zh-CN" | "en-US";
 
@@ -37,6 +43,7 @@ export interface LearningWorkspace {
   selectedProjectId: ProjectId;
   shell: WorkspaceShellLayout;
   lastError?: DomainError;
+  lastErrorCommand?: UiCommand["type"];
 }
 
 export const LAYOUT_VERSION = 1;

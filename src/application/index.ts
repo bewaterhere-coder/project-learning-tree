@@ -1,11 +1,21 @@
 export { dispatchCommand, type UiCommand } from "./commands.js";
-export { formatDomainError } from "./errors.js";
+export {
+  isClosePrerequisiteError,
+  isGlobalDomainError,
+  presentDomainError,
+  type DomainErrorPresentation,
+} from "./errors.js";
 export {
   activateLabelFor,
   selectActionAvailability,
   type ActionAvailability,
   type ActivateLabel,
 } from "./selectors/action-availability.js";
+export {
+  selectCloseReadiness,
+  type CloseReadiness,
+  type CloseRequirement,
+} from "./selectors/close-readiness.js";
 export {
   selectInspectorViewModel,
   type InspectorViewModel,
@@ -23,9 +33,11 @@ export {
 export { createSession, type TreeSession } from "./session.js";
 export type {
   Criterion,
+  CriterionId,
   DomainError,
   DomainSnapshot,
   Evidence,
+  LearningDepth,
   NodeId,
   NodeLifecycle,
   ProjectId,

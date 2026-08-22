@@ -37,6 +37,7 @@ export {
   type CreateBlockingChild,
   type CreateProject,
   type Criterion,
+  type CriterionId,
   type DeclareCriterionSatisfied,
   type DomainEvent,
   type DomainResult,
