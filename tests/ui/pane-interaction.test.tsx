@@ -150,19 +150,24 @@ describe("pane interaction", () => {
     render(<App initialWorkspace={prepared} preferenceStorage={storage} />);
     storage.writes.length = 0;
     const handle = screen.getByTestId("archived-resize");
-    drag(handle, 180, 220, "y");
+    drag(handle, 180, 140, "y");
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes).toEqual([]);
-    pointer(handle, "pointerup", 10, 220);
+    pointer(handle, "pointerup", 10, 140);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
 
-    drag(handle, 220, 20, "y");
-    pointer(handle, "pointerup", 10, 20);
+    drag(handle, 140, 180, "y");
+    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "180");
+    pointer(handle, "pointerup", 10, 180);
+    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "180");
+
+    drag(handle, 180, 400, "y");
+    pointer(handle, "pointerup", 10, 400);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByTestId("archived-list")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("archived-toggle"));
-    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
+    expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "180");
     expect(screen.getByTestId("archived-list")).toHaveTextContent("M2 Demo Tree");
 
     await user.click(screen.getByTestId(`archived-actions-${projectA.snapshot.project.id}`));
