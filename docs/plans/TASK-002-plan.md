@@ -1,7 +1,7 @@
 ---
 task_id: TASK-002
 title: Spatial Knowledge Canvas Visual Redesign
-status: plan_review
+status: approved
 requirement: ../requirements/TASK-002-spatial-knowledge-canvas-visual-redesign.md
 ---
 
@@ -9,9 +9,7 @@ requirement: ../requirements/TASK-002-spatial-knowledge-canvas-visual-redesign.m
 
 This is the canonical implementation plan for TASK-002. It records code evidence from the current tree (post TASK-001) and the smallest presentation-layer change that satisfies the acceptance criteria.
 
-**Gate:** `plan_review` — awaiting ChatGPT Plan review (`plan_approved=true`).
-
-Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
+**Gate:** `approved` — ChatGPT Plan review on PR #19 recorded `plan_approved=true` with binding decisions: solid canvas (no faint dots); clusters after quieting (presentation-only root underlays unless landscape already clear); keep `minZoom=0.4`; soften blocking tick (do not remove).
 
 ## Goal
 

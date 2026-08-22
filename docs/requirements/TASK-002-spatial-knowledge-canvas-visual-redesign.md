@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
