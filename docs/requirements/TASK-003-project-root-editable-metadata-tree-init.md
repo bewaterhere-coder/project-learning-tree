@@ -5,7 +5,7 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-003-project-root-editable-metadata-tree-init
 integration_ref: main
 pr:
-  number: null
+  number: 20
   head_ref: task/TASK-003-project-root-editable-metadata-tree-init
   base_ref: main
   state: draft
