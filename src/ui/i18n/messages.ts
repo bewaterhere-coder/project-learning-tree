@@ -2,7 +2,6 @@ import type { WorkspaceLocale } from "../../workspace/index.js";
 
 const enUS = {
   "app.title": "Learn Tree",
-  "app.activeStack": "Current learning path:",
   "app.activeStackEmpty": "(empty)",
   "app.localeEn": "EN",
   "app.localeZh": "中文",
@@ -121,15 +120,12 @@ const enUS = {
   "depth.L3": "Level 3",
   "node.blocked": "{count} open sub-questions",
   "node.childProgress": "{count} sub-questions · {percent}% completed",
+  "node.childCount": "{count} child questions",
   "node.addChild": "Add a sub-question",
   "node.completed": "Completed",
-  "actions.startLearning": "Start learning",
-  "actions.enterQuestion": "Enter this question",
-  "actions.park": "Pause",
-  "actions.resume": "Resume",
   "actions.close": "Complete",
   "actions.complete": "Mark complete",
-  "actions.returnToParent": "Return to previous question",
+  "actions.more": "More",
   "actions.addSubQuestion": "Add a child question",
   "authoring.title": "Add a child question",
   "authoring.question": "Question",
@@ -251,15 +247,12 @@ const enUS = {
     "The current question is not in a learning state, so a blocking sub-question cannot be added.",
   "close.askAiSummary": "Help me write the learning summary",
   "chat.closedNotice": "This sub-question is complete.",
-  "chat.returnToParent": "Return to parent question",
-  "chat.keepViewing": "Keep viewing",
 } as const;
 
 export type MessageKey = keyof typeof enUS;
 
 const zhCN: Record<MessageKey, string> = {
   "app.title": "知识树",
-  "app.activeStack": "当前学习路径：",
   "app.activeStackEmpty": "（空）",
   "app.localeEn": "EN",
   "app.localeZh": "中文",
@@ -375,15 +368,12 @@ const zhCN: Record<MessageKey, string> = {
   "depth.L3": "第 3 层",
   "node.blocked": "有 {count} 个子问题待解决",
   "node.childProgress": "{count} 个子问题 · 已完成 {percent}%",
+  "node.childCount": "{count} 个子问题",
   "node.addChild": "添加子问题",
   "node.completed": "已完成",
-  "actions.startLearning": "开始学习",
-  "actions.enterQuestion": "进入这个问题",
-  "actions.park": "暂停",
-  "actions.resume": "继续",
   "actions.close": "完成问题",
-  "actions.complete": "已完成",
-  "actions.returnToParent": "返回上一问",
+  "actions.complete": "标记完成",
+  "actions.more": "更多",
   "actions.addSubQuestion": "添加子问题",
   "authoring.title": "添加子问题",
   "authoring.question": "问题",
@@ -491,8 +481,6 @@ const zhCN: Record<MessageKey, string> = {
   "proposal.parentNotActive": "当前父问题不是学习中状态",
   "close.askAiSummary": "AI 帮我整理",
   "chat.closedNotice": "这个子问题已完成。",
-  "chat.returnToParent": "返回父问题",
-  "chat.keepViewing": "继续查看",
 };
 
 export const messages = {

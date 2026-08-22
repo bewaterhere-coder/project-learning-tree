@@ -1,7 +1,7 @@
 ---
 task_id: TASK-009
 title: AFFiNE-inspired Canvas & Interaction Simplification
-status: plan_review
+status: acceptance_review
 requirement: ../requirements/TASK-009-affine-inspired-canvas-simplification.md
 pr: 31
 branch: task/TASK-009-affine-inspired-canvas-simplification
@@ -11,7 +11,7 @@ branch: task/TASK-009-affine-inspired-canvas-simplification
 
 This is the canonical implementation plan for TASK-009. It records Planning Gate evidence (AFFiNE/BlockSuite MSC study + current Learning Tree audit) and the smallest change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — awaiting ChatGPT plan approval (`plan_approved=true`). **Do not implement product code until approved.**
+**Gate:** `acceptance_review` — implementation complete on PR #31; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 **Hard constraints:**
 
@@ -247,18 +247,18 @@ Explicit from node (primary). Header chat only focuses/opens for **current** que
 
 ---
 
-## Proposed binding decisions (for ChatGPT)
+## Binding decisions (PR #31 Planning Gate Review — locked)
 
-| ID | Topic | Recommendation |
+| ID | Topic | Binding choice |
 | --- | --- | --- |
-| **A** | Click node opens Inspector? | **No** — select/focus only; Inspector explicit or restored from prefs |
-| **B** | Domain Project Root on canvas | **KEEP in Domain**; **hide or visually demote** in RF view so Question Nodes dominate. Edges from root→core questions may remain as layout anchors with a minimal/hidden root node, **or** filter root from RF nodes and treat core questions as visual roots while domain parent links stay. Prefer **filter Project Root from visible RF nodes + edges incident only as needed for layout**, without deleting `projectRootNodeId` semantics. Exact render strategy chosen in implementation spike (≤1 small prototype) then locked. |
-| **C** | Complete placement | Under **More** menu; not a permanent third icon |
+| **A** | Node click | Focus/select only — must **not** auto-open Chat; Inspector is contextual/explicit or restored from preference |
+| **B** | Project Root on canvas | Domain semantics **KEEP**; **must not** render as a visible RF node and **must not** use a visually-demoted fallback. Core questions are the visual roots. **No** prototype spike. |
+| **C** | Complete placement | Under **More**; Chat + Add Child remain primary contextual actions |
 | **D** | Panel exclusivity | Inspector ⊕ Chat mutually exclusive |
-| **E** | Chat placement | Keep **docked** as default product path; floating becomes secondary or deferred cleanup if tests allow |
-| **F** | RF `Background` | Optional subtle dots using canvas tokens — only if it increases calm, not decoration |
-| **G** | `childCount` | Add to `TreeNodeView` / `LearningFlowNode` (derived from `childIds.length`); display on node |
-| **H** | Theme | Consume existing semantic tokens only; no new recipe families; coordinate with TASK-008 on shared files |
+| **E** | Chat placement | **Docked** is primary/default; floating may remain only if removal causes disproportionate migration/test risk — do not expand floating |
+| **F** | RF `Background` | Optional; **omit** if decorative rather than clarifying |
+| **G** | `childCount` | Derived view data on `TreeNodeView` / node chrome |
+| **H** | Theme | Existing semantic tokens only |
 
 ---
 

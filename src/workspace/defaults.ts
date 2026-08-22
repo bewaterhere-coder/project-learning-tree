@@ -94,7 +94,7 @@ export function defaultChatLayout(): Pick<
 > {
   return {
     chatOpen: false,
-    chatPlacement: "floating",
+    chatPlacement: "docked",
     chatWidth: DEFAULT_CHAT_WIDTH,
     chatPositionOrigin: "auto",
     chatBinding: { mode: "follow-focus" },

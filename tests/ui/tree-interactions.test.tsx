@@ -11,6 +11,7 @@ import {
   sequentialFixturePorts,
 } from "../../src/fixtures/demo-tree.js";
 import { App } from "../../src/ui/App.js";
+import { clickNodeComplete, openNodeMore } from "./node-more.js";
 
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
@@ -52,6 +53,7 @@ describe("tree interactions", () => {
     render(<App initialSnapshot={focused.snapshot} />);
 
     expect(screen.queryByTestId("action-activate")).toBeNull();
+    await openNodeMore(user, ids.childA);
     expect(screen.getByTestId(`node-complete-${ids.childA}`)).toBeInTheDocument();
     await user.click(screen.getByTestId(`node-${ids.childB}`));
     expect(screen.queryByTestId("action-activate")).toBeNull();
@@ -70,6 +72,7 @@ describe("tree interactions", () => {
     });
     render(<App initialSnapshot={focused.snapshot} />);
 
+    await openNodeMore(user, ids.parent);
     const complete = screen.getByTestId(`node-complete-${ids.parent}`);
     expect(complete).toBeDisabled();
     expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
@@ -112,7 +115,7 @@ describe("tree interactions", () => {
       "open",
     );
 
-    await user.click(screen.getByTestId(`node-complete-${branch.ids.childB}`));
+    await clickNodeComplete(user, branch.ids.childB);
 
     expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
       "data-lifecycle",

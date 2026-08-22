@@ -5,10 +5,10 @@ task_id: TASK-009
 title: AFFiNE-inspired Canvas & Interaction Simplification
 
 development:
-  stage: plan_review
+  stage: acceptance_review
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
   next_expected_actor: chatgpt

@@ -11,6 +11,7 @@ import {
   sequentialFixturePorts,
 } from "../../src/fixtures/demo-tree.js";
 import { App } from "../../src/ui/App.js";
+import { clickNodeComplete, openNodeMore } from "./node-more.js";
 import {
   createWorkspace,
   type LearningWorkspace,
@@ -74,6 +75,7 @@ describe("close readiness UI", () => {
     unmount();
     renderFocused(added.snapshot);
     expect(screen.queryByTestId("summary-status")).toBeNull();
+    await openNodeMore(user, branch.ids.childA);
     expect(screen.getByTestId(`node-complete-${branch.ids.childA}`)).toBeEnabled();
     await user.click(screen.getByTestId("inspector-summary"));
   });
@@ -94,7 +96,7 @@ describe("close readiness UI", () => {
     });
     renderFocused(focused.snapshot);
 
-    await user.click(screen.getByTestId(`node-complete-${branch.ids.childB}`));
+    await clickNodeComplete(user, branch.ids.childB);
     expect(screen.queryByTestId("domain-error")).toBeNull();
     expect(screen.getByTestId(`node-${branch.ids.childB}`)).toHaveAttribute(
       "data-lifecycle",
@@ -103,7 +105,8 @@ describe("close readiness UI", () => {
     expect(screen.queryByTestId("action-activate")).toBeNull();
   });
 
-  it("surfaces unmet blocking children by disabling Complete", () => {
+  it("surfaces unmet blocking children by disabling Complete", async () => {
+    const user = userEvent.setup();
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
@@ -111,6 +114,7 @@ describe("close readiness UI", () => {
     });
     renderFocused(focused.snapshot);
 
+    await openNodeMore(user, ids.parent);
     expect(screen.getByTestId(`node-complete-${ids.parent}`)).toBeDisabled();
     expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
       "data-can-complete",

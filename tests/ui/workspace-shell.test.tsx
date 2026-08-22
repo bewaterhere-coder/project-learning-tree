@@ -164,7 +164,7 @@ describe("inspector column", () => {
     );
   });
 
-  it("opens on node click and restores width per project", async () => {
+  it("opens from More and restores width per project", async () => {
     const user = userEvent.setup();
     const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
     const prepared = updateSelectedLayout(
@@ -180,6 +180,9 @@ describe("inspector column", () => {
 
     expect(screen.queryByTestId("node-inspector")).toBeNull();
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
+    expect(screen.queryByTestId("node-inspector")).toBeNull();
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q1}`));
+    await user.click(screen.getByTestId(`node-open-inspector-${projectA.ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
     expect(screen.getByTestId("inspector-pane")).toHaveAttribute(
       "data-width",
@@ -343,6 +346,7 @@ describe("i18n catalogs", () => {
     );
     expect(screen.queryByTestId("action-activate")).toBeNull();
     expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q2}`));
     expect(screen.getByTestId(`node-complete-${projectA.ids.q2}`)).toHaveTextContent(
       "Mark complete",
     );
@@ -362,8 +366,9 @@ describe("i18n catalogs", () => {
     ).toHaveTextContent("问题详情");
     expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent("达成条件");
     expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent("心得");
+    await user.click(screen.getByTestId(`node-more-${projectA.ids.q1}`));
     expect(screen.getByTestId(`node-complete-${projectA.ids.q1}`)).toHaveTextContent(
-      "已完成",
+      "标记完成",
     );
     expect(document.documentElement.lang).toBe("zh-CN");
 

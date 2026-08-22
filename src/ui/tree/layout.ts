@@ -1,7 +1,7 @@
 import type { NodeId, TreeViewModel } from "../../application/index.js";
 
 export const NODE_WIDTH = 260;
-export const NODE_HEIGHT = 132;
+export const NODE_HEIGHT = 148;
 const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 72;
 const ROOT_GAP = 64;

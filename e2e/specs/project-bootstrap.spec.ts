@@ -31,6 +31,12 @@ test("creating a GitHub project opens onto top-level Questions (no Project Root)
   expect(await recommended.count()).toBeLessThanOrEqual(2);
 
   await page.getByTestId("bootstrap-recommended").locator("button").first().click();
+  const focused = page.locator("[data-focus='true'][data-node-id]");
+  await expect(focused).toBeVisible();
+  const nodeId = await focused.getAttribute("data-node-id");
+  expect(nodeId).toBeTruthy();
+  await page.getByTestId(`node-more-${nodeId}`).click();
+  await page.getByTestId(`node-open-inspector-${nodeId}`).click();
   await expect(page.getByTestId("node-inspector")).toBeVisible();
   // Details panel is knowledge deposition — no Start Learning ceremony
   await expect(page.getByTestId("inspector-dod-heading")).toBeVisible();

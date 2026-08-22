@@ -73,6 +73,7 @@ describe("production workspace UI", () => {
     const recommended = screen.getByTestId("bootstrap-recommended").querySelector("button");
     expect(recommended).not.toBeNull();
     await user.click(recommended!);
+    await user.click(screen.getByTestId("inspector-open"));
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
       "Completion criteria",
