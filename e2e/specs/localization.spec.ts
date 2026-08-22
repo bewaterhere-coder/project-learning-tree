@@ -1,14 +1,7 @@
 import { expect, test } from "../fixtures/test.js";
-import {
-  addCoreQuestion,
-  createProject,
-  openApp,
-  openSettings,
-} from "../helpers/project.js";
+import { createProject, openApp, openSettings } from "../helpers/project.js";
 
-test("switching to zh-CN keeps the core authoring workflow usable", async ({
-  page,
-}) => {
+test("switching to zh-CN keeps node child authoring usable", async ({ page }) => {
   await openApp(page);
   await createProject(page, "Locale Smoke");
 
@@ -18,11 +11,12 @@ test("switching to zh-CN keeps the core authoring workflow usable", async ({
   await expect(page.getByTestId("sidebar-title")).toHaveText("项目");
   await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
 
-  await addCoreQuestion(
-    page,
-    "代理如何规划？",
-    "能讲清主循环",
-  );
+  const nodeId = await page.locator("[data-node-id]").first().getAttribute("data-node-id");
+  expect(nodeId).toBeTruthy();
+  await page.getByTestId(`node-add-child-${nodeId}`).click();
+  await page.getByTestId("authoring-question").fill("代理如何规划？");
+  await page.getByTestId("authoring-goal").fill("能讲清主循环");
+  await page.getByTestId("authoring-submit").click();
   await expect(
     page.locator(".node-question", { hasText: "代理如何规划？" }),
   ).toBeVisible();

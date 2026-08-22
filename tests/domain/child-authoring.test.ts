@@ -233,11 +233,7 @@ describe("ordinary child authoring", () => {
       throw new Error("missing child");
     }
     const activated = unwrap(activateNode(created, { nodeId: childId }));
-    expect(activated.pass.activeStack).toEqual([
-      active.pass.projectRootNodeId,
-      rootId,
-      childId,
-    ]);
+    expect(activated.pass.activeStack).toEqual([rootId, childId]);
     expect(activated.nodes[childId]?.lifecycle).toBe("active");
     expectError(
       activateBlockingChild(created, { parentId: rootId, childId }),

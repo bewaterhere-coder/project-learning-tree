@@ -53,8 +53,9 @@ describe("direct completion without Active Stack (TASK-006)", () => {
       throw new Error("missing core questions");
     }
 
-    const { snapshot: onA, projectRootId } = activateRoot(base, 0);
-    expect(onA.pass.activeStack).toEqual([projectRootId, questionA]);
+    const { snapshot: onA } = activateRoot(base, 0);
+    // Flat hierarchy (TASK-005): stack holds the Question itself, not a Project Root.
+    expect(onA.pass.activeStack).toEqual([questionA]);
     expect(onA.nodes[questionA]?.lifecycle).toBe("active");
     expect(onA.nodes[questionB]?.lifecycle).toBe("open");
 
@@ -83,7 +84,6 @@ describe("direct completion without Active Stack (TASK-006)", () => {
     expect(after.nodes[questionB]?.lifecycle).toBe("closed");
     expect(after.pass.activeStack).toEqual(beforeStack);
     expect(after.nodes[questionA]?.lifecycle).toBe("active");
-    expect(after.nodes[projectRootId]?.lifecycle).toBe("active");
     expect(after.nodes[aChildId]?.lifecycle).toBe(
       beforeLifecycles[aChildId],
     );
@@ -99,15 +99,15 @@ describe("direct completion without Active Stack (TASK-006)", () => {
 
   it("closing an active stack leaf only pops that leaf", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId, projectRootId } = activateRoot(
+    const { snapshot: active, rootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
+    expect(active.pass.activeStack).toEqual([rootId]);
     const closed = unwrap(
       closeNode(prepareCloseable(active, rootId, ports), { nodeId: rootId }),
     );
     expect(closed.nodes[rootId]?.lifecycle).toBe("closed");
-    expect(closed.pass.activeStack).toEqual([projectRootId]);
-    expect(closed.nodes[projectRootId]?.lifecycle).toBe("active");
+    expect(closed.pass.activeStack).toEqual([]);
     assertActiveBijection(closed);
   });
 

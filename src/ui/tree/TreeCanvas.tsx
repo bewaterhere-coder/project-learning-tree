@@ -9,7 +9,7 @@ import {
 } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
-import type { NodePosition, Viewport } from "../../workspace/index.js";
+import type { NodePosition, Viewport, WorkspaceLocale } from "../../workspace/index.js";
 import {
   ClusterRegionFlowNode,
   toClusterFlowNodes,
@@ -59,6 +59,7 @@ export function TreeCanvas({
   viewport,
   persistViewport = true,
   recommendedNodeIds = [],
+  locale,
   onFocusNode,
   onOpenChatForNode,
   onAddChildForNode,
@@ -71,6 +72,7 @@ export function TreeCanvas({
   viewport: Viewport;
   persistViewport?: boolean;
   recommendedNodeIds?: readonly NodeId[];
+  locale: WorkspaceLocale;
   onFocusNode: (nodeId: NodeId) => void;
   onOpenChatForNode: (nodeId: NodeId) => void;
   onAddChildForNode: (nodeId: NodeId) => void;
@@ -88,12 +90,13 @@ export function TreeCanvas({
         ...node,
         data: {
           ...node.data,
+          locale,
           onOpenChatForNode,
           onAddChildForNode,
           onCompleteNode,
         },
       })),
-    [onOpenChatForNode, onAddChildForNode, onCompleteNode],
+    [locale, onOpenChatForNode, onAddChildForNode, onCompleteNode],
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

@@ -88,10 +88,41 @@ export interface DefinitionOfDoneTemplate {
   evidenceRequired: boolean;
 }
 
+import type { GenerationLocale } from "./locale.js";
+
 export function defaultDefinitionOfDone(
   question: QuestionContract,
   projectName: string,
+  locale: GenerationLocale = "en-US",
 ): DefinitionOfDoneTemplate[] {
+  if (locale === "zh-CN") {
+    if (question.targetDepth === "L3") {
+      return [
+        {
+          description: `能在 ${projectName} 中做出或描述一项使用该机制的真实改动。`,
+          required: true,
+          evidenceRequired: true,
+        },
+      ];
+    }
+    if (question.targetDepth === "L2") {
+      return [
+        {
+          description: `结合 ${projectName} 的项目证据，解释这一机制如何运作。`,
+          required: true,
+          evidenceRequired: true,
+        },
+      ];
+    }
+    return [
+      {
+        description: `用自己的话说明 ${projectName} 的这一部分，达到能识别的程度。`,
+        required: true,
+        evidenceRequired: false,
+      },
+    ];
+  }
+
   if (question.targetDepth === "L3") {
     return [
       {

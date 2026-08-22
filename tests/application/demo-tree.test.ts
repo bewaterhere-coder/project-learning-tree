@@ -14,9 +14,7 @@ describe("fixture builders", () => {
     expect(snapshot.nodes[ids.q11]?.lifecycle).toBe("closed");
     expect(snapshot.nodes[ids.q12]?.lifecycle).toBe("parked");
     expect(snapshot.nodes[ids.q2]?.lifecycle).toBe("open");
-    expect(snapshot.pass.activeStack).toEqual([
-      snapshot.pass.projectRootNodeId,
-      ids.q1,
+    expect(snapshot.pass.activeStack).toEqual([ids.q1,
     ]);
     expect(snapshot.pass.currentFocusNodeId).toBe(ids.q2);
     expect(snapshot.nodes[ids.q11]?.parentId).toBe(ids.q1);
@@ -30,9 +28,7 @@ describe("fixture builders", () => {
     expect(isBlocked(snapshot, ids.parent)).toBe(true);
     expect(snapshot.nodes[ids.childA]?.lifecycle).toBe("open");
     expect(snapshot.nodes[ids.childB]?.lifecycle).toBe("open");
-    expect(snapshot.pass.activeStack).toEqual([
-      snapshot.pass.projectRootNodeId,
-      ids.parent,
+    expect(snapshot.pass.activeStack).toEqual([ids.parent,
     ]);
   });
 });

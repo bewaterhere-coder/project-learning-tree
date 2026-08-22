@@ -12,13 +12,18 @@ export interface TreeNodeView {
   parentId?: NodeId;
   question: string;
   goal: string;
+  summary?: string;
   lifecycle: NodeLifecycle;
   isBlocked: boolean;
   unresolvedBlockerCount: number;
   isOnActiveStack: boolean;
   isActiveStackLeaf: boolean;
   isCurrentFocus: boolean;
-  isProjectRoot: boolean;
+  childCount: number;
+  completedChildCount: number;
+  progressPercent?: number;
+  isCompleted: boolean;
+  canCreateChild: boolean;
   /** True when convergence/readiness allows Complete (not merely non-closed). */
   canComplete: boolean;
 }
@@ -65,11 +70,19 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
     if (!node) {
       return;
     }
+    const childCount = node.childIds.length;
+    let completedChildCount = 0;
+    for (const childId of node.childIds) {
+      if (snapshot.nodes[childId]?.lifecycle === "closed") {
+        completedChildCount += 1;
+      }
+    }
     nodes.push({
       id: node.id,
       parentId: node.parentId,
       question: node.question,
       goal: node.goal,
+      summary: node.summary,
       lifecycle: node.lifecycle,
       isBlocked: isBlocked(snapshot, node.id),
       unresolvedBlockerCount: unresolvedBlockingChildIds(snapshot, node.id)
@@ -77,7 +90,14 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       isOnActiveStack: onStack.has(node.id),
       isActiveStackLeaf: leaf === node.id,
       isCurrentFocus: snapshot.pass.currentFocusNodeId === node.id,
-      isProjectRoot: snapshot.pass.projectRootNodeId === node.id,
+      childCount,
+      completedChildCount,
+      progressPercent:
+        childCount > 0
+          ? Math.round((completedChildCount / childCount) * 100)
+          : undefined,
+      isCompleted: node.lifecycle === "closed",
+      canCreateChild: node.lifecycle !== "closed",
       canComplete: selectCloseReadiness(snapshot, node.id).allowed,
     });
     for (const childId of node.childIds) {

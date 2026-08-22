@@ -9,7 +9,6 @@ import {
   createProject,
   declareCriterionSatisfied,
   defaultPorts,
-  ensureProjectRoot,
   focusNode,
   linkEvidenceToCriterion,
   parkNode,
@@ -20,21 +19,8 @@ import {
   type Ports,
 } from "../domain/index.js";
 
-function withProjectRoot(snapshot: DomainSnapshot, ports: Ports): DomainSnapshot {
-  return unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
-}
-
-function projectRootId(snapshot: DomainSnapshot): NodeId {
-  const rootId = snapshot.pass.projectRootNodeId;
-  if (!rootId) {
-    throw new Error("expected project root");
-  }
-  return rootId;
-}
-
 function coreQuestionIds(snapshot: DomainSnapshot): NodeId[] {
-  const root = snapshot.nodes[projectRootId(snapshot)];
-  return root ? [...root.childIds] : [];
+  return [...snapshot.pass.rootNodeIds];
 }
 
 export interface DemoTreeIds {
@@ -160,10 +146,7 @@ export function createClosableNodeFixture(
 export function createBlockedBranchFixture(
   ports: Ports = sequentialFixturePorts(),
 ): BlockedBranchFixture {
-  let snapshot = withProjectRoot(
-    unwrap(createProject({ name: "Blocked Branch Fixture" }, ports), "createProject"),
-    ports,
-  );
+  let snapshot = unwrap(createProject({ name: "Blocked Branch Fixture" }, ports), "createProject");
   snapshot = unwrap(
     addCoreQuestion(
       snapshot,
@@ -204,12 +187,9 @@ export function createBlockedBranchFixture(
 export function createDemoTreeFixture(
   ports: Ports = sequentialFixturePorts(),
 ): DemoTreeFixture {
-  let snapshot = withProjectRoot(
-    unwrap(
-      createProject({ name: "M2 Demo Tree", source: "fixture" }, ports),
-      "createProject",
-    ),
-    ports,
+  let snapshot = unwrap(
+    createProject({ name: "M2 Demo Tree", source: "fixture" }, ports),
+    "createProject",
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -294,12 +274,9 @@ export interface MixedChildrenFixture {
 export function createMixedChildrenFixture(
   ports: Ports = sequentialFixturePorts(2000),
 ): MixedChildrenFixture {
-  let snapshot = withProjectRoot(
-    unwrap(
-      createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
-      "createProject mixed",
-    ),
-    ports,
+  let snapshot = unwrap(
+    createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
+    "createProject mixed",
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -350,12 +327,9 @@ export function createMixedChildrenFixture(
 export function createSecondDemoTreeFixture(
   ports: Ports = sequentialFixturePorts(1000),
 ): SecondDemoTreeFixture {
-  let snapshot = withProjectRoot(
-    unwrap(
-      createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
-      "createProject B",
-    ),
-    ports,
+  let snapshot = unwrap(
+    createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
+    "createProject B",
   );
   snapshot = unwrap(
     addCoreQuestion(

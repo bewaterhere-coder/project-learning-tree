@@ -43,18 +43,18 @@ describe("production workspace UI", () => {
     expect(screen.getByTestId("project-create-open")).toBeInTheDocument();
   });
 
-  it("validates an empty project name locally", async () => {
+  it("validates an empty GitHub URL locally", async () => {
     const user = userEvent.setup();
     render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
     await user.click(screen.getByTestId("project-create-open"));
     await user.click(screen.getByTestId("project-create-submit"));
     expect(
-      screen.getByText("Enter a project name or a GitHub repository."),
+      screen.getByText("Enter a GitHub repository URL."),
     ).toBeInTheDocument();
     expect(screen.queryByTestId("domain-error")).not.toBeInTheDocument();
   });
 
-  it("creates a project, selects it, and shows the generated first learning layer", async () => {
+  it("creates a project from URL only and shows the generated first learning layer", async () => {
     const user = userEvent.setup();
     render(
       <App
@@ -63,11 +63,10 @@ describe("production workspace UI", () => {
       />,
     );
     await user.click(screen.getByTestId("project-create-open"));
-    await user.type(screen.getByTestId("project-name-input"), "Agents");
     await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
     expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
-    expect(screen.getByTestId("project-list")).toHaveTextContent("Agents");
+    expect(screen.getByTestId("project-list")).toHaveTextContent("agents");
     expect(screen.getByTestId("tree-nodes").querySelectorAll("[data-node-id]").length).toBeGreaterThan(
       0,
     );
@@ -75,10 +74,15 @@ describe("production workspace UI", () => {
     expect(recommended).not.toBeNull();
     await user.click(recommended!);
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
-    expect(screen.getByTestId("inspector-dod-heading")).toBeInTheDocument();
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
+      "Completion criteria",
+    );
     expect(screen.getByTestId("inspector-summary-heading")).toBeInTheDocument();
     expect(screen.queryByTestId("action-activate")).toBeNull();
     expect(screen.queryByTestId("inspector-lifecycle")).toBeNull();
+    expect(screen.queryByTestId("active-stack")).not.toHaveTextContent(
+      recommended!.textContent ?? "---",
+    );
     await user.click(screen.getByTestId("add-core-question"));
     await user.type(screen.getByTestId("core-question-input"), "How do agents plan?");
     await user.type(screen.getByTestId("core-goal-input"), "Explain the loop");
@@ -193,10 +197,15 @@ describe("persistence write channels", () => {
   it("writes the semantic store when creating a project", async () => {
     const user = userEvent.setup();
     const storage = trackingStorage();
-    render(<App preferenceStorage={storage} />);
+    render(
+      <App
+        preferenceStorage={storage}
+        evidenceProvider={createRejectingRepositoryEvidenceProvider()}
+      />,
+    );
     storage.writes.length = 0;
     await user.click(screen.getByTestId("project-create-open"));
-    await user.type(screen.getByTestId("project-name-input"), "Persist me");
+    await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
     expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(true);

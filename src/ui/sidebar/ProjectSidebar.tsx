@@ -1,5 +1,6 @@
 import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import {
+  isValidGitHubProjectSource,
   resolveProjectName,
   type ProjectSummary,
 } from "../../application/index.js";
@@ -73,7 +74,7 @@ export function ProjectSidebar({
   const [name, setName] = useState("");
   const [source, setSource] = useState("");
   const [description, setDescription] = useState("");
-  const [nameError, setNameError] = useState<string>();
+  const [sourceError, setSourceError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
   const [menuId, setMenuId] = useState<string>();
   const [pendingDelete, setPendingDelete] = useState<ProjectSummary>();
@@ -93,7 +94,7 @@ export function ProjectSidebar({
     setName("");
     setSource("");
     setDescription("");
-    setNameError(undefined);
+    setSourceError(undefined);
     setCreating(false);
     setEditingId(undefined);
   };
@@ -104,7 +105,7 @@ export function ProjectSidebar({
     setName(summary.name);
     setSource(summary.source ?? "");
     setDescription(summary.description ?? "");
-    setNameError(undefined);
+    setSourceError(undefined);
     setMenuId(undefined);
   };
 
@@ -112,26 +113,43 @@ export function ProjectSidebar({
     if (createBusy) {
       return;
     }
-    const resolvedName = resolveProjectName({ name, source });
-    if (resolvedName === undefined) {
-      setNameError(t(locale, "sidebar.projectNameOrSource"));
-      return;
-    }
-    setSubmitting(true);
-    try {
-      if (editingId !== undefined) {
-        const ok = onUpdateProject(editingId, {
-          name: resolvedName,
-          source: source.trim() || undefined,
-          description: description.trim() || undefined,
+    if (editingId === undefined) {
+      const trimmedSource = source.trim();
+      if (trimmedSource === "") {
+        setSourceError(t(locale, "sidebar.projectUrlRequired"));
+        return;
+      }
+      if (!isValidGitHubProjectSource(trimmedSource)) {
+        setSourceError(t(locale, "sidebar.invalidGitHubUrl"));
+        return;
+      }
+      const resolvedName = resolveProjectName({ source: trimmedSource });
+      if (resolvedName === undefined) {
+        setSourceError(t(locale, "sidebar.invalidGitHubUrl"));
+        return;
+      }
+      setSubmitting(true);
+      try {
+        const ok = await onCreateProject({
+          source: trimmedSource,
         });
         if (ok) {
           resetForm();
         }
-        return;
+      } finally {
+        setSubmitting(false);
       }
-      const ok = await onCreateProject({
-        name: name.trim() || resolvedName,
+      return;
+    }
+    const resolvedName = resolveProjectName({ name, source });
+    if (resolvedName === undefined) {
+      setSourceError(t(locale, "sidebar.projectNameOrSource"));
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const ok = onUpdateProject(editingId, {
+        name: resolvedName,
         source: source.trim() || undefined,
         description: description.trim() || undefined,
       });
@@ -176,7 +194,7 @@ export function ProjectSidebar({
               onClick={() => {
                 setEditingId(undefined);
                 setCreating((value) => !value);
-                setNameError(undefined);
+                setSourceError(undefined);
                 onOpenCreate?.();
               }}
             >
@@ -188,7 +206,7 @@ export function ProjectSidebar({
       {open && formOpen ? (
         <form
           className="project-create"
-          data-testid={editingId ? "project-edit-form" : "project-create-form"}
+          data-testid={editingId ? "project-details-form" : "project-create-form"}
           onSubmit={(event) => {
             event.preventDefault();
             void submitForm();
@@ -200,43 +218,53 @@ export function ProjectSidebar({
             }
           }}
         >
-          <Field
-            label={t(locale, "sidebar.projectName")}
-            required={editingId !== undefined}
-            error={nameError}
-          >
-            <TextInput
-              data-testid={editingId ? "project-edit-name-input" : "project-name-input"}
-              value={name}
-              autoFocus
-              onChange={(event) => setName(event.target.value)}
-            />
-          </Field>
+          {editingId !== undefined ? (
+            <h3 className="project-form-title" data-testid="project-details-title">
+              {t(locale, "project.detailsTitle")}
+            </h3>
+          ) : null}
           <Field
             label={t(locale, "sidebar.projectSource")}
-            helper={t(locale, "sidebar.projectSourceHelper")}
+            required={editingId === undefined}
+            helper={
+              editingId === undefined
+                ? t(locale, "sidebar.createUrlHelper")
+                : t(locale, "sidebar.projectSourceHelper")
+            }
+            error={sourceError}
           >
             <TextInput
               data-testid={
                 editingId ? "project-edit-source-input" : "project-source-input"
               }
               value={source}
+              autoFocus={editingId === undefined}
               placeholder={t(locale, "sidebar.projectSourcePlaceholder")}
               onChange={(event) => setSource(event.target.value)}
             />
           </Field>
-          <Field label={t(locale, "sidebar.projectDescription")}>
-            <TextInput
-              data-testid={
-                editingId
-                  ? "project-edit-description-input"
-                  : "project-description-input"
-              }
-              value={description}
-              placeholder={t(locale, "sidebar.projectDescriptionPlaceholder")}
-              onChange={(event) => setDescription(event.target.value)}
-            />
-          </Field>
+          {editingId !== undefined ? (
+            <>
+              <Field
+                label={t(locale, "sidebar.projectName")}
+                required
+              >
+                <TextInput
+                  data-testid="project-edit-name-input"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                />
+              </Field>
+              <Field label={t(locale, "sidebar.projectDescription")}>
+                <TextInput
+                  data-testid="project-edit-description-input"
+                  value={description}
+                  placeholder={t(locale, "sidebar.projectDescriptionPlaceholder")}
+                  onChange={(event) => setDescription(event.target.value)}
+                />
+              </Field>
+            </>
+          ) : null}
           {(editingId ? editError : createError) ? (
             <p
               className="field-error"
@@ -304,7 +332,7 @@ export function ProjectSidebar({
                       data-testid={`project-edit-${summary.projectId}`}
                       onClick={() => beginEdit(summary)}
                     >
-                      {t(locale, "sidebar.edit")}
+                      {t(locale, "sidebar.projectDetails")}
                     </button>
                     <button
                       type="button"

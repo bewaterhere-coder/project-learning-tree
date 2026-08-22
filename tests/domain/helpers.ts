@@ -7,7 +7,6 @@ import {
   createBlockingChild,
   createProject,
   declareCriterionSatisfied,
-  ensureProjectRoot,
   setNodeSummary,
   type DomainResult,
   type DomainSnapshot,
@@ -60,21 +59,19 @@ export function assertActiveBijection(snapshot: DomainSnapshot): void {
   }
 }
 
+
+/** @deprecated Project Root removed; returns first core question id for transitional tests. */
 export function requireProjectRootId(snapshot: DomainSnapshot): NodeId {
-  const rootId = snapshot.pass.projectRootNodeId;
-  if (!rootId) {
-    throw new Error("missing project root");
+  const id = coreQuestionIds(snapshot)[0];
+  if (!id) {
+    throw new Error("missing project root / core question");
   }
-  return rootId;
+  return id;
 }
 
-/** Core Questions attached under the Project Root (not pass.rootNodeIds). */
+/** Top-level Core Questions (= pass.rootNodeIds after TASK-005 flatten). */
 export function coreQuestionIds(snapshot: DomainSnapshot): NodeId[] {
-  const rootId = snapshot.pass.projectRootNodeId;
-  if (!rootId) {
-    return [];
-  }
-  return [...(snapshot.nodes[rootId]?.childIds ?? [])];
+  return [...snapshot.pass.rootNodeIds];
 }
 
 export function createProjectWithRoots(
@@ -82,7 +79,6 @@ export function createProjectWithRoots(
   questions: string[],
 ): DomainSnapshot {
   let snapshot = unwrap(createProject({ name: "Learning Tree" }, ports));
-  snapshot = unwrap(ensureProjectRoot(snapshot, ports));
   for (const question of questions) {
     snapshot = unwrap(
       addCoreQuestion(snapshot, { question, goal: `Understand ${question}` }, ports),
@@ -92,8 +88,9 @@ export function createProjectWithRoots(
 }
 
 /**
- * Activates the Nth Core Question under the Project Root.
- * `rootId` is the Core Question id (historical test name); stack is [projectRoot, …].
+ * Activates the Nth Core Question (top-level root).
+ * `rootId` is the Core Question id; stack is `[rootId]` (no Project Root).
+ * `projectRootId` is kept as an alias of `rootId` for older call sites.
  */
 export function activateRoot(
   snapshot: DomainSnapshot,
@@ -107,11 +104,10 @@ export function activateRoot(
   if (!rootId) {
     throw new Error("missing core question");
   }
-  const projectRootId = requireProjectRootId(snapshot);
   return {
     snapshot: unwrap(activateNode(snapshot, { nodeId: rootId })),
     rootId,
-    projectRootId,
+    projectRootId: rootId,
   };
 }
 

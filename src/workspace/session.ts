@@ -147,6 +147,7 @@ export async function createWorkspaceProject(
     },
     options.ports ?? defaultPorts(),
     options.provider,
+    workspace.shell.locale,
   );
   if (!result.ok) {
     return {

@@ -3,44 +3,28 @@ import { mockGitHubRepository } from "../helpers/github.js";
 import { createProject, openApp, selectedProjectId } from "../helpers/project.js";
 import { OPENSPEC_GITHUB_FIXTURE } from "../../tests/fixtures/github-api.js";
 
-test("creating a GitHub project generates a hierarchical first layer under a Project Root", async ({
+test("creating a GitHub project opens onto top-level Questions (no Project Root)", async ({
   page,
 }) => {
   await mockGitHubRepository(page);
   await openApp(page);
-  await createProject(page, "Vite", { source: "vitejs/vite" });
+  await createProject(page, "Vite", {
+    source: "vitejs/vite",
+    mockGitHub: false,
+  });
 
   await expect(page.getByTestId("project-empty")).toHaveCount(0);
-  const root = page.locator('[data-project-root="true"]');
-  await expect(root).toHaveCount(1);
-  await expect(root.first()).toContainText("Vite");
+  await expect(page.locator('[data-project-root="true"]')).toHaveCount(0);
 
   const nodes = page.locator("[data-node-id]");
   await expect(nodes.first()).toBeVisible();
   const nodeCount = await nodes.count();
-  // Project Root + up to 5 Core Questions
-  expect(nodeCount).toBeGreaterThan(1);
-  expect(nodeCount).toBeLessThanOrEqual(6);
+  expect(nodeCount).toBeGreaterThan(0);
+  expect(nodeCount).toBeLessThanOrEqual(5);
 
-  const edges = page.locator(".react-flow__edge");
-  expect(await edges.count()).toBeGreaterThan(0);
-
-  const rootBox = await root.first().boundingBox();
-  const child = page.locator('[data-node-id]:not([data-project-root="true"])').first();
-  const childBox = await child.boundingBox();
-  expect(rootBox).not.toBeNull();
-  expect(childBox).not.toBeNull();
-  if (rootBox && childBox) {
-    expect(childBox.y).toBeGreaterThan(rootBox.y);
-  }
-
-  await expect(page.getByTestId("bootstrap-summary")).toContainText("Vite");
+  await expect(page.getByTestId("project-title")).toHaveText("vite");
+  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
   await expect(page.getByTestId("bootstrap-recommended")).toBeVisible();
-  await page.getByTestId("bootstrap-summary").locator("summary").click();
-  await expect(page.getByTestId("bootstrap-evidence-status")).toContainText(
-    "GitHub metadata, README, and repository root",
-  );
-  await expect(page.getByText(/plugin pipeline|dev server/i).first()).toBeVisible();
 
   const recommended = page.locator("[data-recommended='true']");
   await expect(recommended.first()).toBeVisible();
@@ -48,13 +32,14 @@ test("creating a GitHub project generates a hierarchical first layer under a Pro
 
   await page.getByTestId("bootstrap-recommended").locator("button").first().click();
   await expect(page.getByTestId("node-inspector")).toBeVisible();
+  // Details panel is knowledge deposition — no Start Learning ceremony
   await expect(page.getByTestId("inspector-dod-heading")).toBeVisible();
   await expect(page.getByTestId("inspector-summary-heading")).toBeVisible();
   await expect(page.getByTestId("action-activate")).toHaveCount(0);
   await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);
 });
 
-test("source-only create defaults the project name from the GitHub URL", async ({
+test("URL-only create defaults the project name from the GitHub URL", async ({
   page,
 }) => {
   await mockGitHubRepository(page, OPENSPEC_GITHUB_FIXTURE);
@@ -65,52 +50,45 @@ test("source-only create defaults the project name from the GitHub URL", async (
   } else {
     await page.getByTestId("workspace-empty-create").click();
   }
+  await expect(page.getByTestId("project-name-input")).toHaveCount(0);
   await page
     .getByTestId("project-source-input")
     .fill("https://github.com/Fission-AI/OpenSpec");
   await page.getByTestId("project-create-submit").click();
   await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
-  await expect(page.locator('[data-project-root="true"]')).toContainText("OpenSpec");
+  await expect(page.locator('[data-project-root="true"]')).toHaveCount(0);
   await expect(page.getByTestId("project-list")).toContainText("OpenSpec");
+  await expect(page.locator("[data-node-id]").first()).toBeVisible();
 });
 
-test("edit project renames sidebar and Project Root without resetting children", async ({
+test("project details renames the sidebar without resetting questions", async ({
   page,
 }) => {
   await mockGitHubRepository(page);
   await openApp(page);
-  await createProject(page, "Vite", { source: "vitejs/vite" });
+  await createProject(page, "Vite", {
+    source: "vitejs/vite",
+    mockGitHub: false,
+  });
   const projectId = await selectedProjectId(page);
-  const childCountBefore = await page
-    .locator('[data-node-id]:not([data-project-root="true"])')
-    .count();
-  expect(childCountBefore).toBeGreaterThan(0);
+  const nodeCountBefore = await page.locator("[data-node-id]").count();
+  expect(nodeCountBefore).toBeGreaterThan(0);
 
   await page.getByTestId(`project-actions-${projectId}`).click();
   await page.getByTestId(`project-edit-${projectId}`).click();
+  await expect(page.getByTestId("project-details-form")).toBeVisible();
   await page.getByTestId("project-edit-name-input").fill("Vite Study");
   await page.getByTestId("project-edit-submit").click();
 
   await expect(page.getByTestId(`project-item-${projectId}`)).toContainText(
     "Vite Study",
   );
-  await expect(page.locator('[data-project-root="true"]')).toContainText(
-    "Vite Study",
-  );
-  expect(
-    await page.locator('[data-node-id]:not([data-project-root="true"])').count(),
-  ).toBe(childCountBefore);
+  expect(await page.locator("[data-node-id]").count()).toBe(nodeCountBefore);
 
   await page.reload();
   await page.getByTestId("shell").waitFor();
   await expect(page.getByTestId(`project-item-${projectId}`)).toContainText(
     "Vite Study",
   );
-  await expect(page.locator('[data-project-root="true"]')).toContainText(
-    "Vite Study",
-  );
-  expect(
-    await page.locator('[data-node-id]:not([data-project-root="true"])').count(),
-  ).toBe(childCountBefore);
-  expect(await page.locator(".react-flow__edge").count()).toBeGreaterThan(0);
+  expect(await page.locator("[data-node-id]").count()).toBe(nodeCountBefore);
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   migratedProjectRootId,
+  PROJECT_ROOT_ORIENTATION_GOAL,
   type DomainSnapshot,
 } from "../../src/domain/index.js";
 import {
@@ -18,7 +19,7 @@ import {
 } from "../../src/workspace/index.js";
 import { createDemoWorkspaceFixture } from "../../src/fixtures/demo-workspace.js";
 
-function legacyFlatStoredWorkspace(): {
+function legacyRootedStoredWorkspace(): {
   version: typeof SEMANTIC_VERSION;
   selectedProjectId: string;
   projects: Array<{
@@ -29,6 +30,7 @@ function legacyFlatStoredWorkspace(): {
 } {
   const projectId = "proj-legacy";
   const passId = "pass-legacy";
+  const rootId = migratedProjectRootId(projectId);
   return {
     version: SEMANTIC_VERSION,
     selectedProjectId: projectId,
@@ -46,35 +48,52 @@ function legacyFlatStoredWorkspace(): {
             id: passId,
             projectId,
             status: "in_progress",
-            rootNodeIds: ["flat-a", "flat-b"],
-            activeStack: [],
+            rootNodeIds: [rootId],
+            projectRootNodeId: rootId,
+            activeStack: [rootId, "legacy-q1"],
+            currentFocusNodeId: rootId,
             frontier: [],
           },
           nodes: {
-            "flat-a": {
-              id: "flat-a",
-              question: "A",
-              goal: "A",
-              lifecycle: "open",
+            [rootId]: {
+              id: rootId,
+              question: "Stored Legacy",
+              goal: PROJECT_ROOT_ORIENTATION_GOAL,
+              lifecycle: "active",
               targetDepth: "L1",
               definitionOfDone: [],
               evidence: [],
-              childIds: [],
+              childIds: ["legacy-q1", "legacy-q2"],
               blockingChildIds: [],
-              conversationThreadId: "flat-a:thread",
+              conversationThreadId: `${rootId}:thread`,
               reopenHistory: [],
             },
-            "flat-b": {
-              id: "flat-b",
-              question: "B",
-              goal: "B",
+            "legacy-q1": {
+              id: "legacy-q1",
+              parentId: rootId,
+              question: "Q1",
+              goal: "Understand Q1",
+              lifecycle: "active",
+              targetDepth: "L1",
+              definitionOfDone: [],
+              evidence: [],
+              childIds: [],
+              blockingChildIds: [],
+              conversationThreadId: "legacy-q1:thread",
+              reopenHistory: [],
+            },
+            "legacy-q2": {
+              id: "legacy-q2",
+              parentId: rootId,
+              question: "Q2",
+              goal: "Understand Q2",
               lifecycle: "open",
               targetDepth: "L1",
               definitionOfDone: [],
               evidence: [],
               childIds: [],
               blockingChildIds: [],
-              conversationThreadId: "flat-b:thread",
+              conversationThreadId: "legacy-q2:thread",
               reopenHistory: [],
             },
           },
@@ -85,13 +104,12 @@ function legacyFlatStoredWorkspace(): {
 }
 
 describe("workspace metadata and hierarchy migration", () => {
-  it("updates project metadata on the selected snapshot without touching layout", () => {
+  it("updates project metadata on the selected snapshot without syncing a Root node question", () => {
     const { workspace, projectA } = createDemoWorkspaceFixture();
     const layoutBefore = workspace.projects[0]?.layout;
-    const rootId = projectA.snapshot.pass.projectRootNodeId!;
-    const childIdsBefore = [
-      ...(projectA.snapshot.nodes[rootId]?.childIds ?? []),
-    ];
+    const rootNodeIdsBefore = [...projectA.snapshot.pass.rootNodeIds];
+    const q1 = projectA.ids.q1;
+    const q1QuestionBefore = projectA.snapshot.nodes[q1]?.question;
 
     const next = updateWorkspaceProjectMetadata(
       workspace,
@@ -105,21 +123,17 @@ describe("workspace metadata and hierarchy migration", () => {
 
     expect(next.projects[0]?.snapshot.project.name).toBe("Renamed Demo");
     expect(next.projects[0]?.snapshot.project.description).toBe("Edited pitch");
-    expect(next.projects[0]?.snapshot.nodes[rootId]?.question).toBe(
-      "Renamed Demo",
-    );
-    expect(next.projects[0]?.snapshot.pass.projectRootNodeId).toBe(rootId);
-    expect(next.projects[0]?.snapshot.nodes[rootId]?.childIds).toEqual(
-      childIdsBefore,
-    );
+    expect(next.projects[0]?.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(next.projects[0]?.snapshot.pass.rootNodeIds).toEqual(rootNodeIdsBefore);
+    expect(next.projects[0]?.snapshot.nodes[q1]?.question).toBe(q1QuestionBefore);
     expect(next.projects[0]?.layout).toEqual(layoutBefore);
     expect(next.lastError).toBeUndefined();
   });
 
-  it("migrates legacy flat semantic storage and clears nodePositions on reload", () => {
-    const legacy = legacyFlatStoredWorkspace();
+  it("flattens legacy rooted semantic storage and clears nodePositions on reload", () => {
+    const legacy = legacyRootedStoredWorkspace();
     const projectId = legacy.projects[0]!.projectId;
-    const expectedRootId = migratedProjectRootId(projectId);
+    const legacyRootId = migratedProjectRootId(projectId);
 
     const storage = createMemoryPreferenceStorage({
       [WORKSPACE_SEMANTIC_KEY]: JSON.stringify(legacy),
@@ -137,8 +151,9 @@ describe("workspace metadata and hierarchy migration", () => {
           layout: {
             ...defaultProjectLayout(legacySnapshot),
             nodePositions: {
-              "flat-a": { x: 10, y: 20 },
-              "flat-b": { x: 30, y: 40 },
+              [legacyRootId]: { x: 1, y: 2 },
+              "legacy-q1": { x: 10, y: 20 },
+              "legacy-q2": { x: 30, y: 40 },
             },
           },
         },
@@ -148,24 +163,26 @@ describe("workspace metadata and hierarchy migration", () => {
     saveWorkspacePreferences(storage, workspace);
     expect(
       JSON.parse(storage.getItem(WORKSPACE_PREFERENCES_KEY)!)
-        .projects[projectId].nodePositions["flat-a"],
+        .projects[projectId].nodePositions["legacy-q1"],
     ).toEqual({ x: 10, y: 20 });
 
     const load1 = loadSemanticWorkspaceWithMigration(storage);
     expect(load1.migratedProjectIds).toEqual([projectId]);
     const migrated = load1.workspace.projects[0]?.snapshot;
-    expect(migrated?.pass.projectRootNodeId).toBe(expectedRootId);
-    expect(migrated?.pass.rootNodeIds).toEqual([expectedRootId]);
-    expect(migrated?.nodes[expectedRootId]?.childIds).toEqual([
-      "flat-a",
-      "flat-b",
-    ]);
-    expect(migrated?.nodes["flat-a"]?.parentId).toBe(expectedRootId);
+    expect(migrated?.pass.projectRootNodeId).toBeUndefined();
+    expect(migrated?.pass.rootNodeIds).toEqual(["legacy-q1", "legacy-q2"]);
+    expect(migrated?.nodes[legacyRootId]).toBeUndefined();
+    expect(migrated?.nodes["legacy-q1"]?.parentId).toBeUndefined();
+    expect(migrated?.nodes["legacy-q2"]?.parentId).toBeUndefined();
+    expect(migrated?.pass.activeStack).toEqual(["legacy-q1"]);
+    expect(migrated?.pass.currentFocusNodeId).toBe("legacy-q1");
 
     const rewritten = JSON.parse(storage.getItem(WORKSPACE_SEMANTIC_KEY)!);
-    expect(rewritten.projects[0].snapshot.pass.projectRootNodeId).toBe(
-      expectedRootId,
-    );
+    expect(rewritten.projects[0].snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(rewritten.projects[0].snapshot.pass.rootNodeIds).toEqual([
+      "legacy-q1",
+      "legacy-q2",
+    ]);
     expect(JSON.stringify(rewritten)).not.toContain("nodePositions");
 
     const reconciled = hydrateWorkspacePreferences(load1.workspace, storage, {
@@ -175,24 +192,20 @@ describe("workspace metadata and hierarchy migration", () => {
 
     const load2 = loadSemanticWorkspaceWithMigration(storage);
     expect(load2.migratedProjectIds).toEqual([]);
-    expect(load2.workspace.projects[0]?.snapshot.pass.projectRootNodeId).toBe(
-      expectedRootId,
-    );
-    expect(
-      load2.workspace.projects[0]?.snapshot.nodes[expectedRootId]?.childIds,
-    ).toEqual(["flat-a", "flat-b"]);
+    expect(load2.workspace.projects[0]?.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(load2.workspace.projects[0]?.snapshot.pass.rootNodeIds).toEqual([
+      "legacy-q1",
+      "legacy-q2",
+    ]);
   });
 
   it("does not clear nodePositions on metadata-only edits", () => {
     const { workspace, projectA } = createDemoWorkspaceFixture();
-    const withPositions = updateSelectedLayout(
-      workspace,
-      {
-        nodePositions: {
-          [projectA.ids.q1]: { x: 12, y: 34 },
-        },
+    const withPositions = updateSelectedLayout(workspace, {
+      nodePositions: {
+        [projectA.ids.q1]: { x: 12, y: 34 },
       },
-    );
+    });
     const renamed = updateWorkspaceProjectMetadata(
       withPositions,
       projectA.snapshot.project.id,

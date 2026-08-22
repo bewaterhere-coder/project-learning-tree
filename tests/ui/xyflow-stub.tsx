@@ -8,7 +8,9 @@ interface StubNode {
   position?: { x: number; y: number };
   data: TreeNodeView & {
     isRecommended?: boolean;
+    locale?: "en-US" | "zh-CN";
     onOpenChatForNode?: (nodeId: string) => void;
+    onCommand?: (command: import("../../src/application/commands.js").UiCommand) => boolean | void;
     onAddChildForNode?: (nodeId: string) => void;
     onCompleteNode?: (nodeId: string) => void;
     region?: { rootId: string; title: string };

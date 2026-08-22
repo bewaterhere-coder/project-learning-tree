@@ -8,18 +8,19 @@ import {
 } from "../../src/domain/index.js";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
 
-function legacyFlatSnapshot(): DomainSnapshot {
+function rootedSnapshot(): DomainSnapshot {
   const ports = sequentialFixturePorts(7000);
-  const created = createProject({ name: "Legacy Flat", source: "legacy" }, ports);
+  const created = createProject({ name: "Legacy Rooted", source: "legacy" }, ports);
   if (!created.ok) {
     throw new Error(created.error.kind);
   }
   const projectId = created.snapshot.project.id;
   const passId = created.snapshot.pass.id;
+  const rootId = migratedProjectRootId(projectId);
   return {
     project: {
       id: projectId,
-      name: "Legacy Flat",
+      name: "Legacy Rooted",
       source: "legacy",
       passIds: [passId],
     },
@@ -27,13 +28,29 @@ function legacyFlatSnapshot(): DomainSnapshot {
       id: passId,
       projectId,
       status: "in_progress",
-      rootNodeIds: ["legacy-q1", "legacy-q2"],
-      activeStack: ["legacy-q1"],
+      rootNodeIds: [rootId],
+      projectRootNodeId: rootId,
+      activeStack: [rootId, "legacy-q1"],
+      currentFocusNodeId: rootId,
       frontier: [],
     },
     nodes: {
+      [rootId]: {
+        id: rootId,
+        question: "Legacy Rooted",
+        goal: PROJECT_ROOT_ORIENTATION_GOAL,
+        lifecycle: "active",
+        targetDepth: "L1",
+        definitionOfDone: [],
+        evidence: [],
+        childIds: ["legacy-q1", "legacy-q2"],
+        blockingChildIds: [],
+        conversationThreadId: `${rootId}:thread`,
+        reopenHistory: [],
+      },
       "legacy-q1": {
         id: "legacy-q1",
+        parentId: rootId,
         question: "Q1",
         goal: "Understand Q1",
         lifecycle: "active",
@@ -47,6 +64,7 @@ function legacyFlatSnapshot(): DomainSnapshot {
       },
       "legacy-q2": {
         id: "legacy-q2",
+        parentId: rootId,
         question: "Q2",
         goal: "Understand Q2",
         lifecycle: "open",
@@ -63,47 +81,32 @@ function legacyFlatSnapshot(): DomainSnapshot {
 }
 
 describe("migrateSnapshotHierarchy", () => {
-  it("reparents flat roots under a stable Project Root id", () => {
-    const legacy = legacyFlatSnapshot();
-    const first = migrateSnapshotHierarchy(legacy);
+  it("flattens Project Root children into top-level rootNodeIds", () => {
+    const rooted = rootedSnapshot();
+    const rootId = migratedProjectRootId(rooted.project.id);
+    const first = migrateSnapshotHierarchy(rooted);
 
     expect(first.migrated).toBe(true);
-    const rootId = migratedProjectRootId(legacy.project.id);
-    expect(first.snapshot.pass.projectRootNodeId).toBe(rootId);
-    expect(first.snapshot.pass.rootNodeIds).toEqual([rootId]);
-    expect(first.snapshot.nodes[rootId]?.question).toBe("Legacy Flat");
-    expect(first.snapshot.nodes[rootId]?.goal).toBe(PROJECT_ROOT_ORIENTATION_GOAL);
-    expect(first.snapshot.nodes[rootId]?.childIds).toEqual([
-      "legacy-q1",
-      "legacy-q2",
-    ]);
-    expect(first.snapshot.nodes["legacy-q1"]?.parentId).toBe(rootId);
-    expect(first.snapshot.nodes["legacy-q2"]?.parentId).toBe(rootId);
-    expect(first.snapshot.nodes["legacy-q1"]?.id).toBe("legacy-q1");
+    expect(first.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(first.snapshot.pass.rootNodeIds).toEqual(["legacy-q1", "legacy-q2"]);
+    expect(first.snapshot.nodes[rootId]).toBeUndefined();
+    expect(first.snapshot.nodes["legacy-q1"]?.parentId).toBeUndefined();
+    expect(first.snapshot.nodes["legacy-q2"]?.parentId).toBeUndefined();
     expect(first.snapshot.pass.activeStack).toEqual(["legacy-q1"]);
+    expect(first.snapshot.pass.currentFocusNodeId).toBe("legacy-q1");
   });
 
-  it("is idempotent on a second migrate — same Root ID, no structural rewrite", () => {
-    const legacy = legacyFlatSnapshot();
-    const first = migrateSnapshotHierarchy(legacy);
+  it("is idempotent on a second migrate", () => {
+    const rooted = rootedSnapshot();
+    const first = migrateSnapshotHierarchy(rooted);
     const second = migrateSnapshotHierarchy(first.snapshot);
 
     expect(second.migrated).toBe(false);
-    expect(second.snapshot.pass.projectRootNodeId).toBe(
-      first.snapshot.pass.projectRootNodeId,
-    );
-    expect(second.snapshot.pass.projectRootNodeId).toBe(
-      migratedProjectRootId(legacy.project.id),
-    );
-    expect(second.snapshot.pass.rootNodeIds).toEqual(
-      first.snapshot.pass.rootNodeIds,
-    );
-    expect(second.snapshot.nodes[second.snapshot.pass.projectRootNodeId!]?.childIds).toEqual(
-      ["legacy-q1", "legacy-q2"],
-    );
+    expect(second.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(second.snapshot.pass.rootNodeIds).toEqual(["legacy-q1", "legacy-q2"]);
   });
 
-  it("no-ops when there are no roots", () => {
+  it("no-ops when there are no roots and no Project Root pointer", () => {
     const ports = sequentialFixturePorts(7100);
     const created = createProject({ name: "Empty" }, ports);
     if (!created.ok) {

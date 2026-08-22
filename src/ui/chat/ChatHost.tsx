@@ -137,6 +137,7 @@ export function ChatHost({
           identity: captured,
           context: requestContext,
           input,
+          locale,
         });
         persistRegistry(
           routeReplyToIdentity(
@@ -190,17 +191,8 @@ export function ChatHost({
         );
         return;
       }
-      const parent = current.snapshot.nodes[identity.nodeId];
-      if (parent?.lifecycle !== "active") {
-        patchConversation(
-          updateProposal(conversation, proposal.id, {
-            error: t(locale, "proposal.parentNotActive"),
-          }),
-        );
-        return;
-      }
       const ok = runCommand({
-        type: "createBlockingChild",
+        type: "createChild",
         parentId: identity.nodeId,
         question: proposal.question,
         goal: goal.trim(),
@@ -208,7 +200,7 @@ export function ChatHost({
       if (!ok.ok) {
         patchConversation(
           updateProposal(getConversation(registryRef.current, identity), proposal.id, {
-            error: ok.errorMessage ?? t(locale, "proposal.parentNotActive"),
+            error: ok.errorMessage ?? t(locale, "error.generic"),
           }),
         );
         return;

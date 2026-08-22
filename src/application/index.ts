@@ -3,6 +3,7 @@ export {
   bootstrapLearningProject,
   isEmptyFirstLayer,
   resolveProjectName,
+  isValidGitHubProjectSource,
   CANONICAL_CONTRACT_ID,
   CANONICAL_CONTRACT_VERSION,
   LEARNING_TREE_ADAPTER_ID,

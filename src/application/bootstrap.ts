@@ -3,7 +3,6 @@ import {
   addCriterion,
   CORE_QUESTION_LIMIT,
   createProject,
-  ensureProjectRoot,
   type DomainEvent,
   type DomainSnapshot,
   type NodeId,
@@ -20,6 +19,7 @@ import {
   runProjectLearningBootstrap,
   type EvidenceInput,
   type EvidenceStatus,
+  type GenerationLocale,
   type RepositoryEvidenceSource,
 } from "../framework/index.js";
 import type { RepositoryEvidenceProvider } from "./repository-evidence.js";
@@ -59,10 +59,16 @@ export function resolveProjectName(input: {
   return parsed?.repo;
 }
 
+/** Returns true when the source parses as a GitHub repository reference. */
+export function isValidGitHubProjectSource(source: string): boolean {
+  return parseGitHubSource(source.trim()) !== undefined;
+}
+
 export async function bootstrapLearningProject(
   input: EvidenceInput,
   ports: Ports,
   provider?: RepositoryEvidenceProvider,
+  locale: GenerationLocale = "en-US",
 ): Promise<BootstrapProjectResult> {
   const name = resolveProjectName(input);
   if (name === undefined) {
@@ -81,28 +87,23 @@ export async function bootstrapLearningProject(
     return created;
   }
 
-  const rooted = ensureProjectRoot(created.snapshot, ports);
-  if (!rooted.ok) {
-    return rooted;
-  }
-
   const source = await loadEvidenceSource(
     {
-      name: rooted.snapshot.project.name,
-      source: rooted.snapshot.project.source,
+      name: created.snapshot.project.name,
+      source: created.snapshot.project.source,
       description: input.description,
     },
     provider,
   );
   const evidence = normalizeRepositoryEvidence(source);
-  const proposal = runProjectLearningBootstrap(evidence);
+  const proposal = runProjectLearningBootstrap(evidence, locale);
   const questions = proposal.coreQuestions.slice(
     0,
     Math.min(EXPLORATION_BUDGET.coreQuestions, CORE_QUESTION_LIMIT),
   );
 
-  let snapshot = rooted.snapshot;
-  const events: DomainEvent[] = [...created.events, ...rooted.events];
+  let snapshot = created.snapshot;
+  const events: DomainEvent[] = [...created.events];
   const createdNodeIds: NodeId[] = [];
 
   for (const question of questions) {
@@ -196,12 +197,7 @@ async function loadEvidenceSource(
 }
 
 export function isEmptyFirstLayer(snapshot: DomainSnapshot): boolean {
-  const rootId = snapshot.pass.projectRootNodeId;
-  if (rootId === undefined) {
-    return snapshot.pass.rootNodeIds.length === 0;
-  }
-  const root = snapshot.nodes[rootId];
-  return root === undefined || root.childIds.length === 0;
+  return snapshot.pass.rootNodeIds.length === 0;
 }
 
 export type { EvidenceInput, EvidenceStatus };

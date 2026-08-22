@@ -709,6 +709,7 @@ export function App({
                         recommendedNodeIds={
                           current.bootstrap?.recommendedFocusNodeIds ?? []
                         }
+                        locale={locale}
                         onFocusNode={handleFocusNode}
                         onOpenChatForNode={handleOpenChatForNode}
                         onAddChildForNode={handleAddChildForNode}

@@ -36,7 +36,7 @@ describe("project sidebar", () => {
     expect(itemB).toHaveTextContent("M2.1 Demo Tree B");
     expect(
       screen.getByTestId(`project-completion-${projectA.snapshot.project.id}`),
-    ).toHaveAttribute("data-completion", String(1 / 5));
+    ).toHaveAttribute("data-completion", String(1 / 4));
     expect(
       screen.getByTestId(`project-active-${projectA.snapshot.project.id}`),
     ).toHaveTextContent("Q1");

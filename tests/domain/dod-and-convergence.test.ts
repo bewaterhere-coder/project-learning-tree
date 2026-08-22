@@ -212,7 +212,7 @@ describe("definition of done and convergence", () => {
     const focused = unwrap(focusNode(active, { nodeId: otherId }));
     const closed = closePrepared(focused, rootId, ports);
     expect(closed.pass.currentFocusNodeId).toBe(otherId);
-    expect(closed.pass.activeStack).toEqual([projectRootId]);
+    expect(closed.pass.activeStack).toEqual([]);
     expect(closed.nodes[rootId]?.lifecycle).toBe("closed");
   });
 

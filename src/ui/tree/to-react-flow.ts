@@ -1,5 +1,6 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { NodeId, TreeNodeView, TreeViewModel } from "../../application/index.js";
+import type { WorkspaceLocale } from "../../workspace/index.js";
 import {
   resolveNodePosition,
   type NodePosition,
@@ -9,6 +10,7 @@ import { computeLayout, NODE_HEIGHT, NODE_WIDTH } from "./layout.js";
 
 type LearningNodeData = TreeNodeView & {
   isRecommended?: boolean;
+  locale?: WorkspaceLocale;
   onOpenChatForNode?: (nodeId: NodeId) => void;
   onAddChildForNode?: (nodeId: NodeId) => void;
   onCompleteNode?: (nodeId: NodeId) => void;

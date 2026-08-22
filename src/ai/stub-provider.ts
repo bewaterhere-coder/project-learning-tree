@@ -1,6 +1,7 @@
 import type { LearningContext } from "../application/selectors/learning-context.js";
 import type { ChatProvider } from "./provider.js";
 import type { ChatReply, LearningProposal } from "./types.js";
+import type { GenerationLocale } from "../framework/locale.js";
 
 export interface StubProviderOptions {
   delayMs?: number;
@@ -17,43 +18,62 @@ export function createStubProvider(
         const reply = await options.complete(request);
         return delay(reply, delayMs);
       }
-      return delay(defaultStubReply(request.context, request.input), delayMs);
+      return delay(
+        defaultStubReply(request.context, request.input, request.locale ?? "en-US"),
+        delayMs,
+      );
     },
   };
 }
 
-function defaultStubReply(context: LearningContext, input: string): ChatReply {
+function defaultStubReply(
+  context: LearningContext,
+  input: string,
+  locale: GenerationLocale,
+): ChatReply {
   const lowered = input.toLowerCase();
   const nodeId =
     context.identity.kind === "node" ? context.identity.nodeId : undefined;
   const question = context.node?.question ?? context.project.name;
+  const zh = locale === "zh-CN";
 
   if (context.identity.kind === "project") {
     return {
-      answer: `Looking at ${context.project.name} as a whole. ${projectStatusLine(context)}`,
+      answer: zh
+        ? `从整体看 ${context.project.name}。${projectStatusLine(context, zh)}`
+        : `Looking at ${context.project.name} as a whole. ${projectStatusLine(context, zh)}`,
       proposals: [],
     };
   }
 
   if (nodeId === undefined) {
-    return { answer: `I can discuss ${context.project.name}.`, proposals: [] };
+    return {
+      answer: zh
+        ? `我可以围绕 ${context.project.name} 继续讨论。`
+        : `I can discuss ${context.project.name}.`,
+      proposals: [],
+    };
   }
 
   if (looksLikeSummaryAssist(lowered)) {
     const summary =
       context.node?.summary ??
-      `At this depth, ${question} is understood as: ${context.node?.goal ?? question}.`;
+      (zh
+        ? `在当前深度下，${question} 可以这样理解：${context.node?.goal ?? question}。`
+        : `At this depth, ${question} is understood as: ${context.node?.goal ?? question}.`);
     return {
-      answer: "Here is a learning summary draft for this question. It is not a chat transcript.",
-      proposals: [
-        summaryProposal(nodeId, summary),
-      ],
+      answer: zh
+        ? "这是一份学习心得草稿，不是对话摘要。"
+        : "Here is a learning summary draft for this question. It is not a chat transcript.",
+      proposals: [summaryProposal(nodeId, summary)],
     };
   }
 
   if (looksLikeEvidenceAssist(lowered)) {
     return {
-      answer: "This looks like something worth keeping as learning evidence.",
+      answer: zh
+        ? "这看起来值得保留为学习依据。"
+        : "This looks like something worth keeping as learning evidence.",
       proposals: [
         {
           id: stubId("evidence"),
@@ -61,7 +81,9 @@ function defaultStubReply(context: LearningContext, input: string): ChatReply {
           sourceNodeId: nodeId,
           evidenceType: "note",
           reference: input.slice(0, 160),
-          note: `Suggested from the current question: ${question}`,
+          note: zh
+            ? `来自当前问题的建议：${question}`
+            : `Suggested from the current question: ${question}`,
           status: "pending",
         },
       ],
@@ -70,13 +92,17 @@ function defaultStubReply(context: LearningContext, input: string): ChatReply {
 
   if (looksLikeCriterionAssist(lowered)) {
     return {
-      answer: "A completion requirement that would make this question done:",
+      answer: zh
+        ? "一条能让这个问题算完成的达成条件："
+        : "A completion requirement that would make this question done:",
       proposals: [
         {
           id: stubId("criterion"),
           type: "criterion",
           sourceNodeId: nodeId,
-          description: `Be able to explain ${question}`,
+          description: zh
+            ? `能清楚解释 ${question}`
+            : `Be able to explain ${question}`,
           required: true,
           evidenceRequired: false,
           status: "pending",
@@ -85,25 +111,29 @@ function defaultStubReply(context: LearningContext, input: string): ChatReply {
     };
   }
 
-  const proposedQuestion = deriveFollowUp(question, input);
+  const proposedQuestion = deriveFollowUp(question, input, zh);
   return {
-    answer: `Working from “${question}”. ${context.node?.goal ? `Goal: ${context.node.goal}. ` : ""}I can keep going from this node’s current learning context.`,
+    answer: zh
+      ? `围绕「${question}」继续。${context.node?.goal ? `目标：${context.node.goal}。` : ""}我可以基于当前问题的学习上下文继续展开。`
+      : `Working from “${question}”. ${context.node?.goal ? `Goal: ${context.node.goal}. ` : ""}I can keep going from this node’s current learning context.`,
     proposals: [
       {
         id: stubId("question"),
         type: "question",
         sourceNodeId: nodeId,
         question: proposedQuestion,
-        goal: `Understand ${proposedQuestion}`,
+        goal: zh ? `理解 ${proposedQuestion}` : `Understand ${proposedQuestion}`,
         suggestedDestination: "blocking",
-        rationale: "This looks like it may block finishing the current question.",
+        rationale: zh
+          ? "这看起来可能会阻塞完成当前问题。"
+          : "This looks like it may block finishing the current question.",
         status: "pending",
       },
     ],
   };
 }
 
-function projectStatusLine(context: LearningContext): string {
+function projectStatusLine(context: LearningContext, zh: boolean): string {
   const percent = context.projectSummary
     ? Math.round(context.projectSummary.completionLevel * 100)
     : 0;
@@ -111,6 +141,9 @@ function projectStatusLine(context: LearningContext): string {
     ? context.materializedTree.find((node) => node.id === context.currentFocusNodeId)
         ?.question
     : undefined;
+  if (zh) {
+    return `大约 ${percent}% 的已展开问题已完成。${focus ? ` 当前焦点：${focus}。` : ""}`;
+  }
   return `About ${percent}% of materialized questions are completed.${focus ? ` Current focus: ${focus}.` : ""}`;
 }
 
@@ -130,16 +163,22 @@ function looksLikeCriterionAssist(input: string): boolean {
   return (
     input.includes("completion requirement") ||
     input.includes("完成要求") ||
-    input.includes("definition of done")
+    input.includes("definition of done") ||
+    input.includes("达成条件")
   );
 }
 
-function deriveFollowUp(question: string, input: string): string {
+function deriveFollowUp(question: string, input: string, zh: boolean): string {
   const trimmed = input.trim();
   if (trimmed.length > 8 && !looksLikeSummaryAssist(trimmed.toLowerCase())) {
-    return trimmed.endsWith("?") ? trimmed : `${trimmed}?`;
+    if (trimmed.endsWith("?") || trimmed.endsWith("？")) {
+      return trimmed;
+    }
+    return zh ? `${trimmed}？` : `${trimmed}?`;
   }
-  return `What must be true before we can finish “${question}”?`;
+  return zh
+    ? `在完成「${question}」之前，还需要先弄清楚什么？`
+    : `What must be true before we can finish “${question}”?`;
 }
 
 function summaryProposal(nodeId: string, summary: string): LearningProposal {

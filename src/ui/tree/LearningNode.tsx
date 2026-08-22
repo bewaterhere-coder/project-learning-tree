@@ -22,6 +22,7 @@ export function LearningNode({
     data.isCurrentFocus ? "focused" : "",
     data.isActiveStackLeaf ? "stack-leaf" : "",
     data.isRecommended ? "recommended" : "",
+    data.isCompleted ? "completed" : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -31,7 +32,6 @@ export function LearningNode({
   const canAddChild = lifecycle !== "closed" && onAddChild;
   const showComplete = lifecycle !== "closed" && onComplete;
   const completeEnabled = showComplete && data.canComplete === true;
-  const isCompleted = lifecycle === "closed";
   const completeTitle = completeEnabled
     ? t(locale, "actions.complete")
     : t(locale, "close.notReady");
@@ -45,8 +45,7 @@ export function LearningNode({
       data-on-stack={data.isOnActiveStack ? "true" : "false"}
       data-focus={data.isCurrentFocus ? "true" : "false"}
       data-recommended={data.isRecommended ? "true" : "false"}
-      data-project-root={data.isProjectRoot ? "true" : "false"}
-      data-completed={isCompleted ? "true" : "false"}
+      data-completed={data.isCompleted ? "true" : "false"}
       data-can-complete={completeEnabled ? "true" : "false"}
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
@@ -54,12 +53,22 @@ export function LearningNode({
       <p className="node-meta" data-testid={`node-goal-${data.id}`}>
         {data.goal}
       </p>
-      {isCompleted ? (
+      {data.childCount > 0 ? (
+        <p className="node-progress" data-testid={`node-progress-${data.id}`}>
+          {t(locale, "node.childProgress", {
+            count: data.childCount,
+            percent: data.progressPercent ?? 0,
+          })}
+        </p>
+      ) : null}
+      {data.isCompleted ? (
         <span
           className="node-completed-mark"
           data-testid={`node-completed-${data.id}`}
+          aria-label={t(locale, "node.completed")}
+          title={t(locale, "node.completed")}
         >
-          {t(locale, "actions.complete")}
+          ✓
         </span>
       ) : null}
       {data.isRecommended ? (

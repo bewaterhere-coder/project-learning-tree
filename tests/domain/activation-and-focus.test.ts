@@ -37,7 +37,7 @@ describe("activation and focus", () => {
 
     expect(snapshot.nodes[rootId]?.lifecycle).toBe("active");
     expect(snapshot.nodes[projectRootId]?.lifecycle).toBe("active");
-    expect(snapshot.pass.activeStack).toEqual([projectRootId, rootId]);
+    expect(snapshot.pass.activeStack).toEqual([rootId]);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
     assertActiveBijection(snapshot);
   });
@@ -129,12 +129,12 @@ describe("activation and focus", () => {
     const focusedClosed = unwrap(focusNode(snapshot, { nodeId: first }));
     expect(focusedClosed.pass.currentFocusNodeId).toBe(first);
     expect(focusedClosed.nodes[first]?.lifecycle).toBe("closed");
-    expect(focusedClosed.pass.activeStack).toEqual([projectRootId]);
+    expect(focusedClosed.pass.activeStack).toEqual([]);
     expect(focusedClosed.nodes[second]?.lifecycle).toBe("open");
 
     const focusedAgain = unwrap(focusNode(focusedClosed, { nodeId: second }));
     expect(focusedAgain.nodes[second]?.lifecycle).toBe("open");
-    expect(focusedAgain.pass.activeStack).toEqual([projectRootId]);
+    expect(focusedAgain.pass.activeStack).toEqual([]);
     assertActiveBijection(focusedAgain);
   });
 
@@ -149,7 +149,7 @@ describe("activation and focus", () => {
     snapshot = unwrap(focusNode(snapshot, { nodeId: second }));
     snapshot = unwrap(activateNode(snapshot, { nodeId: first }));
     expect(snapshot.pass.currentFocusNodeId).toBe(second);
-    expect(snapshot.pass.activeStack).toEqual([projectRootId, first]);
+    expect(snapshot.pass.activeStack).toEqual([first]);
   });
 
   it("keeps every Active Stack member active and every active node on the stack", () => {
