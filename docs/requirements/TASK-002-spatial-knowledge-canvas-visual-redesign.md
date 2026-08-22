@@ -383,20 +383,27 @@ Do not:
 
 ## Suggested implementation order
 
-Cursor should first inspect current code and produce the canonical Plan on this same task branch. Expected investigation/implementation sequence:
-
-1. current component/style/token audit;
-2. refine design tokens where necessary;
-3. canvas background redesign;
-4. LearningNode redesign;
-5. Edge / Handle presentation and dynamic routing refinement;
-6. Header visual recession;
-7. Sidebar visual recession;
-8. Contextual workspace refinement;
-9. optional zoom-aware progressive disclosure if justified;
+1. refine design tokens where necessary;
+2. keep solid quiet canvas background;
+3. redesign LearningNode hierarchy and hover chat affordance;
+4. quiet Edge / Handle presentation while preserving TASK-001 routing;
+5. recede Header;
+6. recede Sidebar;
+7. refine Contextual workspace and Chat presentation;
+8. evaluate root-derived presentation-only cluster underlays only if the result still reads too much like a workflow diagram;
+9. optional zoom-aware progressive disclosure only if justified by headed review;
 10. update visual regression evidence/tests.
 
 Avoid a full UI rewrite unless code evidence proves it necessary.
+
+## Approved Plan Review Decisions
+
+Plan review is complete. Implementation is authorized on the same task branch and PR.
+
+1. Use a **solid quiet canvas**; do not reintroduce dots by default.
+2. Keep Knowledge Cluster work inside TASK-002, but implement it only if node/edge/chrome quieting still fails the knowledge-landscape visual target.
+3. `minZoom=0.4` may remain; use 40% as the practical zoomed-out verification baseline.
+4. Preserve the blocking tick but **soften** its visual treatment.
 
 ## Acceptance criteria
 
@@ -448,15 +455,14 @@ Visual evidence should cover at least:
 
 ## Cursor Gate
 
-**Do not start implementation yet.**
+**Implementation authorized.**
 
-Planning handoff (completed on `task/TASK-002-spatial-knowledge-canvas-visual-redesign`):
+Cursor must:
 
-1. Requirement + referenced design/product docs read;
-2. current implementation inspected (post TASK-001);
-3. canonical Plan written at `docs/plans/TASK-002-plan.md`;
-4. `development.stage` advanced to `plan_review`;
-5. `next_expected_actor: chatgpt`;
-6. `plan_approved` remains **false** until ChatGPT Plan review records approval.
-
-Implementation begins only after the Plan gate is approved (`plan_approved=true`).
+1. remain on `task/TASK-002-spatial-knowledge-canvas-visual-redesign`;
+2. continue using PR #19 as the single active development PR;
+3. implement according to `docs/plans/TASK-002-plan.md` and the approved Plan Review Decisions above;
+4. modify code/tests/docs as needed, commit and push to the same task branch;
+5. run required tests and visual verification;
+6. when implementation evidence is remotely visible, advance the task to `acceptance` and set `next_expected_actor: chatgpt`;
+7. do **not** merge PR #19.
