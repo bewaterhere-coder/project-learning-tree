@@ -582,6 +582,14 @@ export function App({
                   </EmptyState>
                 ) : (
                   <>
+                    {current.bootstrap ? (
+                      <BootstrapSummary
+                        locale={locale}
+                        record={current.bootstrap}
+                        snapshot={current.snapshot}
+                        onFocusNode={handleFocusNode}
+                      />
+                    ) : null}
                     {tree ? (
                       <TreeCanvas
                         key={workspace.selectedProjectId ?? "none"}
@@ -595,14 +603,6 @@ export function App({
                         onFocusNode={handleFocusNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
-                      />
-                    ) : null}
-                    {current.bootstrap ? (
-                      <BootstrapSummary
-                        locale={locale}
-                        record={current.bootstrap}
-                        snapshot={current.snapshot}
-                        onFocusNode={handleFocusNode}
                       />
                     ) : null}
                     {coreAuthoring?.canAdd ? (

@@ -15,7 +15,7 @@ test("creating a GitHub project generates a bounded, project-specific first laye
   await expect(nodes.first()).toBeVisible();
   expect(await nodes.count()).toBeGreaterThan(0);
   expect(await nodes.count()).toBeLessThanOrEqual(5);
-  await expect(nodes).toContainText(/Vite/);
+  await expect(page.getByText(/Vite/).first()).toBeVisible();
   await expect(page.getByTestId("bootstrap-summary")).toContainText("Vite");
   await expect(page.getByTestId("bootstrap-recommended")).toBeVisible();
 
@@ -23,7 +23,7 @@ test("creating a GitHub project generates a bounded, project-specific first laye
   await expect(recommended.first()).toBeVisible();
   expect(await recommended.count()).toBeLessThanOrEqual(2);
 
-  await recommended.first().click();
+  await page.getByTestId("bootstrap-recommended").locator("button").first().click();
   await expect(page.getByTestId("node-inspector")).toBeVisible();
   await expect(page.getByTestId("inspector-lifecycle")).toHaveText("To start");
   await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);

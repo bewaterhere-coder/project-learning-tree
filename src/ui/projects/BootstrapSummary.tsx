@@ -25,32 +25,37 @@ export function BootstrapSummary({
 
   return (
     <aside className="bootstrap-summary" data-testid="bootstrap-summary">
-      <p className="bootstrap-kicker">
-        {t(locale, "bootstrap.kicker", {
-          version: `${record.frameworkId}/${record.frameworkVersion}`,
-        })}
-      </p>
-      <p className="bootstrap-positioning" data-testid="bootstrap-positioning">
-        {record.positioning}
-      </p>
-      {recommended.length > 0 ? (
-        <div className="bootstrap-recommended" data-testid="bootstrap-recommended">
-          <p className="bootstrap-recommended-label">{t(locale, "bootstrap.recommended")}</p>
-          <ul>
-            {recommended.map((item) => (
-              <li key={item.nodeId}>
-                <Button
-                  variant="ghost"
-                  data-testid={`bootstrap-focus-${item.nodeId}`}
-                  onClick={() => onFocusNode(item.nodeId)}
-                >
-                  {item.question}
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      <div className="bootstrap-summary-main">
+        <p className="bootstrap-kicker">
+          {t(locale, "bootstrap.kicker", {
+            version: `${record.frameworkId}/${record.frameworkVersion}`,
+          })}
+        </p>
+        {recommended.length > 0 ? (
+          <div className="bootstrap-recommended" data-testid="bootstrap-recommended">
+            <p className="bootstrap-recommended-label">{t(locale, "bootstrap.recommended")}</p>
+            <ul>
+              {recommended.map((item) => (
+                <li key={item.nodeId}>
+                  <Button
+                    variant="ghost"
+                    data-testid={`bootstrap-focus-${item.nodeId}`}
+                    onClick={() => onFocusNode(item.nodeId)}
+                  >
+                    {item.question}
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </div>
+      <details className="bootstrap-details">
+        <summary>{t(locale, "bootstrap.details")}</summary>
+        <p className="bootstrap-positioning" data-testid="bootstrap-positioning">
+          {record.positioning}
+        </p>
+      </details>
     </aside>
   );
 }
