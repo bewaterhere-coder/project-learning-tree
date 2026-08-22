@@ -200,6 +200,84 @@ textarea {
   padding: 0 var(--space-3) var(--space-3);
 }
 
+.bootstrap-summary {
+  position: relative;
+  flex-shrink: 0;
+  z-index: 2;
+  max-width: none;
+  margin: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-node);
+}
+
+.bootstrap-summary-main {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.bootstrap-kicker,
+.bootstrap-recommended-label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+}
+
+.bootstrap-positioning {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.bootstrap-recommended {
+  flex: 1;
+  min-width: 0;
+}
+
+.bootstrap-recommended ul {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.bootstrap-recommended .ui-button {
+  max-width: 360px;
+  justify-content: flex-start;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bootstrap-details {
+  margin-top: var(--space-2);
+  font-size: 13px;
+}
+
+.bootstrap-details summary {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.learning-node.recommended:not(.focused) {
+  border-color: var(--color-accent);
+}
+
+.node-recommended {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: var(--color-accent);
+}
+
 .sidebar-panes,
 .sidebar-panes-body,
 .pane-group-vertical {
@@ -361,6 +439,8 @@ textarea {
   flex: 1;
   height: 100%;
   background: var(--color-bg-canvas);
+  display: flex;
+  flex-direction: column;
 }
 
 .contextual-workspace {
@@ -916,7 +996,9 @@ textarea {
 
 .tree-canvas-host {
   width: 100%;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  height: auto;
   position: relative;
 }
 

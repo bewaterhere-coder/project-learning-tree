@@ -1,4 +1,12 @@
-import type { DomainSnapshot } from "../../application/index.js";
+import {
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
+  isEvidenceStatus,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+  type DomainSnapshot,
+  type ProjectLearningBootstrapRecord,
+} from "../../application/index.js";
 import {
   defaultProjectLayout,
   defaultShell,
@@ -42,6 +50,7 @@ export function serializeSemanticWorkspace(
       projectId: project.projectId,
       archived: project.archived,
       snapshot: project.snapshot,
+      bootstrap: project.bootstrap,
     })),
   };
 }
@@ -126,11 +135,72 @@ function parseStoredProject(value: unknown): ProjectWorkspace | undefined {
   if (!snapshot || snapshot.project.id !== value.projectId) {
     return undefined;
   }
+  const bootstrap = parseBootstrap(value.bootstrap);
+  if (value.bootstrap !== undefined && bootstrap === undefined) {
+    return undefined;
+  }
   return {
     projectId: value.projectId,
     archived: value.archived,
     snapshot,
     layout: defaultProjectLayout(snapshot),
+    bootstrap,
+  };
+}
+
+function parseBootstrap(
+  value: unknown,
+): ProjectLearningBootstrapRecord | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (!isRecord(value)) {
+    return undefined;
+  }
+  if (
+    typeof value.positioning !== "string" ||
+    typeof value.learningValue !== "string" ||
+    typeof value.systemModel !== "string" ||
+    typeof value.generatedQuestionCount !== "number"
+  ) {
+    return undefined;
+  }
+  if (
+    !Array.isArray(value.recommendedFocusNodeIds) ||
+    value.recommendedFocusNodeIds.some((id) => typeof id !== "string")
+  ) {
+    return undefined;
+  }
+  const frameworkId =
+    typeof value.frameworkId === "string" && value.frameworkId !== ""
+      ? value.frameworkId
+      : LEARNING_TREE_ADAPTER_ID;
+  const frameworkVersion =
+    typeof value.frameworkVersion === "string" && value.frameworkVersion !== ""
+      ? value.frameworkVersion
+      : LEARNING_TREE_ADAPTER_VERSION;
+  const canonicalContractId =
+    typeof value.canonicalContractId === "string" && value.canonicalContractId !== ""
+      ? value.canonicalContractId
+      : CANONICAL_CONTRACT_ID;
+  const canonicalContractVersion =
+    typeof value.canonicalContractVersion === "string" &&
+    value.canonicalContractVersion !== ""
+      ? value.canonicalContractVersion
+      : CANONICAL_CONTRACT_VERSION;
+  return {
+    frameworkId,
+    frameworkVersion,
+    canonicalContractId,
+    canonicalContractVersion,
+    evidenceStatus: isEvidenceStatus(value.evidenceStatus)
+      ? value.evidenceStatus
+      : "fallback",
+    positioning: value.positioning,
+    learningValue: value.learningValue,
+    systemModel: value.systemModel,
+    recommendedFocusNodeIds: [...value.recommendedFocusNodeIds],
+    generatedQuestionCount: value.generatedQuestionCount,
   };
 }
 

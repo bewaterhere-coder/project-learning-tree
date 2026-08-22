@@ -31,9 +31,9 @@ describe("zero-active workspace", () => {
 });
 
 describe("create / archive / restore", () => {
-  it("creates a project through Domain, selects it, and leaves it unarchived", () => {
+  it("creates a project through Domain, selects it, and leaves it unarchived", async () => {
     const workspace = createWorkspace([]);
-    const next = createWorkspaceProject(
+    const next = await createWorkspaceProject(
       workspace,
       { name: "  Agents  " },
       sequentialFixturePorts(500),
@@ -42,7 +42,11 @@ describe("create / archive / restore", () => {
     expect(next.selectedProjectId).toBe(next.projects[0]?.projectId);
     expect(next.projects[0]?.archived).toBe(false);
     expect(next.projects[0]?.snapshot.project.name).toBe("Agents");
-    expect(next.projects[0]?.snapshot.pass.rootNodeIds).toEqual([]);
+    expect(next.projects[0]?.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
+    expect(next.projects[0]?.snapshot.pass.activeStack).toEqual([]);
+    expect(next.projects[0]?.bootstrap?.generatedQuestionCount).toBe(
+      next.projects[0]?.snapshot.pass.rootNodeIds.length,
+    );
   });
 
   it("archives a non-selected project without changing selection or snapshot identity", () => {

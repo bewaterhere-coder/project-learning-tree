@@ -6,22 +6,26 @@ import {
 } from "../../workspace/index.js";
 import { computeLayout, NODE_HEIGHT, NODE_WIDTH } from "./layout.js";
 
-type LearningNodeData = TreeNodeView & Record<string, unknown>;
+type LearningNodeData = TreeNodeView & {
+  isRecommended?: boolean;
+} & Record<string, unknown>;
 export type LearningFlowNode = Node<LearningNodeData, "learningNode">;
 
 export function toReactFlow(
   model: TreeViewModel,
   savedPositions: Record<NodeId, NodePosition> = {},
+  recommendedNodeIds: readonly NodeId[] = [],
 ): {
   nodes: LearningFlowNode[];
   edges: Edge[];
 } {
   const autoPositions = computeLayout(model);
+  const recommended = new Set(recommendedNodeIds);
   const nodes: LearningFlowNode[] = model.nodes.map((node) => ({
     id: node.id,
     type: "learningNode",
     position: resolveNodePosition(node.id, savedPositions, autoPositions),
-    data: { ...node },
+    data: { ...node, isRecommended: recommended.has(node.id) },
     selected: node.isCurrentFocus,
     draggable: true,
     connectable: false,

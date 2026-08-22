@@ -47,6 +47,7 @@ AI is an advisor. The domain engine is the authority for state transitions. Doma
 8. M2.5 QA Harness: `docs/milestones/M2.5-qa-harness.md`.
 9. UI Reference Study: `docs/design/Learning-Tree-UI-Reference-Study.md`.
 10. M2.6 Visual Hierarchy (planned): `docs/milestones/M2.6-visual-hierarchy.md`.
+11. M4 Project Learning Bootstrap: `docs/milestones/M4-project-learning-bootstrap.md`.
 
 ```bash
 npm install
@@ -100,7 +101,7 @@ npm run test:e2e
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented. M2.4 Product Workspace & UI Foundation is implemented: project create/archive/restore, semantic local persistence, core question authoring, light/dark/system, and the product UI foundation. M2.5 adds a Playwright Chromium acceptance harness (`e2e/`) on top of Vitest. **M3 COMPLETE:** Node Conversation + AI Learning Loop (`docs/milestones/M3-node-conversation.md`).
+M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented. M2.4 Product Workspace & UI Foundation is implemented: project create/archive/restore, semantic local persistence, core question authoring, light/dark/system, and the product UI foundation. M2.5 adds a Playwright Chromium acceptance harness (`e2e/`) on top of Vitest. **M3 COMPLETE:** Node Conversation + AI Learning Loop (`docs/milestones/M3-node-conversation.md`). **M4:** Project Learning Bootstrap from the Coco Project Learning Contract (`docs/milestones/M4-project-learning-bootstrap.md`).
 
 ## License
 

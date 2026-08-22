@@ -10,7 +10,7 @@ export function emptyWorkspace(): LearningWorkspace {
   return createWorkspace([]);
 }
 
-export function workspaceWithNamedProject(name: string): LearningWorkspace {
+export async function workspaceWithNamedProject(name: string): Promise<LearningWorkspace> {
   return createWorkspaceProject(
     createWorkspace([]),
     { name },
@@ -18,12 +18,12 @@ export function workspaceWithNamedProject(name: string): LearningWorkspace {
   );
 }
 
-export function workspaceWithCoreQuestion(
+export async function workspaceWithCoreQuestion(
   name: string,
   question: string,
   goal: string,
-): LearningWorkspace {
-  const created = workspaceWithNamedProject(name);
+): Promise<LearningWorkspace> {
+  const created = await workspaceWithNamedProject(name);
   return applySelectedCommand(created, {
     type: "addCoreQuestion",
     question,

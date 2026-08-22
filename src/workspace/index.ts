@@ -104,4 +104,5 @@ export type {
   WorkspaceLocale,
   WorkspaceShellLayout,
 } from "./types.js";
+export type { CreateWorkspaceProjectOptions } from "./session.js";
 export type { NodeId, ProjectId } from "../application/index.js";

@@ -1,5 +1,23 @@
 export { dispatchCommand, type UiCommand } from "./commands.js";
 export {
+  bootstrapLearningProject,
+  isEmptyFirstLayer,
+  CANONICAL_CONTRACT_ID,
+  CANONICAL_CONTRACT_VERSION,
+  LEARNING_TREE_ADAPTER_ID,
+  LEARNING_TREE_ADAPTER_VERSION,
+  type BootstrapProjectResult,
+  type EvidenceInput,
+  type EvidenceStatus,
+  type ProjectLearningBootstrapRecord,
+} from "./bootstrap.js";
+export { isEvidenceStatus } from "../framework/index.js";
+export type {
+  RepositoryEvidenceProvider,
+  RepositoryEvidenceSource,
+  RepositoryRef,
+} from "./repository-evidence.js";
+export {
   isAuthoringCommand,
   isClosePrerequisiteError,
   isGlobalDomainError,

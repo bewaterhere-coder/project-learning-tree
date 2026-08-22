@@ -8,6 +8,7 @@ import {
 } from "react";
 import {
   isAuthoringCommand,
+  isEmptyFirstLayer,
   isGlobalDomainError,
   isProjectCreateCommand,
   selectActionAvailability,
@@ -50,6 +51,8 @@ import {
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
 import type { ConversationStore } from "../conversation/index.js";
+import type { RepositoryEvidenceProvider } from "../application/index.js";
+import { createGitHubRepositoryEvidenceProvider } from "../infrastructure/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
@@ -62,6 +65,7 @@ import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
+import { BootstrapSummary } from "./projects/BootstrapSummary.js";
 import { applyResolvedTheme, systemPrefersDark } from "./theme/apply-theme.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -86,12 +90,14 @@ export function App({
   preferenceStorage,
   conversationStore,
   chatProvider,
+  evidenceProvider,
 }: {
   initialSnapshot?: DomainSnapshot;
   initialWorkspace?: LearningWorkspace;
   preferenceStorage?: PreferenceStorage;
   conversationStore?: ConversationStore;
   chatProvider?: ChatProvider;
+  evidenceProvider?: RepositoryEvidenceProvider;
 }) {
   const storage = useMemo(
     () => preferenceStorage ?? createBrowserPreferenceStorage(),
@@ -104,6 +110,11 @@ export function App({
   workspaceRef.current = workspace;
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [coreFormOpen, setCoreFormOpen] = useState(false);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const resolvedEvidenceProvider = useMemo(
+    () => evidenceProvider ?? createGitHubRepositoryEvidenceProvider(),
+    [evidenceProvider],
+  );
   const [systemDark, setSystemDark] = useState(systemPrefersDark);
   const [inspectorDragWidth, setInspectorDragWidth] = useState<number>();
   const inspectorDragRef = useRef<number | null>(null);
@@ -322,7 +333,7 @@ export function App({
           .join(" › ")
       : "";
 
-  const emptyProject = current !== undefined && current.snapshot.pass.rootNodeIds.length === 0;
+  const emptyProject = current !== undefined && isEmptyFirstLayer(current.snapshot);
 
   return (
     <LocaleProvider locale={locale}>
@@ -499,14 +510,22 @@ export function App({
                 false,
               )
             }
-            onCreateProject={(name) => {
-              const next = createWorkspaceProject(workspaceRef.current, { name });
-              const failed = isProjectCreateCommand(next.lastErrorCommand);
-              commit(next, !failed);
-              if (!failed) {
-                setCoreFormOpen(false);
+            createPending={creatingProject}
+            onCreateProject={async (input) => {
+              setCreatingProject(true);
+              try {
+                const next = await createWorkspaceProject(workspaceRef.current, input, {
+                  provider: resolvedEvidenceProvider,
+                });
+                const failed = isProjectCreateCommand(next.lastErrorCommand);
+                commit(next, !failed);
+                if (!failed) {
+                  setCoreFormOpen(false);
+                }
+                return !failed;
+              } finally {
+                setCreatingProject(false);
               }
-              return !failed;
             }}
           />
           <div className="workspace-body">
@@ -580,6 +599,14 @@ export function App({
                   </EmptyState>
                 ) : (
                   <>
+                    {current.bootstrap ? (
+                      <BootstrapSummary
+                        locale={locale}
+                        record={current.bootstrap}
+                        snapshot={current.snapshot}
+                        onFocusNode={handleFocusNode}
+                      />
+                    ) : null}
                     {tree ? (
                       <TreeCanvas
                         key={workspace.selectedProjectId ?? "none"}
@@ -587,6 +614,9 @@ export function App({
                         savedPositions={current.layout.nodePositions}
                         viewport={current.layout.viewport}
                         persistViewport={!viewportPersistLocked}
+                        recommendedNodeIds={
+                          current.bootstrap?.recommendedFocusNodeIds ?? []
+                        }
                         onFocusNode={handleFocusNode}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}

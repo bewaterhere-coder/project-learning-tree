@@ -3,6 +3,7 @@ import type {
   DomainSnapshot,
   NodeId,
   ProjectId,
+  ProjectLearningBootstrapRecord,
 } from "../application/index.js";
 
 export type WorkspaceLocale = "zh-CN" | "en-US";
@@ -65,6 +66,7 @@ export interface ProjectWorkspace {
   snapshot: DomainSnapshot;
   layout: ProjectWorkspaceLayout;
   archived: boolean;
+  bootstrap?: ProjectLearningBootstrapRecord;
 }
 
 export interface LearningWorkspace {
@@ -94,6 +96,7 @@ export interface StoredWorkspaceProject {
   projectId: string;
   archived: boolean;
   snapshot: DomainSnapshot;
+  bootstrap?: ProjectLearningBootstrapRecord;
 }
 
 export interface PreferenceStorage {

@@ -104,7 +104,7 @@ describe("M3A contextual chat UI", () => {
 
   it("opens project chat when there is no focused node", async () => {
     const user = userEvent.setup();
-    const empty = createWorkspaceProject(createWorkspace([]), { name: "Bare" });
+    const empty = await createWorkspaceProject(createWorkspace([]), { name: "Bare" });
     renderChat(empty);
     await user.click(screen.getByTestId("chat-open-header"));
     expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-identity-kind", "project");

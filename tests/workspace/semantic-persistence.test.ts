@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
 import { createDemoWorkspaceFixture } from "../../src/fixtures/demo-workspace.js";
+import { VITE_GITHUB_FIXTURE } from "../fixtures/github-api.js";
+import { createFixtureRepositoryEvidenceProvider } from "../fixtures/repository-evidence.js";
 import {
   applyNodeDragStop,
   applySelectedCommand,
@@ -43,6 +45,63 @@ function trackingStorage(initial: Record<string, string> = {}) {
 }
 
 describe("semantic persistence", () => {
+  it("round-trips bootstrap records with the generated first layer", async () => {
+    const created = await createWorkspaceProject(
+      createWorkspace([]),
+      {
+        name: "Vite",
+        source: "vitejs/vite",
+      },
+      {
+        ports: sequentialFixturePorts(1_000),
+        provider: createFixtureRepositoryEvidenceProvider(VITE_GITHUB_FIXTURE),
+      },
+    );
+    const payload = serializeSemanticWorkspace(created);
+    const parsed = parseSemanticWorkspace(JSON.parse(JSON.stringify(payload)));
+    expect(parsed?.projects[0]?.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
+    expect(parsed?.projects[0]?.bootstrap).toEqual(created.projects[0]?.bootstrap);
+    expect(parsed?.projects[0]?.bootstrap?.evidenceStatus).toBe("verified");
+    expect(parsed?.projects[0]?.bootstrap?.canonicalContractId).toBe(
+      "coco-project-learning-contract",
+    );
+    expect(parsed?.projects[0]?.bootstrap?.frameworkId).toBe("learning-tree-coco-adapter");
+  });
+
+  it("hydrates old v1 bootstrap records that lack adapter identity and evidenceStatus", async () => {
+    const created = await createWorkspaceProject(
+      createWorkspace([]),
+      { name: "Legacy" },
+      sequentialFixturePorts(1_100),
+    );
+    const project = created.projects[0];
+    if (!project) {
+      throw new Error("expected project");
+    }
+    const payload = serializeSemanticWorkspace(created);
+    const raw = JSON.parse(JSON.stringify(payload)) as {
+      projects: Array<{ bootstrap?: Record<string, unknown> }>;
+    };
+    raw.projects[0]!.bootstrap = {
+      frameworkId: "coco-project-learning",
+      frameworkVersion: "v1",
+      positioning: project.bootstrap?.positioning,
+      learningValue: project.bootstrap?.learningValue,
+      systemModel: project.bootstrap?.systemModel,
+      recommendedFocusNodeIds: project.bootstrap?.recommendedFocusNodeIds,
+      generatedQuestionCount: project.bootstrap?.generatedQuestionCount,
+      extraFutureField: "keep-the-project",
+    };
+    const parsed = parseSemanticWorkspace(raw);
+    expect(parsed?.projects[0]?.projectId).toBe(project.projectId);
+    expect(parsed?.projects[0]?.bootstrap?.frameworkId).toBe("coco-project-learning");
+    expect(parsed?.projects[0]?.bootstrap?.canonicalContractId).toBe(
+      "coco-project-learning-contract",
+    );
+    expect(parsed?.projects[0]?.bootstrap?.evidenceStatus).toBe("fallback");
+    expect(parsed?.projects[0]?.bootstrap).not.toHaveProperty("extraFutureField");
+  });
+
   it("round-trips snapshots, archive flags, and selection without layout", () => {
     const { workspace, projectB } = createDemoWorkspaceFixture();
     const archived = archiveProject(workspace, projectB.snapshot.project.id);
@@ -60,6 +119,7 @@ describe("semantic persistence", () => {
       projectB.snapshot.project.id,
     );
     expect(parsed?.selectedProjectId).toBe(workspace.selectedProjectId);
+    expect(parsed?.projects[0]?.bootstrap).toEqual(archived.projects[0]?.bootstrap);
   });
 
   it("falls back to an empty workspace when the store is missing or corrupt", () => {
@@ -76,10 +136,10 @@ describe("semantic persistence", () => {
     expect(hydrateSemanticWorkspace(invalid).projects).toEqual([]);
   });
 
-  it("writes the semantic store on create, archive, restore, select, and Domain success", () => {
+  it("writes the semantic store on create, archive, restore, select, and Domain success", async () => {
     const storage = trackingStorage();
     let workspace = createWorkspace([]);
-    workspace = createWorkspaceProject(
+    workspace = await createWorkspaceProject(
       workspace,
       { name: "One" },
       sequentialFixturePorts(700),
@@ -90,7 +150,7 @@ describe("semantic persistence", () => {
     saveSemanticWorkspace(storage, workspace);
     workspace = restoreProject(workspace, created.projects[0]!.projectId);
     saveSemanticWorkspace(storage, workspace);
-    const second = createWorkspaceProject(
+    const second = await createWorkspaceProject(
       workspace,
       { name: "Two" },
       sequentialFixturePorts(800),
