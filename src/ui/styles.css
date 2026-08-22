@@ -24,8 +24,15 @@
   --color-learning-parked: #fff6ea;
   --color-learning-completed: #eef0f2;
   --color-focus-ring: #2f6fed;
-  --shadow-node: 0 8px 20px rgba(28, 36, 48, 0.08);
-  --shadow-overlay: -12px 0 28px rgba(28, 36, 48, 0.1);
+  --color-edge-quiet: color-mix(in srgb, var(--color-border-default) 55%, transparent);
+  --color-edge-default: color-mix(in srgb, var(--color-border-strong) 70%, transparent);
+  --color-cluster-0: color-mix(in srgb, #6f8fbf 12%, transparent);
+  --color-cluster-1: color-mix(in srgb, #2f6f5f 11%, transparent);
+  --color-cluster-2: color-mix(in srgb, #b8873a 11%, transparent);
+  --color-cluster-3: color-mix(in srgb, #7a6aa8 11%, transparent);
+  --color-cluster-4: color-mix(in srgb, #8a6b5a 11%, transparent);
+  --shadow-node: 0 6px 16px rgba(28, 36, 48, 0.06);
+  --shadow-overlay: -4px 0 18px rgba(28, 36, 48, 0.06);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -64,8 +71,15 @@
   --color-learning-parked: #332718;
   --color-learning-completed: #2a3036;
   --color-focus-ring: #7aa7ff;
-  --shadow-node: 0 10px 24px rgba(0, 0, 0, 0.28);
-  --shadow-overlay: -12px 0 28px rgba(0, 0, 0, 0.35);
+  --color-edge-quiet: color-mix(in srgb, var(--color-border-default) 50%, transparent);
+  --color-edge-default: color-mix(in srgb, var(--color-border-strong) 65%, transparent);
+  --color-cluster-0: color-mix(in srgb, #7aa7ff 14%, transparent);
+  --color-cluster-1: color-mix(in srgb, #4aa68d 13%, transparent);
+  --color-cluster-2: color-mix(in srgb, #e0a454 13%, transparent);
+  --color-cluster-3: color-mix(in srgb, #9b8ad4 13%, transparent);
+  --color-cluster-4: color-mix(in srgb, #c49a84 13%, transparent);
+  --shadow-node: 0 8px 18px rgba(0, 0, 0, 0.22);
+  --shadow-overlay: -4px 0 16px rgba(0, 0, 0, 0.22);
 }
 
 * {
@@ -103,9 +117,9 @@ textarea {
   justify-content: space-between;
   gap: var(--space-4);
   align-items: center;
-  padding: var(--space-3) var(--space-5);
-  border-bottom: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border-default) 55%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 88%, var(--color-bg-canvas));
 }
 
 .header-identity {
@@ -128,7 +142,7 @@ textarea {
 
 .project-title {
   margin: 0;
-  font-size: 17px;
+  font-size: 14px;
   font-weight: 650;
   color: var(--color-text-primary);
 }
@@ -166,8 +180,8 @@ textarea {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-right: 1px solid var(--color-border-default);
-  background: var(--color-bg-surface);
+  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 55%, transparent);
+  background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas));
   transition: width var(--motion-fast) ease;
 }
 
@@ -207,10 +221,10 @@ textarea {
   max-width: none;
   margin: var(--space-3);
   padding: var(--space-3);
-  border: 1px solid var(--color-border-default);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
   border-radius: var(--radius-md);
-  background: var(--color-bg-elevated);
-  box-shadow: var(--shadow-node);
+  background: color-mix(in srgb, var(--color-bg-elevated) 92%, transparent);
+  box-shadow: none;
 }
 
 .bootstrap-summary-main {
@@ -269,13 +283,7 @@ textarea {
 }
 
 .learning-node.recommended:not(.focused) {
-  border-color: var(--color-accent);
-}
-
-.node-recommended {
-  margin: 6px 0 0;
-  font-size: 11px;
-  color: var(--color-accent);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, transparent);
 }
 
 .sidebar-panes,
@@ -327,18 +335,18 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: var(--space-1);
-  margin-bottom: var(--space-2);
-  min-height: 44px;
+  margin-bottom: var(--space-1);
+  min-height: 36px;
 }
 
 .project-item {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   width: 100%;
-  padding: 10px;
+  padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   background: transparent;
   color: inherit;
   text-align: left;
@@ -365,7 +373,7 @@ textarea {
 .project-item.archived {
   cursor: default;
   opacity: 0.8;
-  min-height: 44px;
+  min-height: 36px;
   justify-content: center;
 }
 
@@ -448,8 +456,8 @@ textarea {
   flex-shrink: 0;
   height: 100%;
   overflow: auto;
-  border-left: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
+  border-left: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 94%, var(--color-bg-canvas));
   box-shadow: none;
 }
 
@@ -540,6 +548,10 @@ textarea {
 
 .details-section {
   margin: var(--space-3) 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .details-heading {
@@ -860,18 +872,20 @@ textarea {
   width: 100%;
   height: 100%;
   position: relative;
-  padding: 10px 12px 10px 16px;
-  border: 1px solid var(--color-border-default);
+  padding: 12px 14px 12px 16px;
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 40%, transparent);
   border-radius: var(--radius-md);
   background: var(--color-bg-node);
   box-shadow: none;
   transition:
     border-color var(--motion-fast) ease,
-    background var(--motion-fast) ease;
+    background var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
 }
 
 .learning-node:hover:not(.focused) {
-  border-color: var(--color-border-strong);
+  border-color: color-mix(in srgb, var(--color-border-default) 75%, transparent);
+  box-shadow: var(--shadow-node);
 }
 
 .learning-node.lifecycle-open {
@@ -880,40 +894,42 @@ textarea {
 
 .learning-node.lifecycle-active,
 .learning-node.on-stack {
-  background: var(--color-learning-active);
+  background: color-mix(in srgb, var(--color-learning-active) 70%, var(--color-bg-node));
 }
 
 .learning-node.lifecycle-parked {
-  background: var(--color-learning-parked);
+  background: color-mix(in srgb, var(--color-learning-parked) 75%, var(--color-bg-node));
+  opacity: 0.92;
 }
 
 .learning-node.lifecycle-closed {
-  background: var(--color-learning-completed);
+  background: color-mix(in srgb, var(--color-learning-completed) 80%, var(--color-bg-node));
   color: var(--color-text-secondary);
+  opacity: 0.78;
 }
 
 .learning-node.focused {
-  box-shadow: none;
-  outline: 2px solid var(--color-learning-selected);
-  outline-offset: 2px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-learning-selected) 35%, transparent);
+  outline: 1.5px solid var(--color-learning-selected);
+  outline-offset: 1px;
 }
 
 .stack-rail {
   position: absolute;
   left: 0;
-  top: 8px;
-  bottom: 8px;
-  width: 4px;
-  border-radius: 4px;
-  background: var(--color-accent);
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--color-accent) 75%, transparent);
 }
 
 .blocked-pip {
   position: absolute;
   top: 8px;
   right: 8px;
-  width: 8px;
-  height: 8px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--color-warning);
 }
@@ -938,7 +954,8 @@ textarea {
 
 .node-question {
   margin: 0;
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: 600;
   line-height: 1.35;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -947,7 +964,7 @@ textarea {
 }
 
 .node-meta {
-  margin: 4px 24px 0 0;
+  margin: 6px 28px 0 0;
   color: var(--color-text-muted);
   font-size: 11px;
   line-height: 1.35;
@@ -957,6 +974,16 @@ textarea {
   overflow: hidden;
 }
 
+.node-recommended {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-accent);
+}
+
 .node-chat-action {
   position: absolute;
   right: 6px;
@@ -964,6 +991,15 @@ textarea {
   z-index: 1;
   color: var(--color-text-secondary);
   border-color: transparent;
+  opacity: 0;
+  transition: opacity var(--motion-fast) ease;
+}
+
+.learning-node:hover .node-chat-action,
+.learning-node:focus-within .node-chat-action,
+.learning-node.focused .node-chat-action,
+.node-chat-action:focus-visible {
+  opacity: 1;
 }
 
 .node-chat-action:hover {
@@ -998,23 +1034,74 @@ textarea {
 }
 
 .react-flow__edge.edge-active-stack .react-flow__edge-path {
-  stroke: var(--color-accent);
-  stroke-width: 2;
+  stroke: color-mix(in srgb, var(--color-accent) 80%, transparent);
+  stroke-width: 1.25;
 }
 
 .react-flow__edge.edge-default .react-flow__edge-path {
-  stroke: var(--color-border-strong);
-  stroke-width: 1;
+  stroke: var(--color-edge-default);
+  stroke-width: 1.1;
 }
 
 .react-flow__edge.edge-quiet .react-flow__edge-path {
-  stroke: var(--color-border-default);
+  stroke: var(--color-edge-quiet);
   stroke-width: 1;
-  opacity: 0.45;
+  opacity: 0.55;
 }
 
 .react-flow__edge.edge-blocking .react-flow__edge-path {
   stroke-linecap: round;
+}
+
+.blocking-tick-mark {
+  opacity: 0.72;
+}
+
+.knowledge-cluster {
+  width: 100%;
+  height: 100%;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+  background: var(--color-cluster-0);
+}
+
+.knowledge-cluster.tone-0 {
+  background: var(--color-cluster-0);
+}
+
+.knowledge-cluster.tone-1 {
+  background: var(--color-cluster-1);
+}
+
+.knowledge-cluster.tone-2 {
+  background: var(--color-cluster-2);
+}
+
+.knowledge-cluster.tone-3 {
+  background: var(--color-cluster-3);
+}
+
+.knowledge-cluster.tone-4 {
+  background: var(--color-cluster-4);
+}
+
+.knowledge-cluster-title {
+  margin: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+}
+
+.react-flow__node-clusterRegion {
+  pointer-events: none !important;
 }
 
 .tree-canvas-host {
@@ -1057,8 +1144,8 @@ textarea {
   min-width: 280px;
   max-height: calc(100% - 24px);
   overflow: auto;
-  border: 1px solid var(--color-border-default);
-  background: var(--color-bg-elevated);
+  border: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-canvas));
   box-shadow: var(--shadow-overlay);
 }
 
@@ -1067,7 +1154,8 @@ textarea {
   left: 0;
   bottom: 0;
   max-height: 100%;
-  border-right: 1px solid var(--color-border-default);
+  border-right: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
+  box-shadow: none;
 }
 
 .chat-panel-floating {

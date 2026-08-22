@@ -448,15 +448,8 @@ Visual evidence should cover at least:
 
 ## Cursor Gate
 
-**Do not start implementation yet.**
+Plan review approved on PR #19 (`plan_approved=true`).
 
-Planning handoff (completed on `task/TASK-002-spatial-knowledge-canvas-visual-redesign`):
+Implementation proceeds on `cursor/task-002-implement-1405` per the approved plan and binding review decisions (solid canvas; clusters after quieting; `minZoom=0.4`; soften blocking tick).
 
-1. Requirement + referenced design/product docs read;
-2. current implementation inspected (post TASK-001);
-3. canonical Plan written at `docs/plans/TASK-002-plan.md`;
-4. `development.stage` advanced to `plan_review`;
-5. `next_expected_actor: chatgpt`;
-6. `plan_approved` remains **false** until ChatGPT Plan review records approval.
-
-Implementation begins only after the Plan gate is approved (`plan_approved=true`).
+After implementation evidence is ready, advance to `acceptance` with `next_expected_actor: chatgpt` and leave `acceptance_approved=false` for ChatGPT Acceptance Review.
