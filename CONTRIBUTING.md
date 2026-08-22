@@ -21,6 +21,7 @@ Playwright covers real-browser workflows. Vitest covers domain logic, persistenc
 
 - Install the browser once: `npx playwright install chromium`
 - Run against a production preview: `npm run build && npm run test:e2e`
+- Watch the same tests in a real Chromium window: `npm run build && npm run test:e2e:headed` (needs a local display; not `npm run dev`; see `docs/milestones/M2.5-qa-harness.md`)
 - Prefer existing `data-testid`s, authored entity text, and `data-node-id`. Do not select translated chrome copy or XYFlow CSS classes.
 - Each test starts from an empty browser context. Seed semantic state only through Playwright `storageState`, never by rewriting localStorage on every navigation.
 - Visual snapshots are generated and validated on Linux CI. Use `npm run test:e2e:update-snapshots` from a Linux/Playwright image, not as a macOS/Windows baseline.

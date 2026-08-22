@@ -53,6 +53,8 @@ npm run typecheck
 npm run dev
 ```
 
+`npm run dev` is for operating the product yourself (Vite dev server). It is not the acceptance-test runner.
+
 Browser acceptance (Chromium, production preview):
 
 ```bash
@@ -60,6 +62,37 @@ npx playwright install chromium
 npm run build
 npm run test:e2e
 ```
+
+To watch the same tests operate the product in a real Chromium window:
+
+```bash
+npx playwright install chromium
+npm run build
+npm run test:e2e:headed
+```
+
+Command roles:
+
+```text
+npm run dev
+→ operate the product yourself (Vite dev server)
+
+npm run test:e2e:headed
+→ open a real Chromium window and watch Playwright operate the product
+  (production preview, not npm run dev; needs a local display)
+
+npm run test:e2e:ui
+→ Playwright UI Mode for analyzing and debugging tests
+  (not the product window itself)
+
+npm run test:e2e:debug
+→ Playwright Inspector / step-through debugging
+
+npm run test:e2e
+→ headless automatic acceptance (also what CI runs)
+```
+
+`--headed` is a Playwright CLI flag. No `playwright.config.ts` change and no extra dependency are required. Headed mode uses the existing Vite production preview (`webServer` on port 4173), not `npm run dev`. It needs a graphical display; CI and SSH sessions without `DISPLAY` should keep using `npm run test:e2e`. Existing `fullyParallel` settings are unchanged, so headed mode may open several Chromium windows at once.
 
 `npm test` is Vitest-only and does not launch a browser. Visual snapshots are Linux-canonical; set `E2E_VISUAL=1` to run them locally. See `docs/milestones/M2.5-qa-harness.md` for selector policy, storage seeding, and artifact debugging.
 
