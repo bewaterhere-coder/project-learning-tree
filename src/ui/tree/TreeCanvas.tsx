@@ -10,6 +10,11 @@ import {
 import { useCallback, useMemo, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
 import type { NodePosition, Viewport } from "../../workspace/index.js";
+import {
+  ClusterRegionFlowNode,
+  toClusterFlowNodes,
+} from "./cluster-flow.js";
+import { isClusterNodeId } from "./cluster-regions.js";
 import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
 import { LearningNode } from "./LearningNode.js";
 import { LearningNodeHandles } from "./node-handles.js";
@@ -35,7 +40,10 @@ function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
   );
 }
 
-const nodeTypes = { learningNode: FlowLearningNode };
+const nodeTypes = {
+  learningNode: FlowLearningNode,
+  clusterRegion: ClusterRegionFlowNode,
+};
 
 export function TreeCanvas({
   model,
@@ -80,33 +88,56 @@ export function TreeCanvas({
     setNodes(enrichNodes(derived.nodes));
   }
 
+  const clusterNodes = useMemo(() => {
+    const positions: Record<NodeId, NodePosition> = {};
+    for (const node of nodes) {
+      positions[node.id] = node.position;
+    }
+    return toClusterFlowNodes(model, positions);
+  }, [model, nodes]);
+
+  const flowNodes = useMemo(
+    () => [...clusterNodes, ...nodes],
+    [clusterNodes, nodes],
+  );
+
   const edges = useMemo(
     () => routeEdgesForNodes(derived.edges, nodes),
     [derived.edges, nodes],
   );
 
-  const handleNodeClick: NodeMouseHandler<LearningFlowNode> = useCallback(
+  const handleNodeClick: NodeMouseHandler = useCallback(
     (_event, node) => {
+      if (isClusterNodeId(node.id)) {
+        return;
+      }
       onFocusNode(node.id);
     },
     [onFocusNode],
   );
 
-  const handleNodesChange: OnNodesChange<LearningFlowNode> = useCallback(
+  const handleNodesChange: OnNodesChange = useCallback(
     (changes) => {
-      const layoutChanges = layoutOnlyNodeChanges(changes);
+      const layoutChanges = layoutOnlyNodeChanges(changes).filter(
+        (change) => "id" in change && !isClusterNodeId(String(change.id)),
+      );
       if (layoutChanges.length === 0) {
         return;
       }
       setNodes((current) =>
-        enrichNodes(applyNodeChanges(layoutChanges, current)),
+        enrichNodes(
+          applyNodeChanges(layoutChanges, current) as LearningFlowNode[],
+        ),
       );
     },
     [enrichNodes],
   );
 
-  const handleNodeDragStop: OnNodeDrag<LearningFlowNode> = useCallback(
+  const handleNodeDragStop: OnNodeDrag = useCallback(
     (_event, node) => {
+      if (isClusterNodeId(node.id)) {
+        return;
+      }
       onNodeDragStop({ [node.id]: { x: node.position.x, y: node.position.y } });
     },
     [onNodeDragStop],
@@ -132,25 +163,26 @@ export function TreeCanvas({
         <defs>
           <marker
             id="blocking-tick"
-            markerWidth="10"
-            markerHeight="10"
-            refX="6"
-            refY="5"
+            markerWidth="8"
+            markerHeight="8"
+            refX="5"
+            refY="4"
             orient="auto"
           >
             <rect
+              className="blocking-tick-mark"
               x="2"
               y="1.5"
-              width="3.5"
-              height="7"
+              width="2.5"
+              height="5"
               rx="0.5"
               fill="var(--color-warning)"
             />
           </marker>
         </defs>
       </svg>
-      <ReactFlow<LearningFlowNode>
-        nodes={nodes}
+      <ReactFlow
+        nodes={flowNodes}
         edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
