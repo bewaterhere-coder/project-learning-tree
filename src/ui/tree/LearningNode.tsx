@@ -34,14 +34,14 @@ export function LearningNode({ data }: NodeProps<LearningFlowNode>) {
       data-on-stack={data.isOnActiveStack ? "true" : "false"}
       data-focus={data.isCurrentFocus ? "true" : "false"}
     >
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} isConnectable={false} />
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <div className="node-badges">
         <span className="lifecycle-badge">{lifecycleLabel(data.lifecycle)}</span>
         {data.isBlocked ? <span className="blocked-badge">Blocked</span> : null}
       </div>
       <p className="node-question">{data.question}</p>
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} />
     </div>
   );
 }

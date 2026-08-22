@@ -22,14 +22,25 @@ interface StubViewport {
 export function ReactFlow({
   nodes,
   onNodeClick,
+  onNodesChange,
   onNodeDragStop,
   onMoveEnd,
   nodesDraggable,
   nodesConnectable,
+  edgesReconnectable,
+  deleteKeyCode,
   defaultViewport,
 }: {
   nodes: StubNode[];
   onNodeClick?: (event: MouseEvent<HTMLButtonElement>, node: StubNode) => void;
+  onNodesChange?: (
+    changes: Array<{
+      id: string;
+      type: "position";
+      position: { x: number; y: number };
+      dragging: boolean;
+    }>,
+  ) => void;
   onNodeDragStop?: (
     event: MouseEvent<HTMLButtonElement>,
     node: StubNode,
@@ -37,6 +48,8 @@ export function ReactFlow({
   onMoveEnd?: (event: MouseEvent<HTMLButtonElement> | null, viewport: StubViewport) => void;
   nodesDraggable?: boolean;
   nodesConnectable?: boolean;
+  edgesReconnectable?: boolean;
+  deleteKeyCode?: string | null;
   defaultViewport?: StubViewport;
 }) {
   const viewport = defaultViewport ?? { x: 0, y: 0, zoom: 1 };
@@ -45,6 +58,8 @@ export function ReactFlow({
       data-testid="tree-nodes"
       data-nodes-draggable={nodesDraggable ? "true" : "false"}
       data-nodes-connectable={nodesConnectable ? "true" : "false"}
+      data-edges-reconnectable={edgesReconnectable ? "true" : "false"}
+      data-delete-key={deleteKeyCode === null ? "none" : String(deleteKeyCode ?? "")}
       data-viewport-x={String(viewport.x)}
       data-viewport-y={String(viewport.y)}
       data-viewport-zoom={String(viewport.zoom)}
@@ -68,15 +83,16 @@ export function ReactFlow({
           <button
             type="button"
             data-testid={`node-drag-${node.id}`}
-            onClick={(event) =>
-              onNodeDragStop?.(event, {
-                ...node,
-                position: {
-                  x: (node.position?.x ?? 0) + 50,
-                  y: (node.position?.y ?? 0) + 25,
-                },
-              })
-            }
+            onClick={(event) => {
+              const position = {
+                x: (node.position?.x ?? 0) + 50,
+                y: (node.position?.y ?? 0) + 25,
+              };
+              onNodesChange?.([
+                { id: node.id, type: "position", position, dragging: false },
+              ]);
+              onNodeDragStop?.(event, { ...node, position });
+            }}
           >
             Drag
           </button>
@@ -93,6 +109,25 @@ export function ReactFlow({
       </button>
     </div>
   );
+}
+
+export function applyNodeChanges(
+  changes: Array<{
+    id: string;
+    type: string;
+    position?: { x: number; y: number };
+  }>,
+  nodes: StubNode[],
+): StubNode[] {
+  return nodes.map((node) => {
+    const change = changes.find(
+      (entry) => entry.id === node.id && entry.type === "position",
+    );
+    if (change?.position === undefined) {
+      return node;
+    }
+    return { ...node, position: change.position };
+  });
 }
 
 export function Background() {

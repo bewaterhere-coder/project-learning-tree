@@ -25,7 +25,12 @@ export function NodeActions({
           data-testid="action-activate"
           onClick={() => onCommand({ type: "activateNode", nodeId })}
         >
-          {availability.activateLabel}
+          {t(
+            locale,
+            availability.activateLabel === "startLearning"
+              ? "actions.startLearning"
+              : "actions.enterQuestion",
+          )}
         </button>
       ) : null}
       {availability.canPark ? (

@@ -281,6 +281,8 @@ describe("node dragging", () => {
     const canvas = screen.getByTestId("tree-nodes");
     expect(canvas).toHaveAttribute("data-nodes-draggable", "true");
     expect(canvas).toHaveAttribute("data-nodes-connectable", "false");
+    expect(canvas).toHaveAttribute("data-edges-reconnectable", "false");
+    expect(canvas).toHaveAttribute("data-delete-key", "none");
     const beforeX = screen.getByTestId(`node-${projectA.ids.q2}`).getAttribute(
       "data-x",
     );
@@ -332,6 +334,9 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("Node Inspector");
+    expect(screen.getByTestId("action-activate")).toHaveTextContent(
+      "Start learning",
+    );
 
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
@@ -340,5 +345,6 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("节点检视器");
+    expect(screen.getByTestId("action-activate")).toHaveTextContent("开始学习");
   });
 });

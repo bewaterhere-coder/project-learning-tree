@@ -229,6 +229,25 @@ describe("workspace preference persistence", () => {
     expect(hydrated.projects[0]?.layout.nodePositions).toEqual({});
   });
 
+  it("falls back when stored layout version does not match", () => {
+    const { workspace } = createDemoWorkspaceFixture();
+    const storage = createMemoryPreferenceStorage({
+      [WORKSPACE_PREFERENCES_KEY]: JSON.stringify({
+        version: 99,
+        shell: {
+          projectSidebarOpen: false,
+          projectSidebarWidth: 320,
+          locale: "zh-CN",
+        },
+        projects: {},
+      }),
+    });
+    const hydrated = hydrateWorkspacePreferences(workspace, storage);
+    expect(hydrated.shell).toEqual(workspace.shell);
+    expect(hydrated.shell.locale).toBe("en-US");
+    expect(hydrated.projects[0]?.layout.nodePositions).toEqual({});
+  });
+
   it("falls back when stored layout looks like a DomainSnapshot", () => {
     const { workspace } = createDemoWorkspaceFixture();
     const storage = createMemoryPreferenceStorage({

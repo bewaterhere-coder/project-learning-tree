@@ -92,13 +92,13 @@ describe("inspector and action copy", () => {
     expect(inspector.summary).toContain("Q1.1");
   });
 
-  it("labels root activation as 开始学习 and child activation as 进入这个问题", () => {
+  it("labels root activation as startLearning and child activation as enterQuestion", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
     expect(selectActionAvailability(snapshot, ids.parent).activateLabel).toBe(
-      "开始学习",
+      "startLearning",
     );
     expect(selectActionAvailability(snapshot, ids.childA).activateLabel).toBe(
-      "进入这个问题",
+      "enterQuestion",
     );
     expect(selectActionAvailability(snapshot, ids.childA).canActivate).toBe(true);
   });
