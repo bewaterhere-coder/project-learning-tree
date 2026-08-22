@@ -122,16 +122,23 @@ export function PaneDivider({
       data-testid={testId}
       onKeyDown={onKeyDown}
       onPointerDown={(event) => {
-        last.current = readPoint(event);
+        const point = readPoint(event);
+        if (!Number.isFinite(point)) {
+          return;
+        }
+        last.current = point;
         dragging.current = true;
         event.currentTarget.dataset.active = "true";
         event.currentTarget.setPointerCapture(event.pointerId);
       }}
       onPointerMove={(event) => {
-        if (last.current === null || (event.buttons & 1) === 0) {
+        if (last.current === null || !dragging.current) {
           return;
         }
         const next = readPoint(event);
+        if (!Number.isFinite(next)) {
+          return;
+        }
         const delta = next - last.current;
         last.current = next;
         onDrag(invert ? -delta : delta);

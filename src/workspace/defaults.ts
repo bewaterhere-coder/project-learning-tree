@@ -67,10 +67,13 @@ export function clampArchivedPaneHeight(
   if (!Number.isFinite(height)) {
     return DEFAULT_ARCHIVED_PANE_HEIGHT;
   }
-  const maxFromAvailable =
-    availableHeight !== undefined && Number.isFinite(availableHeight)
-      ? Math.max(MIN_ARCHIVED_PANE_HEIGHT, availableHeight - MIN_ACTIVE_PANE_HEIGHT)
-      : MAX_ARCHIVED_PANE_HEIGHT;
+  const hasAvailable =
+    availableHeight !== undefined &&
+    Number.isFinite(availableHeight) &&
+    availableHeight > MIN_ARCHIVED_PANE_HEIGHT + MIN_ACTIVE_PANE_HEIGHT;
+  const maxFromAvailable = hasAvailable
+    ? Math.max(MIN_ARCHIVED_PANE_HEIGHT, availableHeight - MIN_ACTIVE_PANE_HEIGHT)
+    : MAX_ARCHIVED_PANE_HEIGHT;
   return Math.min(
     Math.max(height, MIN_ARCHIVED_PANE_HEIGHT),
     Math.min(MAX_ARCHIVED_PANE_HEIGHT, maxFromAvailable),

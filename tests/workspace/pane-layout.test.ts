@@ -53,9 +53,16 @@ describe("archived pane release", () => {
   });
 
   it("clamps against remaining sidebar height", () => {
-    expect(resolveArchivedRelease(400, 168, 220)).toEqual({
+    expect(resolveArchivedRelease(400, 168, 300)).toEqual({
       open: true,
-      size: 100,
+      size: 180,
+    });
+  });
+
+  it("ignores unmeasured or tiny containers", () => {
+    expect(resolveArchivedRelease(220, 168, 0)).toEqual({
+      open: true,
+      size: 220,
     });
   });
 

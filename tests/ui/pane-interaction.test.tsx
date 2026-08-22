@@ -21,6 +21,19 @@ if (!Element.prototype.setPointerCapture) {
   Element.prototype.releasePointerCapture = () => undefined;
 }
 
+if (typeof PointerEvent === "undefined") {
+  class PointerEventPolyfill extends MouseEvent {
+    pointerId: number;
+    constructor(type: string, init: MouseEventInit & { pointerId?: number } = {}) {
+      super(type, init);
+      this.pointerId = init.pointerId ?? 1;
+    }
+  }
+  Object.defineProperty(globalThis, "PointerEvent", {
+    value: PointerEventPolyfill,
+  });
+}
+
 function trackingStorage() {
   const inner = createMemoryPreferenceStorage();
   const writes: string[] = [];
@@ -34,16 +47,35 @@ function trackingStorage() {
   };
 }
 
+function pointer(
+  handle: HTMLElement,
+  type: "pointerdown" | "pointermove" | "pointerup",
+  x: number,
+  y: number,
+) {
+  fireEvent(
+    handle,
+    new PointerEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      pointerId: 1,
+      clientX: x,
+      clientY: y,
+      buttons: type === "pointerup" ? 0 : 1,
+    }),
+  );
+}
+
 function drag(
   handle: HTMLElement,
   from: number,
   to: number,
   axis: "x" | "y" = "x",
 ) {
-  const start = axis === "x" ? { clientX: from, clientY: 0 } : { clientX: 0, clientY: from };
-  const end = axis === "x" ? { clientX: to, clientY: 0 } : { clientX: 0, clientY: to };
-  fireEvent.pointerDown(handle, { pointerId: 1, buttons: 1, ...start });
-  fireEvent.pointerMove(handle, { pointerId: 1, buttons: 1, ...end });
+  const start = axis === "x" ? [from, 10] : [10, from];
+  const end = axis === "x" ? [to, 10] : [10, to];
+  pointer(handle, "pointerdown", start[0]!, start[1]!);
+  pointer(handle, "pointermove", end[0]!, end[1]!);
 }
 
 describe("pane interaction", () => {
@@ -60,7 +92,7 @@ describe("pane interaction", () => {
     drag(handle, 260, 320);
     expect(screen.getByTestId("project-sidebar")).toHaveAttribute("data-width", "320");
     expect(storage.writes).toEqual([]);
-    fireEvent.pointerUp(handle, { pointerId: 1 });
+    pointer(handle, "pointerup", 320, 10);
     expect(screen.getByTestId("project-sidebar")).toHaveAttribute("data-width", "320");
     expect(storage.writes.includes(WORKSPACE_PREFERENCES_KEY)).toBe(true);
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
@@ -77,7 +109,7 @@ describe("pane interaction", () => {
     );
     const handle = screen.getByTestId("sidebar-resize");
     drag(handle, 260, 150);
-    fireEvent.pointerUp(handle, { pointerId: 1 });
+    pointer(handle, "pointerup", 150, 10);
     expect(screen.getByTestId("project-sidebar")).toHaveAttribute(
       "data-width",
       String(MIN_SIDEBAR_WIDTH),
@@ -96,7 +128,7 @@ describe("pane interaction", () => {
     );
     const handle = screen.getByTestId("sidebar-resize");
     drag(handle, 300, 40);
-    fireEvent.pointerUp(handle, { pointerId: 1 });
+    pointer(handle, "pointerup", 40, 10);
     expect(screen.getByTestId("project-sidebar")).toHaveAttribute("data-open", "false");
     expect(screen.getByTestId("project-sidebar")).toHaveAttribute("data-width", "300");
     await user.click(screen.getByTestId("sidebar-toggle"));
@@ -121,12 +153,12 @@ describe("pane interaction", () => {
     drag(handle, 180, 220, "y");
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes).toEqual([]);
-    fireEvent.pointerUp(handle, { pointerId: 1 });
+    pointer(handle, "pointerup", 10, 220);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-size", "220");
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(false);
 
     drag(handle, 220, 20, "y");
-    fireEvent.pointerUp(handle, { pointerId: 1 });
+    pointer(handle, "pointerup", 10, 20);
     expect(screen.getByTestId("archived-pane")).toHaveAttribute("data-collapsed", "true");
     expect(screen.queryByTestId("archived-list")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("archived-toggle"));

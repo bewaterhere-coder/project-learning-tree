@@ -211,6 +211,9 @@ export function ProjectSidebar({
                   testId="archived-resize"
                   label={t(locale, "sidebar.archivedResize")}
                   onDrag={(delta) => {
+                    if (!Number.isFinite(delta)) {
+                      return;
+                    }
                     const base =
                       dragHeightRef.current ??
                       (archivedOpen ? archivedHeight : ARCHIVED_HEADER_HEIGHT);
@@ -304,6 +307,9 @@ export function ProjectSidebar({
           testId="sidebar-resize"
           label={t(locale, "sidebar.resize")}
           onDrag={(delta) => {
+            if (!Number.isFinite(delta)) {
+              return;
+            }
             const base = dragWidthRef.current ?? width;
             const next = Math.max(0, base + delta);
             dragWidthRef.current = next;

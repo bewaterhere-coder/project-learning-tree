@@ -1,6 +1,6 @@
 /** @vitest-environment jsdom */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../src/ui/App.js";
@@ -92,18 +92,18 @@ describe("theme resolution", () => {
     );
     expectTheme("light");
     media.dispatch(true);
-    expectTheme("dark");
+    await waitFor(() => expectTheme("dark"));
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("theme-light"));
     expectTheme("light");
     media.dispatch(false);
-    expectTheme("light");
+    await waitFor(() => expectTheme("light"));
     await user.click(screen.getByTestId("theme-dark"));
     expectTheme("dark");
     media.dispatch(true);
-    expectTheme("dark");
+    await waitFor(() => expectTheme("dark"));
     media.dispatch(false);
-    expectTheme("dark");
+    await waitFor(() => expectTheme("dark"));
     await user.click(screen.getByTestId("theme-system"));
     expectTheme("light");
   });
