@@ -1,30 +1,77 @@
 # Product Interaction Spec
 
-Status: Draft — resolve before M1 implementation.
+Status: Frozen for M1.
 
 ## Workspace
 
 The MVP has four functional regions:
 
-1. Learning Tree — hierarchy, node state, and Current Focus.
-2. Focus Panel — the active node's learning conversation.
-3. Node Inspector — goal, depth, Definition of Done, evidence, summary, status.
-4. Learning Frontier — adjacent questions deliberately excluded from the current blocking path.
+1. Learning Tree — hierarchy, lifecycle state, derived blocking state, Active Stack, and Current Focus.
+2. Focus Panel — the currently focused node's learning conversation.
+3. Node Inspector — goal, depth, Definition of Done, evidence, summary, lifecycle, and derived state.
+4. Learning Frontier — pass-scoped adjacent questions that are relevant but deliberately not materialized into the tree.
+
+## Core interaction semantics
+
+M1 freezes the following rules:
+
+1. Multiple unresolved Blocking Children may exist for one parent, but only one branch may occupy the current Active Stack at a time.
+2. `Blocked` is a derived condition, not a stored lifecycle enum value.
+3. Closed nodes may be reopened only by an explicit `Reopen` action with a required reason.
+4. Definition of Done is represented by structured Criteria with Evidence, not boolean flags alone.
+5. Frontier belongs to the Learning Pass; each Frontier item retains `sourceNodeId`.
+6. Focused and Active are distinct concepts. Viewing another node does not change the Active Stack.
+7. Parked is a materialized Learning Node that has been deliberately paused; Frontier is an unmaterialized candidate question.
 
 ## Node lifecycle
+
+Persisted lifecycle:
 
 ```text
 Open
   ↓ activate
 Active
-  ├─ discover blocking child → Blocked
   ├─ park → Parked
   └─ convergence passed → Closed
 
-Blocked
-  ↓ blocking child resolved
+Parked
+  ↓ resume
 Active
+
+Closed
+  ↓ explicit reopen(reason)
+Open or Active, according to the domain command
 ```
+
+`Blocked` is derived:
+
+```text
+isBlocked(node) = node has one or more unresolved blocking children
+```
+
+A node can therefore have lifecycle `Active` while also being derived as `Blocked`. The active branch is represented separately by the Active Stack.
+
+## Active Stack vs Current Focus
+
+The Learning Pass maintains an Active Stack representing the single learning path currently being worked through.
+
+Example:
+
+```text
+Q2
+└── Q2.1
+    └── Q2.1.1
+```
+
+If `Q2.1.1` is the current active leaf, the Active Stack is:
+
+```text
+[Q2, Q2.1, Q2.1.1]
+```
+
+Only one blocking branch can be in this stack at a time, even if Q2 has several unresolved Blocking Children.
+
+`Current Focus` is a UI/navigation concern. A user may inspect Q5 while Q2.1.1 remains the active learning leaf. Merely viewing Q5 must not mutate lifecycle state or the Active Stack.
 
 ## 1. Create project
 
@@ -38,20 +85,27 @@ System may propose at most five Core Questions. The user can accept, edit, delet
 
 The system must not generate a complete question tree.
 
-## 3. Focus a node
+## 3. Activate or focus a node
 
-When a user focuses an Open node:
+Two actions are distinct:
 
-- node becomes Active;
-- it becomes Current Focus;
-- its conversation thread opens;
-- Node Inspector shows Goal, Target Depth, DoD, Evidence, and Summary.
+### Focus Node
 
-Only one node should be Current Focus in MVP.
+- changes Current Focus only;
+- opens that node's conversation and inspector;
+- does not modify lifecycle;
+- does not modify the Active Stack.
+
+### Activate Node
+
+- explicitly places an eligible node onto the Active Stack;
+- lifecycle becomes `Active` when required;
+- the node normally also becomes Current Focus;
+- activation must obey blocking and stack invariants.
 
 ## 4. Learn inside the node
 
-Conversation is scoped to the active node. AI may answer, cite evidence, update proposed understanding, and suggest newly discovered questions.
+Conversation belongs to the focused Learning Node. AI may answer, cite evidence, propose understanding updates, and suggest newly discovered questions.
 
 New questions must be classified before entering the tree.
 
@@ -59,71 +113,116 @@ New questions must be classified before entering the tree.
 
 When AI or user identifies a new question, evaluate:
 
-> Can the current node reach its Definition of Done without resolving this question now?
+> Can the current learning node reach its Definition of Done without resolving this question now?
 
 If no:
 
 - classify as Blocking;
 - offer Create Blocking Child;
-- parent becomes Blocked after child activation;
-- child becomes Active and Current Focus.
+- materialize the child as a formal Learning Node;
+- multiple unresolved blocking children are allowed;
+- only an explicitly activated child may extend the Active Stack;
+- the parent becomes derived `Blocked` while any required Blocking Child remains unresolved.
 
 If yes:
 
-- do not create a child automatically;
-- send it to Frontier or discard it.
+- do not create a tree child automatically;
+- add the candidate to Frontier or discard it.
 
 ## 6. Learning Frontier
 
-Frontier contains relevant questions that are not required for the current node's DoD.
+Frontier belongs to the Learning Pass.
 
-A Frontier item can later be promoted to a root/core node or a child only through an explicit user action or renewed blocking evaluation.
+A Frontier item is not a Learning Node. It must retain enough provenance to explain where it came from, including at minimum:
 
-## 7. Convergence Gate
+```text
+id
+question
+description? / reason?
+sourceNodeId
+createdAt
+```
+
+A Frontier item can later be materialized as a root/core node or child only through an explicit promotion action or renewed blocking evaluation.
+
+## 7. Parked Nodes
+
+A Parked item is already a formal Learning Node in the tree.
+
+Parking means:
+
+- preserve the node, its conversation, DoD, evidence, summary, and relationships;
+- remove it from active work;
+- lifecycle becomes `Parked`;
+- it may later be resumed explicitly.
+
+Do not use Parked for questions that have never been materialized. Those belong in Frontier.
+
+## 8. Definition of Done and Evidence
+
+DoD is structured rather than boolean-only.
+
+A Criterion should be able to express:
+
+- what understanding or result is required;
+- whether it is required or optional;
+- its satisfaction state;
+- evidence references supporting satisfaction;
+- optional rationale or notes.
+
+A Criterion is not considered satisfied merely because a checkbox was toggled if its evidence requirements are unmet.
+
+## 9. Convergence Gate
 
 Closing a node is a domain action, not a visual toggle.
 
 Minimum checks:
 
-- required DoD criteria are satisfied;
-- required blocking children are resolved;
-- sufficient evidence exists for the node's intended depth;
-- a concise summary can explain the answer at that depth.
+- all required DoD Criteria are satisfied;
+- required Evidence is present;
+- all required Blocking Children are resolved;
+- a concise summary can explain the answer at the intended Target Depth.
 
-If checks fail, the node remains Active and the UI should show missing conditions.
+If checks fail, closure is rejected and the UI should expose the missing conditions.
 
-## 8. Close and return
+## 10. Close and return
 
 When a blocking child closes:
 
-- return focus to the blocked parent by default;
-- parent becomes Active again if no unresolved blocking children remain.
+- remove it from the Active Stack when applicable;
+- its parent becomes unblocked only when no unresolved required Blocking Children remain;
+- return Current Focus to the parent by default when it is the next active stack node.
 
-When a non-blocking/root node closes:
+When a root/non-blocking node closes, the user may activate another eligible node.
 
-- user may choose the next Open node.
+## 11. Reopen
 
-## 9. Resume
+Closed nodes may be reopened, but never implicitly.
+
+`Reopen` requires:
+
+- explicit user or authorized domain action;
+- a non-empty reason;
+- preservation of prior summary, evidence, and closure history;
+- a recorded reopen event suitable for later audit/history.
+
+Reopening must not silently delete previous evidence or learning history.
+
+## 12. Resume
 
 After reopening the app, restore:
 
 - active project and pass;
-- Current Focus;
-- tree state;
+- Active Stack;
+- Current Focus independently;
+- tree lifecycle state;
+- data needed to derive blocking state;
 - per-node conversations;
-- Frontier;
-- DoD/evidence/summary.
+- pass-scoped Frontier with `sourceNodeId`;
+- DoD Criteria, Evidence, summaries, and reopen history.
 
 Resume should not regenerate questions or replay AI actions.
 
-## Open product questions
+## M1 product semantics
 
-These should be resolved before M1 is treated as frozen:
-
-1. Can multiple blocking children exist simultaneously, or must they be resolved serially?
-2. Is `Blocked` stored as a node state or derived from unresolved blocking children?
-3. Can Closed nodes be reopened in MVP?
-4. Are DoD criteria boolean only, or can they carry evidence requirements?
-5. Does Frontier belong to the project, pass, or source node?
-6. When a user manually switches away from an Active node, does it remain Active or become Open/Parked?
-7. What is the exact distinction between Parked and Frontier?
+The seven previously open lifecycle questions are resolved and frozen for M1. Future changes to these semantics should be treated as explicit product/domain changes rather than implementation details.
