@@ -26,24 +26,31 @@ Create Project
 ## Architecture direction
 
 - React + TypeScript + Vite
-- `@xyflow/react`
-- Zustand
-- Dexie / IndexedDB
+- `@xyflow/react` for Tree UI (derived from DomainSnapshot; not a source of truth)
 - Vitest
 - Pure domain engine with no dependency on React, persistence, LLM providers, GitHub, or network APIs
 
-AI is an advisor. The domain engine is the authority for state transitions.
+Zustand and Dexie/IndexedDB remain deferred past M2.
+
+AI is an advisor. The domain engine is the authority for state transitions. DomainSnapshot is the single source of truth.
 
 ## Start here
 
 1. Read `AGENTS.md`.
-2. Review `docs/product/interaction-spec.md` and resolve open product questions.
-3. Use Cursor Plan Mode for `docs/milestones/M1-domain-engine.md`.
-4. Implement M1 only after the spec is accepted.
+2. Review `docs/product/interaction-spec.md` and `docs/product/domain-model.md`.
+3. M1 Domain Engine is complete: `docs/milestones/M1-domain-engine.md`.
+4. M2 Tree UI: `docs/milestones/M2-tree-ui.md`.
+
+```bash
+npm install
+npm test
+npm run typecheck
+npm run dev
+```
 
 ## Status
 
-Product specification / pre-implementation.
+M1 Domain Engine is complete. M2 Tree UI is implemented.
 
 ## License
 

@@ -10,3 +10,7 @@ alwaysApply: true
 - Do not add infrastructure for future milestones preemptively.
 - Prefer explicit domain operations over UI-driven state mutation.
 - Keep the first implementation local-first.
+- DomainSnapshot is the single source of truth for learning state.
+- UI may keep viewport, zoom, hover, and panel chrome locally.
+- UI must not store lifecycle, activeStack, currentFocus, blocked, DoD satisfaction, evidence relationships, or parent/child relationships.
+- XYFlow nodes/edges are a derived view and must not become the domain source of truth.
