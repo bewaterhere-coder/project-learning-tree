@@ -7,6 +7,7 @@ import type {
   PaneReleaseResult,
   ProjectWorkspaceLayout,
   ResolvedColorScheme,
+  ThemeRecipeId,
   Viewport,
   WorkspaceLocale,
   WorkspaceShellLayout,
@@ -30,6 +31,14 @@ export const MIN_ACTIVE_PANE_HEIGHT = 120;
 export const ARCHIVED_COLLAPSE_THRESHOLD = 56;
 export const DEFAULT_LOCALE: WorkspaceLocale = "en-US";
 export const DEFAULT_COLOR_SCHEME: ColorScheme = "system";
+/** Evaluation default; permanent product default remains an Acceptance decision. */
+export const DEFAULT_THEME_RECIPE_ID: ThemeRecipeId = "rose-pine";
+export const THEME_RECIPE_IDS = [
+  "rose-pine",
+  "catppuccin",
+  "everforest",
+  "nord",
+] as const satisfies readonly ThemeRecipeId[];
 export const WORKSPACE_PREFERENCES_KEY = "plt.workspace.layout.v2";
 export const WORKSPACE_PREFERENCES_KEY_V1 = "plt.workspace.layout.v1";
 export const WORKSPACE_SEMANTIC_KEY = "plt.workspace.semantic.v1";
@@ -45,7 +54,21 @@ export function defaultShell(): WorkspaceShellLayout {
     archivedPaneHeight: DEFAULT_ARCHIVED_PANE_HEIGHT,
     locale: DEFAULT_LOCALE,
     colorScheme: DEFAULT_COLOR_SCHEME,
+    themeRecipeId: DEFAULT_THEME_RECIPE_ID,
   };
+}
+
+export function isThemeRecipeId(value: unknown): value is ThemeRecipeId {
+  return (
+    value === "rose-pine" ||
+    value === "catppuccin" ||
+    value === "everforest" ||
+    value === "nord"
+  );
+}
+
+export function parseThemeRecipeId(value: unknown): ThemeRecipeId {
+  return isThemeRecipeId(value) ? value : DEFAULT_THEME_RECIPE_ID;
 }
 
 export function defaultProjectLayout(

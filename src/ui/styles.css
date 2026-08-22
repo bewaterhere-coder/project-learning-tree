@@ -1,38 +1,39 @@
-:root,
-[data-theme="light"] {
+:root {
   color-scheme: light;
   font-family: "Segoe UI", "PingFang SC", "Noto Sans SC", "Hiragino Sans GB", sans-serif;
-  --color-bg-canvas: #e8ece9;
-  --color-bg-surface: #f4f2ed;
-  --color-bg-elevated: #ffffff;
-  --color-bg-node: #ffffff;
-  --color-text-primary: #1c2430;
-  --color-text-secondary: #5b6573;
-  --color-text-muted: #7a8490;
-  --color-text-inverse: #f7f5f0;
-  --color-border-default: #d7d0c4;
-  --color-border-strong: #b9b3a8;
-  --color-border-accent: #2f6f5f;
-  --color-accent: #2f6f5f;
-  --color-accent-hover: #24584b;
-  --color-accent-subtle: #e4f2ed;
-  --color-success: #1f7a63;
-  --color-warning: #9a5b12;
-  --color-danger: #b42318;
-  --color-learning-active: #e7f5ef;
-  --color-learning-selected: #2f6fed;
-  --color-learning-parked: #fff6ea;
-  --color-learning-completed: #eef0f2;
-  --color-focus-ring: #2f6fed;
+  /* Fallback until recipe apply runs (Rosé Pine Dawn evaluation default). */
+  --color-bg-canvas: #faf4ed;
+  --color-bg-surface: #fffaf3;
+  --color-bg-elevated: #f2e9e1;
+  --color-bg-node: #fffaf3;
+  --color-text-primary: #575279;
+  --color-text-secondary: #797593;
+  --color-text-muted: #9893a5;
+  --color-text-inverse: #fffaf3;
+  --color-border-default: #dfdad9;
+  --color-border-strong: #cecacd;
+  --color-border-accent: #286983;
+  --color-accent: #286983;
+  --color-accent-hover: #56949f;
+  --color-accent-subtle: #f4ede8;
+  --color-success: #56949f;
+  --color-warning: #ea9d34;
+  --color-danger: #b4637a;
+  --color-learning-active: #f4ede8;
+  --color-learning-selected: #907aa9;
+  --color-learning-parked: color-mix(in srgb, #ea9d34 18%, transparent);
+  --color-learning-completed: #f2e9e1;
+  --color-focus-ring: #907aa9;
   --color-edge-quiet: color-mix(in srgb, var(--color-border-default) 55%, transparent);
   --color-edge-default: color-mix(in srgb, var(--color-border-strong) 70%, transparent);
-  --color-cluster-0: color-mix(in srgb, #6f8fbf 12%, transparent);
-  --color-cluster-1: color-mix(in srgb, #2f6f5f 11%, transparent);
-  --color-cluster-2: color-mix(in srgb, #b8873a 11%, transparent);
-  --color-cluster-3: color-mix(in srgb, #7a6aa8 11%, transparent);
-  --color-cluster-4: color-mix(in srgb, #8a6b5a 11%, transparent);
-  --shadow-node: 0 6px 16px rgba(28, 36, 48, 0.06);
-  --shadow-overlay: -4px 0 18px rgba(28, 36, 48, 0.06);
+  --color-cluster-0: color-mix(in srgb, #56949f 12%, transparent);
+  --color-cluster-1: color-mix(in srgb, #286983 11%, transparent);
+  --color-cluster-2: color-mix(in srgb, #ea9d34 11%, transparent);
+  --color-cluster-3: color-mix(in srgb, #907aa9 11%, transparent);
+  --color-cluster-4: color-mix(in srgb, #d7827e 11%, transparent);
+  --color-backdrop: color-mix(in srgb, #575279 35%, transparent);
+  --shadow-node: 0 6px 16px rgba(87, 82, 121, 0.08);
+  --shadow-overlay: -4px 0 18px rgba(87, 82, 121, 0.08);
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
@@ -47,39 +48,41 @@
   background: var(--color-bg-surface);
 }
 
-[data-theme="dark"] {
+/* Dark fallbacks only on html — never on .shell[data-theme], which would shadow recipe vars. */
+html[data-theme="dark"] {
   color-scheme: dark;
-  --color-bg-canvas: #161b1f;
-  --color-bg-surface: #1c2228;
-  --color-bg-elevated: #262d34;
-  --color-bg-node: #222930;
-  --color-text-primary: #edf1f4;
-  --color-text-secondary: #b4bcc4;
-  --color-text-muted: #8b949e;
-  --color-text-inverse: #161b1f;
-  --color-border-default: #3a434c;
-  --color-border-strong: #59626b;
-  --color-border-accent: #4aa68d;
-  --color-accent: #4aa68d;
-  --color-accent-hover: #63c0a6;
-  --color-accent-subtle: #1f3330;
-  --color-success: #4aa68d;
-  --color-warning: #e0a454;
-  --color-danger: #f07167;
-  --color-learning-active: #1c322c;
-  --color-learning-selected: #7aa7ff;
-  --color-learning-parked: #332718;
-  --color-learning-completed: #2a3036;
-  --color-focus-ring: #7aa7ff;
+  --color-bg-canvas: #232136;
+  --color-bg-surface: #2a273f;
+  --color-bg-elevated: #393552;
+  --color-bg-node: #393552;
+  --color-text-primary: #e0def4;
+  --color-text-secondary: #908caa;
+  --color-text-muted: #6e6a86;
+  --color-text-inverse: #232136;
+  --color-border-default: #44415a;
+  --color-border-strong: #56526e;
+  --color-border-accent: #3e8fb0;
+  --color-accent: #3e8fb0;
+  --color-accent-hover: #9ccfd8;
+  --color-accent-subtle: #2a283e;
+  --color-success: #9ccfd8;
+  --color-warning: #f6c177;
+  --color-danger: #eb6f92;
+  --color-learning-active: #2a283e;
+  --color-learning-selected: #c4a7e7;
+  --color-learning-parked: color-mix(in srgb, #f6c177 16%, transparent);
+  --color-learning-completed: #44415a;
+  --color-focus-ring: #c4a7e7;
   --color-edge-quiet: color-mix(in srgb, var(--color-border-default) 50%, transparent);
   --color-edge-default: color-mix(in srgb, var(--color-border-strong) 65%, transparent);
-  --color-cluster-0: color-mix(in srgb, #7aa7ff 14%, transparent);
-  --color-cluster-1: color-mix(in srgb, #4aa68d 13%, transparent);
-  --color-cluster-2: color-mix(in srgb, #e0a454 13%, transparent);
-  --color-cluster-3: color-mix(in srgb, #9b8ad4 13%, transparent);
-  --color-cluster-4: color-mix(in srgb, #c49a84 13%, transparent);
-  --shadow-node: 0 8px 18px rgba(0, 0, 0, 0.22);
-  --shadow-overlay: -4px 0 16px rgba(0, 0, 0, 0.22);
+  --color-cluster-0: color-mix(in srgb, #9ccfd8 14%, transparent);
+  --color-cluster-1: color-mix(in srgb, #3e8fb0 13%, transparent);
+  --color-cluster-2: color-mix(in srgb, #f6c177 13%, transparent);
+  --color-cluster-3: color-mix(in srgb, #c4a7e7 13%, transparent);
+  --color-cluster-4: color-mix(in srgb, #ea9a97 13%, transparent);
+  --color-backdrop: color-mix(in srgb, #232136 55%, transparent);
+  --shadow-node: 0 8px 18px rgba(0, 0, 0, 0.28);
+  --shadow-overlay: -4px 0 16px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -822,7 +825,7 @@ textarea {
   display: grid;
   place-items: center;
   padding: var(--space-4);
-  background: rgba(20, 24, 32, 0.45);
+  background: var(--color-backdrop);
 }
 
 .confirm-dialog {
@@ -910,6 +913,7 @@ textarea {
 .locale-switch,
 .theme-switch {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
 }
 
@@ -1339,7 +1343,7 @@ textarea {
 
 .proposal-error,
 .chat-error {
-  color: var(--color-danger, #b42318);
+  color: var(--color-danger);
 }
 
 .proposal-actions {
