@@ -11,7 +11,7 @@ development:
   next_expected_actor: human
 artifacts:
   plan: ../plans/TASK-001-plan.md
-  pr: null
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/17
 ---
 
 # TASK-001 — Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
