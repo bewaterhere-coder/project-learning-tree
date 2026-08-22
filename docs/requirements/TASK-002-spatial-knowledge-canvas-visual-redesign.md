@@ -5,16 +5,16 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: acceptance
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
-    merge_verified: false
-  next_expected_actor: chatgpt
+    acceptance_approved: true
+    merge_verified: true
+  next_expected_actor: none
 artifacts:
   plan: ../plans/TASK-002-plan.md
-  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/21
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
 ---
 
 # TASK-002 — Spatial Knowledge Canvas Visual Redesign
@@ -80,7 +80,6 @@ Visual priority should be:
 
 ```text
 Canvas
->>>>>>>>>>>>>>>>>>>>>
 Header
 Sidebar
 Contextual workspace
@@ -383,20 +382,27 @@ Do not:
 
 ## Suggested implementation order
 
-Cursor should first inspect current code and produce the canonical Plan on this same task branch. Expected investigation/implementation sequence:
-
-1. current component/style/token audit;
-2. refine design tokens where necessary;
-3. canvas background redesign;
-4. LearningNode redesign;
-5. Edge / Handle presentation and dynamic routing refinement;
-6. Header visual recession;
-7. Sidebar visual recession;
-8. Contextual workspace refinement;
-9. optional zoom-aware progressive disclosure if justified;
+1. refine design tokens where necessary;
+2. keep solid quiet canvas background;
+3. redesign LearningNode hierarchy and hover chat affordance;
+4. quiet Edge / Handle presentation while preserving TASK-001 routing;
+5. recede Header;
+6. recede Sidebar;
+7. refine Contextual workspace and Chat presentation;
+8. evaluate root-derived presentation-only cluster underlays only if the result still reads too much like a workflow diagram;
+9. optional zoom-aware progressive disclosure only if justified by headed review;
 10. update visual regression evidence/tests.
 
 Avoid a full UI rewrite unless code evidence proves it necessary.
+
+## Approved Plan Review Decisions
+
+Plan review is complete. Implementation is authorized on the same task branch and PR.
+
+1. Use a **solid quiet canvas**; do not reintroduce dots by default.
+2. Keep Knowledge Cluster work inside TASK-002, but implement it only if node/edge/chrome quieting still fails the knowledge-landscape visual target.
+3. `minZoom=0.4` may remain; use 40% as the practical zoomed-out verification baseline.
+4. Preserve the blocking tick but **soften** its visual treatment.
 
 ## Acceptance criteria
 
@@ -446,10 +452,36 @@ Visual evidence should cover at least:
 - zoomed-out overview;
 - zoomed-in node interaction.
 
+## Acceptance Review
+
+Accepted against PR #19 at implementation head `32a9a80496b2b8c19aa66f86dbf14db3b0799d4d`.
+
+Repository-visible evidence reviewed:
+
+- LearningNode hierarchy is quieter: question-first typography, restrained Focus/Active cues, receded Parked/Closed presentation, hover/focus-revealed Node Chat.
+- Edge strokes are materially reduced while TASK-001 geometry/routing is preserved; blocking tick remains but is softened.
+- Header, sidebar, Details and Chat chrome are visually receded through presentation-layer CSS changes.
+- Presentation-only Knowledge Cluster regions are derived from existing root subtrees, are non-interactive, and do not add domain or persistence semantics.
+- Solid canvas and `minZoom=0.4` decisions are preserved.
+- Visual snapshot / milestone screenshot assets were refreshed on the same PR lineage.
+- Latest GitHub Actions CI for the implementation head passed both `check` and `e2e`, including `typecheck`, unit tests, build and `npm run test:e2e`.
+
+No acceptance-blocking code or workflow regression was found in the reviewed diff/evidence.
+
+## Completion Evidence
+
+Acceptance review passed for PR #19 with repository-visible evidence:
+
+- implementation matches the approved plan and acceptance criteria;
+- GitHub Actions CI run #72 completed successfully on implementation head `32a9a80496b2b8c19aa66f86dbf14db3b0799d4d`;
+- `check` passed typecheck, unit tests, and build;
+- `e2e` passed the Playwright acceptance suite;
+- PR #19 merged successfully into `main`;
+- merge commit: `4cd33fc6769f503b656326906bacf18c21aa7ef0`;
+- post-merge CI on `main` for that push completed successfully;
+- `main` was re-read after merge before `merge_verified` was set;
+- presentation-layer redesign is present on `main` (`cluster-regions.ts`, quieter node/edge/chrome CSS, hover Node Chat).
+
 ## Cursor Gate
 
-Plan review approved on PR #19 (`plan_approved=true`).
-
-Implementation completed on `cursor/task-002-implement-1405` / PR #21.
-
-**Acceptance handoff:** `development.stage: acceptance`, `next_expected_actor: chatgpt`, `acceptance_approved: false`. Please run **ChatGPT Acceptance Review TASK-002**. Do not self-approve acceptance.
+TASK-002 is complete (`stage: done`, `merge_verified=true`). No further Cursor action is required for this task.
