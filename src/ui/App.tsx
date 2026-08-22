@@ -48,6 +48,7 @@ import {
   type LearningWorkspace,
   type NodePosition,
   type PreferenceStorage,
+  type ProjectId,
   type Viewport,
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
@@ -67,6 +68,7 @@ import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
 import { BootstrapSummary } from "./projects/BootstrapSummary.js";
+import { permanentlyDeleteArchivedProject } from "./projects/permanent-delete.js";
 import { applyResolvedTheme, systemPrefersDark } from "./theme/apply-theme.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
@@ -496,6 +498,14 @@ export function App({
             onRestoreProject={(projectId) =>
               commit(restoreProject(workspaceRef.current, projectId), true)
             }
+            onDeleteProject={async (projectId: ProjectId) => {
+              await permanentlyDeleteArchivedProject({
+                workspace: workspaceRef.current,
+                projectId,
+                commit,
+                conversationStore,
+              });
+            }}
             onToggle={() =>
               commit(
                 updateShell(workspaceRef.current, {

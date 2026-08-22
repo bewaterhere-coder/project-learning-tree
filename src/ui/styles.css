@@ -803,6 +803,50 @@ textarea {
   color: var(--color-danger);
 }
 
+.confirm-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  background: rgba(20, 24, 32, 0.45);
+}
+
+.confirm-dialog {
+  width: min(420px, 100%);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  box-shadow: var(--shadow-overlay);
+}
+
+.confirm-dialog-title {
+  margin: 0 0 var(--space-3);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.confirm-dialog-body {
+  margin: 0 0 var(--space-4);
+  white-space: pre-line;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.confirm-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+
+.confirm-dialog-actions .ui-button-danger {
+  background: color-mix(in srgb, var(--color-danger) 14%, var(--color-bg-elevated));
+  border-color: var(--color-danger);
+}
+
 .node-actions button:disabled,
 .ui-button:disabled {
   background: var(--color-border-default);
@@ -835,6 +879,14 @@ textarea {
 
 .ui-menu button:hover {
   background: var(--color-accent-subtle);
+}
+
+.ui-menu button.menu-item-danger {
+  color: var(--color-danger);
+}
+
+.ui-menu button.menu-item-danger:hover {
+  background: color-mix(in srgb, var(--color-danger) 12%, transparent);
 }
 
 .settings-label {

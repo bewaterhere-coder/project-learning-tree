@@ -217,6 +217,40 @@ export function restoreProject(
   };
 }
 
+export type DeleteArchivedProjectResult =
+  | { workspace: LearningWorkspace; deleted: false }
+  | { workspace: LearningWorkspace; deleted: true; projectId: ProjectId };
+
+export function deleteArchivedProject(
+  workspace: LearningWorkspace,
+  projectId: ProjectId,
+): DeleteArchivedProjectResult {
+  const index = workspace.projects.findIndex(
+    (project) => project.projectId === projectId,
+  );
+  const current = index >= 0 ? workspace.projects[index] : undefined;
+  if (!current || !current.archived) {
+    return { workspace, deleted: false };
+  }
+  const projects = workspace.projects.filter(
+    (project) => project.projectId !== projectId,
+  );
+  return {
+    deleted: true,
+    projectId,
+    workspace: {
+      ...workspace,
+      projects,
+      selectedProjectId:
+        workspace.selectedProjectId === projectId
+          ? nextActiveProjectId(projects, -1)
+          : workspace.selectedProjectId,
+      lastError: undefined,
+      lastErrorCommand: undefined,
+    },
+  };
+}
+
 export function normalizeWorkspaceSelection(
   workspace: LearningWorkspace,
 ): LearningWorkspace {
