@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: implementation
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
@@ -455,14 +455,9 @@ Visual evidence should cover at least:
 
 ## Cursor Gate
 
-**Implementation authorized.**
+Plan review approved (`plan_approved=true`). Implementation completed on
+`task/TASK-002-spatial-knowledge-canvas-visual-redesign` / PR #19.
 
-Cursor must:
-
-1. remain on `task/TASK-002-spatial-knowledge-canvas-visual-redesign`;
-2. continue using PR #19 as the single active development PR;
-3. implement according to `docs/plans/TASK-002-plan.md` and the approved Plan Review Decisions above;
-4. modify code/tests/docs as needed, commit and push to the same task branch;
-5. run required tests and visual verification;
-6. when implementation evidence is remotely visible, advance the task to `acceptance` and set `next_expected_actor: chatgpt`;
-7. do **not** merge PR #19.
+**Acceptance handoff:** `development.stage: acceptance`, `next_expected_actor: chatgpt`,
+`acceptance_approved: false`. Please run **ChatGPT Acceptance Review TASK-002**.
+Do not self-approve acceptance. Do not merge PR #19 until acceptance is recorded.

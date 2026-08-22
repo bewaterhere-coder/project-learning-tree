@@ -241,19 +241,14 @@ Focus ≠ Chat auto-open; Details open on focus; conversation binding/pin; proje
 | Requirement ready | true |
 | Code evidence recorded | true (this plan) |
 | Smallest design chosen | presentation CSS + thin UI helpers; no domain rewrite |
-| Cluster approach | presentation-only from `rootNodeIds` subtrees; optional if needed |
+| Cluster approach | presentation-only from `rootNodeIds` subtrees; after quieting |
 | Edge routing | reuse TASK-001; quiet visually |
-| Plan approved | **false — awaiting ChatGPT review** |
+| Plan approved | **true** (PR #19 ChatGPT review) |
 
-## Handoff for ChatGPT Review TASK-002
+## Binding review decisions (PR #19)
 
-Please review this plan against `docs/requirements/TASK-002-spatial-knowledge-canvas-visual-redesign.md`.
+1. Solid quiet canvas by default; no faint dots unless later headed evidence requires them.
+2. Clusters stay in TASK-002 after node/edge/chrome quieting; skip only if landscape acceptance is already clearly met.
+3. Keep `minZoom=0.4`; treat 40% as zoomed-out baseline.
+4. Soften blocking tick; do not remove the semantic cue.
 
-Blocking questions for reviewers:
-
-1. Is solid canvas (no faint dots) acceptable given Background is already removed?
-2. Should cluster underlays be in the first implementation slice or deferred until after node/edge/chrome quieting is reviewed visually?
-3. May `minZoom` remain 0.4 (with 40% as zoomed-out stand-in), or must it drop toward 0.25?
-4. Soften vs remove blocking tick — plan prefers soften; confirm.
-
-Implementation must not start until `plan_approved=true` is recorded on the Requirement after review.
