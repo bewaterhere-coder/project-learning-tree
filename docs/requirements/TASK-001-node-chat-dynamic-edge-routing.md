@@ -55,15 +55,19 @@ Interaction contract:
 ```text
 click node body
 → Focus Node
+→ open Inspector (existing behavior)
 
 click node Chat action
 → Open Conversation Panel
 → bind Conversation to that Node
+→ do not open Inspector as an additional side effect
 ```
 
 `Focus` and `Open Chat` remain separate actions.
 
 Focusing or selecting a node alone must not automatically open Chat.
+
+Clicking the node Chat action must not open the Inspector/Contextual Workspace unless it was already open for another reason.
 
 The Chat action must not accidentally trigger unintended node drag, selection, or graph interaction.
 
@@ -79,13 +83,21 @@ Conversation responsibility:
 
 Do not render full conversation history inside the graph node.
 
-### 4. One Node supports multiple relationships
+### 4. One Node supports multiple visible links
 
-The graph and UI must not assume that one node has only one incoming and one outgoing relationship.
+The graph and UI must not assume that one node has only one incoming and one outgoing **visual link**.
 
-A node may have multiple incoming and outgoing edges, including relationships already supported by the domain such as child, parent, blocking, frontier, or other semantic relationships.
+Under the current Learning Tree domain, semantic hierarchy remains a **tree**:
 
-UI handle structure must not restrict domain relationship cardinality.
+- at most **one semantic parent** (`parentId`);
+- **many children** (`childIds`);
+- blocking, Active Stack, and receded are **flags on parent→child edges**, not separate relationship types.
+
+Within that model, a Learning Node may participate in **multiple visible graph links** at once—for example, one incoming parent edge plus several outgoing child edges. The UI handle and routing layer must not impose a one-in/one-out rendering restriction.
+
+**Frontier items are not materialized as graph edges** in this task.
+
+**Multi-parent semantic relationships are out of scope.** If the product later needs a node with multiple semantic parents, that requires a separate Domain/Product design decision—not an implicit expansion under this task.
 
 ### 5. Edge attachment adapts to relative node position
 
@@ -222,7 +234,9 @@ Cursor should inspect the current implementation and determine:
 - Clicking the node Chat action opens Conversation.
 - Conversation binds to the clicked Node.
 - Clicking Chat does not produce unintended graph drag/selection behavior.
+- Clicking the node Chat action does not open the Inspector when it was closed.
 - Focusing/clicking the Node body alone still does not automatically open Chat.
+- Node body click behavior (Focus + open Inspector) remains unchanged.
 
 ### Edge routing
 
@@ -237,9 +251,10 @@ Dragging nodes across those relative positions causes routing/attachment to upda
 
 ### Multiple edges
 
-- One Node can visibly maintain multiple incoming/outgoing relationships.
+- One Node can visibly maintain multiple **legitimate graph links** allowed by the current tree domain—especially multiple outgoing child edges, and the combination of one incoming parent edge plus multiple outgoing child edges.
 - Multiple edges remain attached after node movement.
-- The implementation does not impose a one-in/one-out domain restriction.
+- The UI does not impose a one-in/one-out **rendering** restriction.
+- The task does not introduce multi-parent semantic relationships.
 
 ### Regression
 

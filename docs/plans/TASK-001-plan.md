@@ -9,9 +9,16 @@ requirement: ../requirements/TASK-001-node-chat-dynamic-edge-routing.md
 
 This is the canonical implementation plan for TASK-001. It records code evidence for the requirement’s planning questions and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `plan_review` — awaiting `plan_approved=true` from the next actor (`chatgpt`).
+**Gate:** `plan_review` — revised per PR #17 blocking findings; awaiting re-review (`plan_approved=true`).
 
 Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
+
+## Review revisions (PR #17)
+
+Two blocking findings addressed in this revision:
+
+1. **Multi-link alignment** — Requirement and Plan now state explicitly that semantic hierarchy stays a tree (one parent, many children). This task supports multiple **visible graph links** without multi-parent semantics or Frontier-as-edge.
+2. **Node Chat side effects** — `openChatForNode` no longer calls `focusAndOpenInspector`. It focuses the node only when needed for follow-focus binding, opens Chat, and does **not** open the Inspector.
 
 ## Goal
 
@@ -72,13 +79,19 @@ Edge routing is not persisted. Layout preferences store `nodePositions` only.
 
 ### 5. Are multiple edges already supported semantically?
 
-Yes for outgoing relationships; no extra domain types are required.
+Yes for **multiple outgoing** parent→child links under the current tree domain; no extra domain types are required for this task.
 
-The domain is a **tree**: many `childIds` (multiple outgoing), at most one `parentId` (one incoming). Blocking, Active Stack, and receded are **flags on the same parent→child edge**, not separate edge entities.
+The domain is a **tree**:
+
+- many `childIds` → multiple outgoing edges from one node;
+- at most one `parentId` → at most one incoming parent edge;
+- blocking, Active Stack, and receded are **flags on the same parent→child edge**, not separate edge entities.
+
+A node may therefore show **one incoming plus multiple outgoing** visible links—the combination the current domain already allows. **Multi-parent semantics are not supported** and are out of scope; introducing them would require a separate Domain/Product decision.
 
 **Frontier is not a graph edge** and will not become one in this task.
 
-The UI must not assume one-in/one-out **handle structure**. The domain cardinality itself does not need to change.
+The UI must not impose a one-in/one-out **handle or routing restriction**. The domain cardinality itself does not need to change.
 
 ### 6. Smallest robust way to derive attachment after movement
 
@@ -127,16 +140,24 @@ Eligible nodes: every materialized Learning Node on the canvas, including parked
 
 ### B. Chat action
 
-Focus and Open Chat stay **separate entry points**, but binding must not race with event bubbling.
+Focus and Open Chat stay **separate entry points**, and Node Chat must not add Inspector side effects.
 
 Add workspace helper `openChatForNode(workspace, nodeId)`:
 
 ```text
-focusAndOpenInspector(nodeId)
-then openChat()  → follow-focus binds to that node
+applySelectedCommand({ type: "focusNode", nodeId })   // domain focus only
+then openChat()                                       // follow-focus binds to currentFocusNodeId
 ```
 
-One `commit()`. Clicking Chat on node N focuses N **and** opens Chat bound to N. Header and inspector Chat behavior stay unchanged.
+**Do not** call `focusAndOpenInspector`. Node Chat must not set `inspectorOpen: true`.
+
+One `commit()`. Clicking Chat on node N:
+
+- sets Current Focus to N when follow-focus binding requires it;
+- opens Chat bound to N;
+- leaves Inspector closed if it was closed (does not open Contextual Workspace as a side effect).
+
+Header and inspector Chat behavior stay unchanged.
 
 Chat button contract:
 
@@ -146,7 +167,7 @@ Chat button contract:
 - accessible name from existing i18n `chat.open` (“聊聊这个问题” / “Talk about this question”)
 - `Button variant="icon"`; compact corner control, not a transcript
 
-Body click still: Focus + open inspector, **no** Chat.
+Body click still: `focusAndOpenInspector` → Focus + open Inspector, **no** Chat.
 
 If Chat was pinned to another node, `openChat()` already resets to `follow-focus`, which is the correct rebind.
 
@@ -194,9 +215,9 @@ Default auto-layout remains top-down, so unset user positions still render `s-bo
 ## Tests to add after approval
 
 - [`tests/ui/edge-routing.test.ts`](../../tests/ui/edge-routing.test.ts) — Given/When/Then for right / left / above / below, diagonal primary axis, vertical tie-break, and that a position swap changes handles. No domain types.
-- [`tests/ui/to-react-flow.test.ts`](../../tests/ui/to-react-flow.test.ts) — default tree still `s-bottom` / `t-top`; relocated child gets a new pair; handles absent from domain snapshot.
-- [`tests/workspace/chat-layout.test.ts`](../../tests/workspace/chat-layout.test.ts) — `openChatForNode` focuses, opens chat, follow-focus binds to that node, does not write the semantic store.
-- [`tests/ui/node-chat.test.tsx`](../../tests/ui/node-chat.test.tsx) — click `node-chat-*` opens the panel bound to that node; body click still does not open Chat.
+- [`tests/ui/to-react-flow.test.ts`](../../tests/ui/to-react-flow.test.ts) — default tree still `s-bottom` / `t-top`; relocated child gets a new pair; handles absent from domain snapshot; parent with multiple children renders multiple outgoing edges.
+- [`tests/workspace/chat-layout.test.ts`](../../tests/workspace/chat-layout.test.ts) — `openChatForNode` applies domain `focusNode`, opens chat, follow-focus binds to that node, does **not** set `inspectorOpen`, does not write the semantic store.
+- [`tests/ui/node-chat.test.tsx`](../../tests/ui/node-chat.test.tsx) — click `node-chat-*` opens the panel bound to that node; Inspector stays closed when it was closed; body click still opens Inspector and does not open Chat.
 - Node content assertion: goal text visible; long goal does not explode layout (`data-testid` on `.node-meta`).
 
 [`tests/ui/xyflow-stub.tsx`](../../tests/ui/xyflow-stub.tsx) already renders `LearningNode`, so the Chat button will appear in existing UI tests. Optionally surface derived `sourceHandle` on stub edges if a canvas-level test needs it; do not turn the stub into a second routing engine.
@@ -209,6 +230,7 @@ No new e2e required for the first slice: handle geometry is unit-tested. Add e2e
 
 - Redesign of the entire Learning Tree UI
 - Frontier-as-edge or new domain relationship types
+- **Multi-parent semantic relationships** (separate Domain/Product decision if ever needed)
 - Conversation history inside graph nodes
 - Persisted `sourceHandle` / `targetHandle`
 - Elk / Dagre / custom pathfinding
@@ -221,6 +243,6 @@ No new e2e required for the first slice: handle geometry is unit-tested. Add e2e
 | --- | --- |
 | Requirement ready | true |
 | Canonical plan written | this file |
-| Plan approved | false — awaiting review |
+| Plan approved | false — revised; awaiting re-review |
 | Implementation | blocked until `plan_approved=true` |
-| Next expected actor | chatgpt (Plan review) |
+| Next expected actor | chatgpt (Plan re-review) |
