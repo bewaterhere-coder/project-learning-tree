@@ -317,6 +317,12 @@ Do not expand this task into:
 
 Canonical implementation plan: `docs/plans/TASK-003-plan.md` (approved by review `5000630434`).
 
-Development stage is `acceptance`. `plan_approved: true`. `acceptance_approved: false`. Next expected actor: ChatGPT (acceptance review).
+Development stage is `acceptance`. `plan_approved: true`. `acceptance_approved: false`. Next expected actor: ChatGPT (acceptance re-review).
 
-Implementation is on this same task branch / PR #20. Do not create another PR.
+CI receipt on PR head `b203c2a9b1216b6cec5a1790245a16002b56b017`:
+
+- Actions run: https://github.com/bewaterhere-coder/project-learning-tree/actions/runs/32587851056
+- `check`: success
+- `e2e`: success
+
+Acceptance review `5000678263` correctly blocked on the prior failing head `989393c` / run `32587759206`. That failure was the Linux visual baseline for hierarchical Project Root layout; baseline was refreshed from the Actions Chromium actual and CI is now green. Request **验收 TASK-003** again on this same branch/PR.
