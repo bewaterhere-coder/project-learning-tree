@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: draft
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-004-plan.md
 ---
@@ -335,8 +335,8 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-Canonical implementation plan: `docs/plans/TASK-004-plan.md` (revised for PR #22 fail-closed delete orchestration).
+Canonical implementation plan: `docs/plans/TASK-004-plan.md` (revised for PR #22 fail-closed delete orchestration and approved by ChatGPT Plan Review).
 
-Development stage is `plan_review`. Next expected actor: ChatGPT (Plan re-review).
+Development stage is `implementation`. `plan_approved: true`. Next expected actor: Cursor.
 
-Cursor must **not** implement product code until Plan review records `plan_approved=true`. Keep all further work on this same task branch and PR.
+Cursor may implement the approved Plan on this same task branch and PR. Do not create another implementation PR. After implementation and required test evidence are remotely visible, advance this Requirement to `acceptance` with `acceptance_approved: false` and hand back to ChatGPT for acceptance review.
