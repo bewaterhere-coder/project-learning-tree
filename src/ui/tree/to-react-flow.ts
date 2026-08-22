@@ -1,5 +1,7 @@
 import type { Edge, Node } from "@xyflow/react";
 import type { NodeId, TreeNodeView, TreeViewModel } from "../../application/index.js";
+import type { UiCommand } from "../../application/commands.js";
+import type { WorkspaceLocale } from "../../workspace/index.js";
 import {
   resolveNodePosition,
   type NodePosition,
@@ -9,7 +11,9 @@ import { computeLayout, NODE_HEIGHT, NODE_WIDTH } from "./layout.js";
 
 type LearningNodeData = TreeNodeView & {
   isRecommended?: boolean;
+  locale?: WorkspaceLocale;
   onOpenChatForNode?: (nodeId: NodeId) => void;
+  onCommand?: (command: UiCommand) => boolean | void;
 } & Record<string, unknown>;
 export type LearningFlowNode = Node<LearningNodeData, "learningNode">;
 

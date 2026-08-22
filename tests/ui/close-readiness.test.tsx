@@ -128,7 +128,10 @@ describe("close readiness UI", () => {
     expect(screen.queryByTestId("domain-error")).toBeNull();
     await user.click(screen.getByTestId("action-close"));
     expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
+    expect(screen.getByTestId(`node-${ids.parent}`)).toHaveAttribute(
+      "data-lifecycle",
+      "active",
+    );
   });
 
   it("enables Complete when the node is ready and still runs closeNode", async () => {
@@ -153,7 +156,10 @@ describe("close readiness UI", () => {
     expect(screen.getByTestId("action-close")).toBeEnabled();
     await user.click(screen.getByTestId("action-close"));
     expect(screen.queryByTestId("domain-error")).toBeNull();
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
+    expect(screen.getByTestId(`node-${branch.ids.childA}`)).toHaveAttribute(
+      "data-lifecycle",
+      "closed",
+    );
   });
 
   it("places unexpected close failures beside Complete instead of the global banner", () => {

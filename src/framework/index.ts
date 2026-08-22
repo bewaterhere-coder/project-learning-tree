@@ -47,3 +47,7 @@ export {
   type ProjectLearningProposal,
   type ProposedCoreQuestion,
 } from "./bootstrap.js";
+export {
+  DEFAULT_GENERATION_LOCALE,
+  type GenerationLocale,
+} from "./locale.js";

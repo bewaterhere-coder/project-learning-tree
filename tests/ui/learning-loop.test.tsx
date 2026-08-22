@@ -98,13 +98,11 @@ describe("M3B learning loop", () => {
     await screen.findByTestId("proposal-accept-blocking");
     await user.click(screen.getByTestId("proposal-accept-blocking"));
     await waitFor(() => {
-      expect(
-        screen.getAllByText("Why DAG addressing?").length,
-      ).toBeGreaterThan(1);
+      expect(screen.getAllByText("Why DAG addressing?").length).toBeGreaterThan(0);
     });
   });
 
-  it("sends a question to Frontier and can reject blocking on a non-active parent", async () => {
+  it("accepts a question as a direct child without requiring an active parent", async () => {
     const user = userEvent.setup();
     const { workspace, projectA } = createDemoWorkspaceFixture();
     renderLoop(
@@ -126,13 +124,12 @@ describe("M3B learning loop", () => {
     );
     await user.type(screen.getByTestId("chat-input"), "later");
     await user.click(screen.getByTestId("chat-send"));
-    await screen.findByTestId("proposal-send-frontier");
+    await screen.findByTestId("proposal-accept-blocking");
     await user.click(screen.getByTestId("proposal-accept-blocking"));
-    await waitFor(() => expect(screen.getByTestId("proposal-error")).toBeInTheDocument());
-    await user.click(screen.getByTestId("proposal-send-frontier"));
     await waitFor(() => {
-      expect(screen.queryByTestId("proposal-card-question")).not.toBeInTheDocument();
+      expect(screen.getAllByText("Pack files?").length).toBeGreaterThan(0);
     });
+    expect(screen.queryByTestId("proposal-error")).not.toBeInTheDocument();
   });
 
   it("requires confirmation for evidence, criterion, and summary proposals", async () => {
@@ -161,7 +158,6 @@ describe("M3B learning loop", () => {
     await user.type(screen.getByTestId("chat-input"), "evidence please");
     await user.click(screen.getByTestId("chat-send"));
     await screen.findByTestId("proposal-card-evidence");
-    await user.click(screen.getByTestId("inspector-details"));
     expect(screen.queryByTestId("inspector-evidence")).not.toBeInTheDocument();
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
@@ -204,7 +200,6 @@ describe("M3B learning loop", () => {
     await user.click(screen.getByTestId("chat-send"));
     const criterion = await screen.findByTestId("proposal-card-criterion");
     expect(screen.getByTestId("proposal-card-summary")).toBeInTheDocument();
-    await user.click(screen.getByTestId("inspector-details"));
     await user.click(criterion.querySelector('[data-testid="proposal-adopt"]')!);
     await waitFor(() => {
       expect(screen.getByTestId("inspector-dod")).toHaveTextContent("Explain blob/tree/commit/tag");

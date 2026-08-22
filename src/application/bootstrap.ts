@@ -19,6 +19,7 @@ import {
   runProjectLearningBootstrap,
   type EvidenceInput,
   type EvidenceStatus,
+  type GenerationLocale,
   type RepositoryEvidenceSource,
 } from "../framework/index.js";
 import type { RepositoryEvidenceProvider } from "./repository-evidence.js";
@@ -58,10 +59,16 @@ export function resolveProjectName(input: {
   return parsed?.repo;
 }
 
+/** Returns true when the source parses as a GitHub repository reference. */
+export function isValidGitHubProjectSource(source: string): boolean {
+  return parseGitHubSource(source.trim()) !== undefined;
+}
+
 export async function bootstrapLearningProject(
   input: EvidenceInput,
   ports: Ports,
   provider?: RepositoryEvidenceProvider,
+  locale: GenerationLocale = "en-US",
 ): Promise<BootstrapProjectResult> {
   const name = resolveProjectName(input);
   if (name === undefined) {
@@ -89,7 +96,7 @@ export async function bootstrapLearningProject(
     provider,
   );
   const evidence = normalizeRepositoryEvidence(source);
-  const proposal = runProjectLearningBootstrap(evidence);
+  const proposal = runProjectLearningBootstrap(evidence, locale);
   const questions = proposal.coreQuestions.slice(
     0,
     Math.min(EXPLORATION_BUDGET.coreQuestions, CORE_QUESTION_LIMIT),

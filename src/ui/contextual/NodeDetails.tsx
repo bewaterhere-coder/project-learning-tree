@@ -1,20 +1,12 @@
 import type {
-  ActionAvailability,
-  AuthoringAvailability,
   CloseReadiness,
   CloseRequirement,
   InspectorViewModel,
   UiCommand,
 } from "../../application/index.js";
-import { ChildAuthoringSection } from "../inspector/ChildAuthoringSection.js";
 import type { WorkspaceLocale } from "../../workspace/index.js";
 import { Button } from "../primitives/Button.js";
-import {
-  criterionStatusKey,
-  depthMessageKey,
-  lifecycleMessageKey,
-  t,
-} from "../i18n/index.js";
+import { criterionStatusKey, t } from "../i18n/index.js";
 
 function RequiredMarker() {
   return (
@@ -79,174 +71,23 @@ function unmetLabel(locale: WorkspaceLocale, requirement: CloseRequirement): str
   }
 }
 
-function actionClass(
-  kind: "activate" | "park" | "resume" | "close" | "return",
-  availability: ActionAvailability,
-): "primary" | "secondary" | "ghost" {
-  const closePrimary = availability.canClose && availability.canPark;
-  const resumePrimary = availability.canResume;
-
-  if (kind === "resume") {
-    return resumePrimary ? "primary" : "secondary";
-  }
-  if (kind === "close") {
-    return closePrimary ? "primary" : "secondary";
-  }
-  if (kind === "activate") {
-    const activatePrimary =
-      availability.canActivate && !resumePrimary && !availability.canClose;
-    return activatePrimary ? "primary" : "ghost";
-  }
-  if (kind === "park") {
-    return "secondary";
-  }
-  return "ghost";
-}
-
-export function NodeActions({
-  nodeId,
-  availability,
-  readiness,
-  locale,
-  actionError,
-  onCommand,
-  onOpenChat,
-  onAskSummary,
-}: {
-  nodeId: string;
-  availability: ActionAvailability;
-  readiness: CloseReadiness;
-  locale: WorkspaceLocale;
-  actionError?: string;
-  onCommand: (command: UiCommand) => boolean | void;
-  onOpenChat?: () => void;
-  onAskSummary?: () => void;
-}) {
-  const unmet = readiness.requirements.filter((requirement) => !requirement.met);
-
-  return (
-    <div className="node-actions" data-testid="node-actions">
-      {availability.canActivate ? (
-        <Button
-          variant={actionClass("activate", availability)}
-          data-testid="action-activate"
-          onClick={() => onCommand({ type: "activateNode", nodeId })}
-        >
-          {t(
-            locale,
-            availability.activateLabel === "startLearning"
-              ? "actions.startLearning"
-              : "actions.enterQuestion",
-          )}
-        </Button>
-      ) : null}
-      {availability.canPark ? (
-        <Button
-          variant={actionClass("park", availability)}
-          data-testid="action-park"
-          onClick={() => onCommand({ type: "parkNode", nodeId })}
-        >
-          {t(locale, "actions.park")}
-        </Button>
-      ) : null}
-      {availability.canResume ? (
-        <Button
-          variant={actionClass("resume", availability)}
-          data-testid="action-resume"
-          onClick={() => onCommand({ type: "resumeNode", nodeId })}
-        >
-          {t(locale, "actions.resume")}
-        </Button>
-      ) : null}
-      {availability.canClose ? (
-        <Button
-          variant={actionClass("close", availability)}
-          data-testid="action-close"
-          disabled={!readiness.allowed}
-          onClick={() => onCommand({ type: "closeNode", nodeId })}
-        >
-          {t(locale, "actions.close")}
-        </Button>
-      ) : null}
-      {availability.canReturnToParent ? (
-        <Button
-          variant={actionClass("return", availability)}
-          data-testid="action-return-to-parent"
-          onClick={() => onCommand({ type: "returnToParent" })}
-        >
-          {t(locale, "actions.returnToParent")}
-        </Button>
-      ) : null}
-      {onOpenChat ? (
-        <Button variant="ghost" data-testid="chat-open" onClick={onOpenChat}>
-          {t(locale, "chat.open")}
-        </Button>
-      ) : null}
-      {availability.canClose && unmet.length > 0 ? (
-        <div className="close-unmet" data-testid="close-unmet">
-          <p>{t(locale, "close.stillNeeded")}</p>
-          <ul>
-            {unmet.flatMap((requirement, index) => {
-              if (
-                requirement.kind === "blockingChildren" &&
-                requirement.questions.length > 0
-              ) {
-                return requirement.questions.map((question) => (
-                  <li key={`child-${question}`}>
-                    * {t(locale, "close.needChild", { question })}
-                  </li>
-                ));
-              }
-              return [
-                <li key={`${requirement.kind}-${index}`}>
-                  * {unmetLabel(locale, requirement)}
-                  {requirement.kind === "summary" && onAskSummary ? (
-                    <Button
-                      variant="ghost"
-                      data-testid="close-ask-ai-summary"
-                      onClick={onAskSummary}
-                    >
-                      {t(locale, "close.askAiSummary")}
-                    </Button>
-                  ) : null}
-                </li>,
-              ];
-            })}
-          </ul>
-        </div>
-      ) : null}
-      {actionError ? (
-        <p className="node-action-error" role="alert" data-testid="node-action-error">
-          {actionError}
-        </p>
-      ) : null}
-    </div>
-  );
-}
-
 export function NodeDetails({
   inspector,
-  availability,
   readiness,
-  authoring,
   locale,
   actionError,
-  authoringError,
   onCommand,
   onClose,
-  onOpenChat,
+  onComplete,
   onAskSummary,
 }: {
   inspector: InspectorViewModel;
-  availability?: ActionAvailability;
   readiness?: CloseReadiness;
-  authoring?: AuthoringAvailability;
   locale: WorkspaceLocale;
   actionError?: string;
-  authoringError?: string;
   onCommand: (command: UiCommand) => boolean | void;
   onClose: () => void;
-  onOpenChat?: () => void;
+  onComplete: () => void;
   onAskSummary?: () => void;
 }) {
   if (!inspector.hasFocus || inspector.nodeId === undefined) {
@@ -258,12 +99,9 @@ export function NodeDetails({
     );
   }
 
-  const showCloseRequirements = availability?.canClose === true;
+  const showCloseRequirements = inspector.lifecycle !== "closed";
   const summaryRequirement = readiness?.requirements.find(
     (requirement) => requirement.kind === "summary",
-  );
-  const blockingRequirement = readiness?.requirements.find(
-    (requirement) => requirement.kind === "blockingChildren",
   );
   const hasRequiredCriterion = (readiness?.requirements ?? []).some(
     (requirement) => requirement.kind === "criterion",
@@ -271,112 +109,23 @@ export function NodeDetails({
   const hasRequiredEvidence = (readiness?.requirements ?? []).some(
     (requirement) => requirement.kind === "evidence",
   );
-  const recordUnmet =
-    showCloseRequirements &&
-    (readiness?.requirements ?? []).some(
-      (requirement) =>
-        !requirement.met &&
-        (requirement.kind === "summary" ||
-          requirement.kind === "criterion" ||
-          requirement.kind === "evidence"),
-    );
+  const unmet = (readiness?.requirements ?? []).filter(
+    (requirement) => !requirement.met,
+  );
 
   return (
     <section className="inspector" data-testid="node-inspector">
       <InspectorChrome locale={locale} onClose={onClose} />
       <div className="details-section">
-        <h3 className="details-heading">{t(locale, "inspector.identity")}</h3>
-        <dl className="inspector-fields">
-          <div>
-            <dt>{t(locale, "inspector.question")}</dt>
-            <dd data-testid="inspector-question">{inspector.question}</dd>
-          </div>
-          <div>
-            <dt>{t(locale, "inspector.goal")}</dt>
-            <dd data-testid="inspector-goal">{inspector.goal}</dd>
-          </div>
-        </dl>
+        <h3 className="details-heading">{t(locale, "inspector.question")}</h3>
+        <p className="inspector-question" data-testid="inspector-question">
+          {inspector.question}
+        </p>
       </div>
       <div className="details-section">
-        <h3 className="details-heading">{t(locale, "inspector.status")}</h3>
-        <dl className="inspector-fields">
-          <div>
-            <dt>{t(locale, "inspector.lifecycle")}</dt>
-            <dd data-testid="inspector-lifecycle">
-              {inspector.lifecycle
-                ? t(locale, lifecycleMessageKey(inspector.lifecycle))
-                : ""}
-            </dd>
-          </div>
-          <div>
-            <dt>
-              {showCloseRequirements && blockingRequirement ? <RequiredMarker /> : null}
-              {t(locale, "inspector.blocked")}
-            </dt>
-            <dd data-testid="inspector-blocked">
-              {(inspector.unresolvedBlockerCount ?? 0) > 0
-                ? t(locale, "node.blocked", {
-                    count: inspector.unresolvedBlockerCount ?? 0,
-                  })
-                : t(locale, "inspector.blockedNone")}
-              {showCloseRequirements && blockingRequirement ? (
-                <RequirementStatus
-                  locale={locale}
-                  requirement={blockingRequirement}
-                  testId="blocked-status"
-                />
-              ) : null}
-            </dd>
-          </div>
-        </dl>
-      </div>
-      {availability && readiness ? (
-        <div className="details-section">
-          <h3 className="details-heading">{t(locale, "inspector.actions")}</h3>
-          <NodeActions
-            nodeId={inspector.nodeId}
-            availability={availability}
-            readiness={readiness}
-            locale={locale}
-            actionError={actionError}
-            onCommand={onCommand}
-            onOpenChat={onOpenChat}
-            onAskSummary={onAskSummary}
-          />
-        </div>
-      ) : null}
-      {authoring ? (
-        <div className="details-section">
-          <h3 className="details-heading">{t(locale, "inspector.structure")}</h3>
-          <ChildAuthoringSection
-            parentId={inspector.nodeId}
-            children={inspector.children}
-            availability={authoring}
-            locale={locale}
-            authoringError={authoringError}
-            onCommand={onCommand}
-          />
-        </div>
-      ) : null}
-      <details
-        className="inspector-details"
-        data-testid="inspector-details"
-        open={recordUnmet ? true : undefined}
-      >
-        <summary>{t(locale, "inspector.record")}</summary>
-        <dl className="inspector-fields">
-          <div>
-            <dt>{t(locale, "inspector.targetDepth")}</dt>
-            <dd data-testid="inspector-depth">
-              {inspector.targetDepth
-                ? t(locale, depthMessageKey(inspector.targetDepth))
-                : ""}
-            </dd>
-          </div>
-        </dl>
-        <h3 data-testid="inspector-dod-heading">
+        <h3 className="details-heading" data-testid="inspector-dod-heading">
           {showCloseRequirements && hasRequiredCriterion ? <RequiredMarker /> : null}
-          {t(locale, "inspector.dod")}
+          {t(locale, "inspector.criteria")}
         </h3>
         {inspector.definitionOfDone.length === 0 ? (
           <p className="empty">{t(locale, "inspector.noCriteria")}</p>
@@ -419,27 +168,6 @@ export function NodeDetails({
             })}
           </ul>
         )}
-
-        <h3 data-testid="inspector-evidence-heading">
-          {showCloseRequirements && hasRequiredEvidence ? (
-            <span data-testid="evidence-required-marker">
-              <RequiredMarker />
-            </span>
-          ) : null}
-          {t(locale, "inspector.evidence")}
-        </h3>
-        {inspector.evidence.length === 0 ? (
-          <p className="empty">{t(locale, "inspector.noEvidence")}</p>
-        ) : (
-          <ul data-testid="inspector-evidence">
-            {inspector.evidence.map((item) => (
-              <li key={item.id}>
-                {item.type}: {item.reference}
-                {item.note ? ` — ${item.note}` : ""}
-              </li>
-            ))}
-          </ul>
-        )}
         {showCloseRequirements
           ? readiness?.requirements
               .filter((requirement) => requirement.kind === "evidence")
@@ -452,14 +180,59 @@ export function NodeDetails({
                 />
               ))
           : null}
-
-        <h3 data-testid="inspector-summary-heading">
+        {showCloseRequirements && hasRequiredEvidence ? (
+          <>
+            <h4 data-testid="inspector-evidence-heading">
+              <span data-testid="evidence-required-marker">
+                <RequiredMarker />
+              </span>
+              {t(locale, "inspector.evidence")}
+            </h4>
+            {inspector.evidence.length === 0 ? (
+              <p className="empty">{t(locale, "inspector.noEvidence")}</p>
+            ) : (
+              <ul data-testid="inspector-evidence">
+                {inspector.evidence.map((item) => (
+                  <li key={item.id}>
+                    {item.type}: {item.reference}
+                    {item.note ? ` — ${item.note}` : ""}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {readiness?.requirements
+              .filter((requirement) => requirement.kind === "evidence")
+              .map((requirement) => (
+                <RequirementStatus
+                  key={requirement.criterionId}
+                  locale={locale}
+                  requirement={requirement}
+                  testId={`evidence-status-${requirement.criterionId}`}
+                />
+              ))}
+          </>
+        ) : inspector.evidence.length > 0 ? (
+          <>
+            <h4 data-testid="inspector-evidence-heading">{t(locale, "inspector.evidence")}</h4>
+            <ul data-testid="inspector-evidence">
+              {inspector.evidence.map((item) => (
+                <li key={item.id}>
+                  {item.type}: {item.reference}
+                  {item.note ? ` — ${item.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </div>
+      <div className="details-section">
+        <h3 className="details-heading" data-testid="inspector-summary-heading">
           {showCloseRequirements && summaryRequirement ? (
             <span data-testid="summary-required-marker">
               <RequiredMarker />
             </span>
           ) : null}
-          {t(locale, "inspector.summary")}
+          {t(locale, "inspector.notes")}
           {showCloseRequirements && summaryRequirement ? (
             <RequirementStatus
               locale={locale}
@@ -471,7 +244,60 @@ export function NodeDetails({
         <p data-testid="inspector-summary">
           {inspector.summary ?? t(locale, "inspector.noSummary")}
         </p>
-      </details>
+        {showCloseRequirements &&
+        summaryRequirement &&
+        !summaryRequirement.met &&
+        onAskSummary ? (
+          <Button
+            variant="ghost"
+            data-testid="close-ask-ai-summary"
+            onClick={onAskSummary}
+          >
+            {t(locale, "close.askAiSummary")}
+          </Button>
+        ) : null}
+      </div>
+      {inspector.lifecycle !== "closed" && readiness ? (
+        <div className="details-section details-complete">
+          <Button
+            variant="primary"
+            data-testid="action-close"
+            disabled={!readiness.allowed}
+            onClick={onComplete}
+          >
+            {t(locale, "actions.close")}
+          </Button>
+          {unmet.length > 0 ? (
+            <div className="close-unmet" data-testid="close-unmet">
+              <p>{t(locale, "close.stillNeeded")}</p>
+              <ul>
+                {unmet.flatMap((requirement, index) => {
+                  if (
+                    requirement.kind === "blockingChildren" &&
+                    requirement.questions.length > 0
+                  ) {
+                    return requirement.questions.map((question) => (
+                      <li key={`child-${question}`}>
+                        * {t(locale, "close.needChild", { question })}
+                      </li>
+                    ));
+                  }
+                  return [
+                    <li key={`${requirement.kind}-${index}`}>
+                      * {unmetLabel(locale, requirement)}
+                    </li>,
+                  ];
+                })}
+              </ul>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+      {actionError ? (
+        <p className="node-action-error" role="alert" data-testid="node-action-error">
+          {actionError}
+        </p>
+      ) : null}
     </section>
   );
 }

@@ -338,28 +338,19 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("Question details");
-    expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Start learning",
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
+      "Completion criteria",
     );
-    expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
-    expect(screen.getByTestId("inspector-depth")).toHaveTextContent("Level 1");
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent(
+      "Learning notes",
+    );
+    expect(screen.queryByTestId("action-activate")).not.toBeInTheDocument();
+    expect(screen.getByTestId(`node-add-child-${projectA.ids.q2}`)).toBeInTheDocument();
 
-    await user.click(screen.getByTestId(`node-${projectA.ids.q12}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent(
-      "Continue later",
-    );
-    await user.click(screen.getByTestId(`node-${projectA.ids.q11}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
     expect(screen.getByTestId("action-close")).toHaveTextContent("Complete");
-    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
-      "open sub-questions",
-    );
-    expect(screen.getByTestId(`lifecycle-badge-${projectA.ids.q1}`)).toHaveTextContent(
-      "Learning",
-    );
+    expect(screen.queryByTestId("inspector-lifecycle")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-open")).not.toBeInTheDocument();
 
     await user.click(screen.getByTestId("settings-open"));
     await user.click(screen.getByTestId("locale-zh"));
@@ -370,29 +361,12 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("问题详情");
+    expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent("达成条件");
+    expect(screen.getByTestId("inspector-summary-heading")).toHaveTextContent("心得");
     expect(screen.getByTestId("action-close")).toHaveTextContent("完成问题");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("学习中");
     expect(document.documentElement.lang).toBe("zh-CN");
 
     const inspector = screen.getByTestId("node-inspector").textContent ?? "";
-    const chrome = document.body.textContent ?? "";
-    for (const forbidden of [
-      "Open",
-      "Active",
-      "Parked",
-      "Closed",
-      "Blocked",
-      "Dismiss",
-      "Cannot close",
-      "without a summary",
-      "unsatisfied",
-      "satisfied",
-    ]) {
-      expect(chrome).not.toContain(forbidden);
-    }
-    expect(inspector).not.toMatch(/\bopen\b/);
-    expect(inspector).not.toMatch(/\bactive\b/);
-    expect(inspector).not.toMatch(/\bclosed\b/);
-    expect(inspector).not.toMatch(/\bparked\b/);
+    expect(inspector).not.toMatch(/Start learning|开始学习|Enter this question/);
   });
 });

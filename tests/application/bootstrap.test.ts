@@ -133,4 +133,24 @@ describe("bootstrapLearningProject", () => {
     }
     expect(result.error).toEqual({ kind: "ProjectNameRequired" });
   });
+
+  it("generates Chinese guided questions and DoD when locale is zh-CN", async () => {
+    const result = await bootstrapLearningProject(
+      {
+        name: "Vite",
+        source: "https://github.com/vitejs/vite",
+      },
+      sequentialFixturePorts(400),
+      createFixtureRepositoryEvidenceProvider(VITE_GITHUB_FIXTURE),
+      "zh-CN",
+    );
+    if (!result.ok) {
+      throw new Error(result.error.kind);
+    }
+    const firstRootId = result.snapshot.pass.rootNodeIds[0];
+    const firstNode = firstRootId ? result.snapshot.nodes[firstRootId] : undefined;
+    expect(firstNode?.question).toMatch(/主要解决什么问题/);
+    expect(firstNode?.definitionOfDone[0]?.description).toMatch(/项目证据|机制/);
+    expect(result.record.learningValue).toMatch(/这次学习应把/);
+  });
 });

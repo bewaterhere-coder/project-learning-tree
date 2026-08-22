@@ -12,8 +12,6 @@ import {
   isGlobalDomainError,
   isProjectCreateCommand,
   isProjectMetadataCommand,
-  selectActionAvailability,
-  selectAuthoringAvailability,
   selectCloseReadiness,
   selectCoreQuestionAuthoring,
   selectInspectorViewModel,
@@ -188,23 +186,11 @@ export function App({
     () => (current ? selectInspectorViewModel(current.snapshot) : undefined),
     [current],
   );
-  const availability = useMemo(() => {
-    if (!current || inspector?.nodeId === undefined) {
-      return undefined;
-    }
-    return selectActionAvailability(current.snapshot, inspector.nodeId);
-  }, [inspector?.nodeId, current]);
   const readiness = useMemo(() => {
     if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectCloseReadiness(current.snapshot, inspector.nodeId);
-  }, [inspector?.nodeId, current]);
-  const authoring = useMemo(() => {
-    if (!current || inspector?.nodeId === undefined) {
-      return undefined;
-    }
-    return selectAuthoringAvailability(current.snapshot, inspector.nodeId);
   }, [inspector?.nodeId, current]);
   const coreAuthoring = useMemo(
     () => (current ? selectCoreQuestionAuthoring(current.snapshot) : undefined),
@@ -665,8 +651,10 @@ export function App({
                         recommendedNodeIds={
                           current.bootstrap?.recommendedFocusNodeIds ?? []
                         }
+                        locale={locale}
                         onFocusNode={handleFocusNode}
                         onOpenChatForNode={handleOpenChatForNode}
+                        onCommand={dispatch}
                         onNodeDragStop={handleNodeDragStop}
                         onViewportChange={handleViewportChange}
                       />
@@ -775,30 +763,35 @@ export function App({
             >
               <NodeDetails
                 inspector={inspector}
-                availability={availability}
                 readiness={readiness}
-                authoring={authoring}
                 locale={locale}
                 actionError={
                   actionError
                     ? formatPresentedError(locale, actionError, current.snapshot)
                     : undefined
                 }
-                authoringError={
-                  authoringError
-                    ? formatPresentedError(
-                        locale,
-                        authoringError,
-                        current.snapshot,
-                      )
-                    : undefined
-                }
                 onCommand={dispatch}
+                onComplete={() => {
+                  const nodeId = inspector.nodeId;
+                  if (nodeId === undefined) {
+                    return;
+                  }
+                  let next = workspaceRef.current;
+                  const before = selectedProject(next)?.snapshot;
+                  const node = before?.nodes[nodeId];
+                  const lifecycle = node?.lifecycle;
+                  if (lifecycle === "open") {
+                    next = applySelectedCommand(next, {
+                      type: "activateNode",
+                      nodeId,
+                    });
+                  }
+                  next = applySelectedCommand(next, { type: "closeNode", nodeId });
+                  const after = selectedProject(next)?.snapshot;
+                  commit(next, before !== after);
+                }}
                 onClose={() =>
                   commit(setInspectorOpen(workspaceRef.current, false), false)
-                }
-                onOpenChat={() =>
-                  commit(openChat(workspaceRef.current), false)
                 }
                 onAskSummary={() => {
                   commit(openChat(workspaceRef.current), false);

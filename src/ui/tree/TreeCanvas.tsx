@@ -9,7 +9,8 @@ import {
 } from "@xyflow/react";
 import { useCallback, useMemo, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
-import type { NodePosition, Viewport } from "../../workspace/index.js";
+import type { UiCommand } from "../../application/index.js";
+import type { NodePosition, Viewport, WorkspaceLocale } from "../../workspace/index.js";
 import {
   ClusterRegionFlowNode,
   toClusterFlowNodes,
@@ -30,11 +31,13 @@ function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
       <LearningNodeHandles />
       <LearningNode
         data={data}
+        locale={data.locale ?? "en-US"}
         onOpenChat={
           data.onOpenChatForNode
             ? () => data.onOpenChatForNode?.(data.id)
             : undefined
         }
+        onCommand={data.onCommand}
       />
     </>
   );
@@ -51,8 +54,10 @@ export function TreeCanvas({
   viewport,
   persistViewport = true,
   recommendedNodeIds = [],
+  locale,
   onFocusNode,
   onOpenChatForNode,
+  onCommand,
   onNodeDragStop,
   onViewportChange,
 }: {
@@ -61,8 +66,10 @@ export function TreeCanvas({
   viewport: Viewport;
   persistViewport?: boolean;
   recommendedNodeIds?: readonly NodeId[];
+  locale: WorkspaceLocale;
   onFocusNode: (nodeId: NodeId) => void;
   onOpenChatForNode: (nodeId: NodeId) => void;
+  onCommand: (command: UiCommand) => boolean | void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
@@ -76,10 +83,12 @@ export function TreeCanvas({
         ...node,
         data: {
           ...node.data,
+          locale,
           onOpenChatForNode,
+          onCommand,
         },
       })),
-    [onOpenChatForNode],
+    [locale, onCommand, onOpenChatForNode],
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);

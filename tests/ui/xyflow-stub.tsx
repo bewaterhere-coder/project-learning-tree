@@ -8,7 +8,9 @@ interface StubNode {
   position?: { x: number; y: number };
   data: TreeNodeView & {
     isRecommended?: boolean;
+    locale?: "en-US" | "zh-CN";
     onOpenChatForNode?: (nodeId: string) => void;
+    onCommand?: (command: import("../../src/application/commands.js").UiCommand) => boolean | void;
     region?: { rootId: string; title: string };
   };
 }
@@ -96,11 +98,13 @@ export function ReactFlow({
           >
             <LearningNode
               data={{ ...node.data }}
+              locale={node.data.locale ?? "en-US"}
               onOpenChat={
                 node.data.onOpenChatForNode
                   ? () => node.data.onOpenChatForNode?.(node.id)
                   : undefined
               }
+              onCommand={node.data.onCommand}
             />
           </div>
           <button

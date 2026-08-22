@@ -53,4 +53,24 @@ describe("stub provider", () => {
       expect(reply.proposals[0].summary).not.toContain("user:");
     }
   });
+
+  it("returns Chinese proposals and answers when locale is zh-CN", async () => {
+    const { snapshot, ids } = createDemoTreeFixture();
+    const context = selectLearningContext(snapshot, {
+      kind: "node",
+      projectId: snapshot.project.id,
+      nodeId: ids.q1,
+    });
+    const reply = await createStubProvider().complete({
+      identity: { kind: "node", projectId: snapshot.project.id, nodeId: ids.q1 },
+      context,
+      input: "接下来该关注什么？",
+      locale: "zh-CN",
+    });
+    expect(reply.answer).toMatch(/围绕/);
+    expect(reply.proposals[0]?.type).toBe("question");
+    if (reply.proposals[0]?.type === "question") {
+      expect(reply.proposals[0].goal).toMatch(/理解/);
+    }
+  });
 });
