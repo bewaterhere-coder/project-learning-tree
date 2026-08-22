@@ -1,6 +1,6 @@
 import type { DomainSnapshot, NodeId } from "../../domain/index.js";
 
-export type ActivateLabel = "开始学习" | "进入这个问题";
+export type ActivateLabel = "startLearning" | "enterQuestion";
 
 export interface ActionAvailability {
   canActivate: boolean;
@@ -14,7 +14,7 @@ export interface ActionAvailability {
 export function activateLabelFor(node: {
   parentId?: NodeId;
 }): ActivateLabel {
-  return node.parentId === undefined ? "开始学习" : "进入这个问题";
+  return node.parentId === undefined ? "startLearning" : "enterQuestion";
 }
 
 export function selectActionAvailability(
@@ -25,7 +25,7 @@ export function selectActionAvailability(
   if (!node) {
     return {
       canActivate: false,
-      activateLabel: "开始学习",
+      activateLabel: "startLearning",
       canPark: false,
       canResume: false,
       canClose: false,

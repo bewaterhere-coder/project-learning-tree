@@ -88,4 +88,19 @@ describe("import and state boundaries", () => {
     expect(adapter).not.toContain("focusNode");
     expect(adapter).not.toMatch(/nodes\[.*\]\.data\.lifecycle\s*=/);
   });
+
+  it("keeps canvas dragging layout-only and never creates connections", () => {
+    const canvas = readFileSync(
+      join(ROOT, "src/ui/tree/TreeCanvas.tsx"),
+      "utf8",
+    );
+    expect(canvas).toContain("nodesConnectable={false}");
+    expect(canvas).toContain("edgesReconnectable={false}");
+    expect(canvas).toContain("deleteKeyCode={null}");
+    expect(canvas).toContain("layoutOnlyNodeChanges");
+    expect(canvas).not.toContain("onConnect");
+    expect(canvas).not.toContain("onEdgesChange");
+    expect(canvas).not.toContain("activateNode");
+    expect(canvas).not.toContain("createBlockingChild");
+  });
 });

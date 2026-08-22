@@ -1,14 +1,18 @@
 import {
   clampInspectorWidth,
   clampSidebarWidth,
-  DEFAULT_INSPECTOR_WIDTH,
-  DEFAULT_SIDEBAR_WIDTH,
-  DEFAULT_VIEWPORT,
-  defaultProjectLayout,
-  defaultShell,
   WORKSPACE_PREFERENCES_KEY,
 } from "./defaults.js";
-import { LAYOUT_VERSION, type LearningWorkspace, type PreferenceStorage, type ProjectWorkspaceLayout, type StoredWorkspacePreferences, type Viewport, type WorkspaceLocale, type WorkspaceShellLayout } from "./types.js";
+import {
+  LAYOUT_VERSION,
+  type LearningWorkspace,
+  type PreferenceStorage,
+  type ProjectWorkspaceLayout,
+  type StoredWorkspacePreferences,
+  type Viewport,
+  type WorkspaceLocale,
+  type WorkspaceShellLayout,
+} from "./types.js";
 
 const DOMAIN_SNAPSHOT_KEYS = [
   "snapshot",
@@ -254,5 +258,3 @@ function cloneLayout(layout: ProjectWorkspaceLayout): ProjectWorkspaceLayout {
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
-
-export { DEFAULT_INSPECTOR_WIDTH, DEFAULT_SIDEBAR_WIDTH, DEFAULT_VIEWPORT, defaultProjectLayout, defaultShell };

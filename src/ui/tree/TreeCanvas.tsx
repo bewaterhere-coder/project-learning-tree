@@ -1,13 +1,16 @@
 import {
+  applyNodeChanges,
   Background,
   ReactFlow,
   type NodeMouseHandler,
   type OnMove,
   type OnNodeDrag,
+  type OnNodesChange,
 } from "@xyflow/react";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
 import type { NodePosition, Viewport } from "../../workspace/index.js";
+import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
 import { LearningNode } from "./LearningNode.js";
 import { toReactFlow, type LearningFlowNode } from "./to-react-flow.js";
 
@@ -28,16 +31,33 @@ export function TreeCanvas({
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
-  const { nodes, edges } = useMemo(
+  const derived = useMemo(
     () => toReactFlow(model, savedPositions),
     [model, savedPositions],
   );
+  const [nodes, setNodes] = useState(derived.nodes);
+  const [derivedNodes, setDerivedNodes] = useState(derived.nodes);
+  if (derived.nodes !== derivedNodes) {
+    setDerivedNodes(derived.nodes);
+    setNodes(derived.nodes);
+  }
 
   const handleNodeClick: NodeMouseHandler<LearningFlowNode> = useCallback(
     (_event, node) => {
       onFocusNode(node.id);
     },
     [onFocusNode],
+  );
+
+  const handleNodesChange: OnNodesChange<LearningFlowNode> = useCallback(
+    (changes) => {
+      const layoutChanges = layoutOnlyNodeChanges(changes);
+      if (layoutChanges.length === 0) {
+        return;
+      }
+      setNodes((current) => applyNodeChanges(layoutChanges, current));
+    },
+    [],
   );
 
   const handleNodeDragStop: OnNodeDrag<LearningFlowNode> = useCallback(
@@ -48,7 +68,10 @@ export function TreeCanvas({
   );
 
   const handleMoveEnd: OnMove = useCallback(
-    (_event, nextViewport) => {
+    (event, nextViewport) => {
+      if (event === null) {
+        return;
+      }
       onViewportChange({
         x: nextViewport.x,
         y: nextViewport.y,
@@ -62,14 +85,17 @@ export function TreeCanvas({
     <div className="tree-canvas-host">
       <ReactFlow<LearningFlowNode>
         nodes={nodes}
-        edges={edges}
+        edges={derived.edges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
+        onNodesChange={handleNodesChange}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={handleMoveEnd}
         nodesDraggable
         nodesConnectable={false}
+        edgesReconnectable={false}
         elementsSelectable
+        deleteKeyCode={null}
         panOnDrag
         zoomOnScroll
         defaultViewport={viewport}

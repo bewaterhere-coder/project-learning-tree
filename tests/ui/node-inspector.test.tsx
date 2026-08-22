@@ -20,7 +20,9 @@ describe("node inspector", () => {
 
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("open");
-    expect(screen.getByTestId("action-activate")).toHaveTextContent("开始学习");
+    expect(screen.getByTestId("action-activate")).toHaveTextContent(
+      "Start learning",
+    );
 
     await user.click(screen.getByTestId(`node-${ids.q1}`));
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q1");
@@ -31,7 +33,7 @@ describe("node inspector", () => {
     );
   });
 
-  it("uses 进入这个问题 for a blocking child", () => {
+  it("uses Enter this question for a blocking child", () => {
     const { snapshot, ids } = createBlockedBranchFixture();
     const focused = dispatchCommand(createSession(snapshot), {
       type: "focusNode",
@@ -39,7 +41,7 @@ describe("node inspector", () => {
     });
     render(<App initialSnapshot={focused.snapshot} />);
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "进入这个问题",
+      "Enter this question",
     );
   });
 });

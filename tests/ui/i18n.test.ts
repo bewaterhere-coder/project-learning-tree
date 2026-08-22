@@ -14,6 +14,8 @@ describe("i18n message catalogs", () => {
       "inspector.open",
       "inspector.noFocus",
       "inspector.question",
+      "actions.startLearning",
+      "actions.enterQuestion",
     ] as const;
 
     for (const key of required) {
