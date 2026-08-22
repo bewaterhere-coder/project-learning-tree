@@ -9,7 +9,7 @@ requirement: ../requirements/TASK-003-project-root-editable-metadata-tree-init.m
 
 This is the canonical implementation plan for TASK-003. It records code evidence for the requirement’s planning surface and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `implementation` — Plan approved (`plan_approved=true`). Product implementation in progress on this branch.
+**Gate:** `acceptance` — implementation complete on this branch; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 ## Review revisions (PR review 5000617595)
 
