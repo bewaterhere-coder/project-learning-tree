@@ -13,6 +13,18 @@ This is the canonical implementation plan for TASK-006. It records code evidence
 
 **Gate:** `planning` — awaiting ChatGPT plan review (`plan_approved=true`). **Do not implement production code until that gate flips.**
 
+## Review revisions (PR #27 plan review)
+
+Blocking finding addressed in this revision:
+
+1. **Reject Decision A (`implicit activate`)** — Hidden `activateNode()` before Complete is not a harmless bridge. `activateNode` → `applyNewStack(pathFromRoot(...))` demotes off-path actives to `open`, marks the new root→target path `active`, and **replaces** `pass.activeStack`. Completing Question B while Question A’s path is active would silently rewrite A’s stack/lifecycles. That reintroduces the learning-state machine as a side effect after the UI stops exposing it.
+
+**Replacement:** Define completion as user-facing `not completed → completed` mapped to Domain `* → closed` **without** requiring Active Stack membership. Make the smallest Domain/Application change to `closeNode` / close-readiness / lifecycle legality so a Question that satisfies convergence can complete from `open` (and from `active` when already on stack, with existing leaf-pop only). **Never** call `activateNode` as a Complete precondition.
+
+**`createBlockingChild`:** Re-evaluated separately. Node Add Child is **ordinary `createChild` only**. TASK-006 does **not** keep a blocking-authoring checkbox; no hidden activate for blocking authoring.
+
+**Required regression:** Completing Question B must not mutate lifecycle / `activeStack` of an unrelated Question A path.
+
 ## Goal
 
 Make the product model match:
@@ -26,12 +38,15 @@ Remove explicit Start Learning / learning-state ceremony from the primary UI. Us
 
 Preserve:
 
-- Domain lifecycle / `activeStack` / `currentFocusNodeId` as internal engine state (no new “learning started” flag)
 - Contextual node chat + conversation persistence
 - Real Question → child Question graph edges
 - `DomainSnapshot` as semantic source of truth
 - Preference store denylist for lifecycle / stack / focus (unchanged)
+- `activeStack` / `activateNode` as optional Domain machinery for other paths — **not** as the user Complete bridge
+- No new “learning started” persisted flag
 - TASK-006 identity independent of TASK-005 (PR #26)
+
+**Explicit Domain change in scope:** smallest relaxation of `closeNode` / close-readiness / lifecycle legality so completion is `未完成 → 已完成` without Active Stack entry (Decision A′).
 
 ## Current-state findings
 
@@ -83,20 +98,23 @@ These are **UI-only ceremony** today and can be removed from primary surfaces wi
 
 **No new persisted “learningStarted” flag exists or is needed.** Semantic snapshot already persists `lifecycle` + `activeStack` + `currentFocusNodeId` ([`semantic.ts`](../../src/workspace/persistence/semantic.ts)). Preferences already exclude those keys.
 
-### 4. Domain constraints that still gate real operations
+### 4. Domain constraints — completion needs a small Domain change
 
-Removing the Start Learning **button** does not remove Domain invariants:
-
-| Operation | Domain gate today | UX impact if UI never calls `activateNode` |
+| Operation | Domain gate today | TASK-006 stance |
 | --- | --- | --- |
-| `createChild` | Parent not `closed` | **OK** — ordinary add-child needs no Start Learning |
-| `createBlockingChild` | Parent must be `active` | Blocking “must resolve first” authoring fails unless activated |
-| `closeNode` / close readiness | Parent must be `active` | Complete fails unless activated |
+| `createChild` | Parent not `closed` | **Keep** — ordinary node Add Child; no activate |
+| `createBlockingChild` | Parent must be `active` | **Out of node UX** — do not expose blocking checkbox; leave Domain op for other callers; **no** hidden activate |
+| `closeNode` / close readiness | Must be `active` today | **Change** — allow complete when convergence/readiness is met **without** Active Stack membership (Decision A′) |
 | Chat / focus / inspect | None | **OK** — click already sufficient |
 
-Evidence: [`operations.ts`](../../src/domain/operations.ts) (`createChild`, `createBlockingChild`, `closeNode`); [`close-readiness.ts`](../../src/application/selectors/close-readiness.ts); [`child-authoring.ts`](../../src/application/selectors/child-authoring.ts).
+Evidence today:
 
-**Plan decision:** Prefer removing UI ceremony over Domain redesign. Use **implicit activation** when a user action requires `active` (Decision A). Do not invent a parallel UI state machine.
+- [`closeNode`](../../src/domain/operations.ts) rejects unless `lifecycle === "active"` (lines ~938–944), then sets `closed`; only if the node is the **stack leaf** does it `activeStack.slice(0, -1)`.
+- [`activateNode`](../../src/domain/operations.ts) calls `applyNewStack(pathFromRoot(...))`, which demotes off-path actives to `open` and **replaces** `activeStack` — unsafe as a Complete side effect.
+- [`selectCloseReadiness`](../../src/application/selectors/close-readiness.ts) sets `allowed: node.lifecycle === "active" && canClose`.
+- [`lifecycle.ts`](../../src/domain/lifecycle.ts) LEGAL table lists only `active → closed` via `"close"` (`isLegalTransition` is currently unused by ops but must stay consistent).
+
+**Plan decision:** Explicit smallest Domain/Application change for completion (Decision A′). Do **not** bridge with hidden `activateNode`.
 
 ### 5. Mapping: `达成条件` / `心得`
 
@@ -131,30 +149,41 @@ i18n today ([`messages.ts`](../../src/ui/i18n/messages.ts)): no keys for `达成
 
 ## Decisions
 
-### A. Implicit activate — hide ceremony, keep Domain
+### A′. Direct completion — `未完成 → 已完成` without Active Stack
 
-When a user action needs `lifecycle === "active"` and the focused node is not active:
+User-facing completion is binary:
 
-1. Application/UI command path runs `activateNode` (or equivalent) **silently**, then the intended op.
-2. Covered actions at minimum: **Complete / close**, and **createBlockingChild** if node still exposes a blocking toggle.
-3. Ordinary `createChild`, chat, focus, Details editing of 心得/达成条件 must **not** require a visible Start Learning step.
-4. Do **not** add persisted UI-only “started” state.
-5. Park / Resume remain Domain ops but are **removed from primary Details UI** (non-goal to redesign stack UX; users should not manage pause/resume as learning ceremony).
+```text
+not completed  →  completed
+(Domain open / parked / …)  →  (Domain closed)
+```
 
-Tests must prove: user can complete a Question and add an ordinary child without ever clicking `action-activate` / seeing `开始学习`.
+It must **not** require entering `active` / rewriting `activeStack` first.
+
+**Smallest Domain/Application change (explicit):**
+
+1. **`closeNode`** — Allow close when convergence/`canClose` is true and the node is not already `closed`, including from **`open`** (primary TASK-006 path). Keep existing behavior for an already-`active` **stack leaf**: set `closed` and pop that leaf only (`activeStack.slice(0, -1)`). Do **not** call `activateNode` / `applyNewStack` inside Complete.
+2. **`lifecycle.ts` LEGAL** — Add `open → closed` via `"close"` (and `parked → closed` via `"close"` if parked nodes would otherwise become a trap after Park UI is removed). Keep `active → closed`.
+3. **`selectCloseReadiness`** — `allowed` must not require `lifecycle === "active"`; gate on convergence/`canClose` and not-already-closed (plus any existing Project Root close guards that still apply).
+4. **Stack isolation invariant** — Completing Question B that is **not** on `activeStack` must leave `activeStack` and every unrelated node’s `lifecycle` unchanged (especially Question A’s path).
+5. **No hidden activate** — Application Complete / node Complete command path must invoke `closeNode` (or a thin wrapper) only — never `activateNode` as a precondition.
+6. **Park / Resume** — Remain Domain ops; remove from primary Details UI. Do not redesign stack UX in this task.
+7. **No new persisted “learning started” flag.**
+
+Existing Domain tests that assume “must activate before close” will be updated to the new contract; Active Stack bijection helpers remain for paths that still use activate.
 
 ### B. Complete / 已完成 lives on the Question node
 
 - Move completion affordance to the Question card (label `已完成` in zh-CN; en-US “Mark complete” / “Completed” as appropriate).
-- Disable or explain unmet close readiness using existing readiness model (summary / criteria / blocking children) without forcing Start Learning.
+- Enable when Decision A′ readiness says allowed (summary / 达成条件 / blocking-children convergence — **not** “is active”).
 - Remove Close from Details `NodeActions` along with the rest of the action dashboard.
-- Optional: keep a compact unmet-readiness hint near the node complete control or in Details under 心得/达成条件 — not a second navigation system.
+- Optional: compact unmet-readiness hint near the node control or under Details 心得/达成条件 — not a second navigation system.
 
 ### C. Add child on the node; remove from Details
 
-- Add a node-level control (icon/button, `添加子问题`) that opens a small authoring affordance (inline popover/form or lightweight dialog) calling existing `createChild`.
-- Default path: **ordinary child** (no activate required).
-- Blocking relationship: either (1) omit from node MVP and leave advanced blocking to chat proposals, or (2) keep a secondary “must resolve first” checkbox that uses Decision A. Prefer (1) for ceremony reduction unless existing tests force blocking from the same form — then use (2) with implicit activate.
+- Add a node-level control (icon/button, `添加子问题`) that opens a small authoring affordance calling existing **`createChild` only**.
+- **Do not** expose a blocking / “must resolve first” checkbox on the node in TASK-006.
+- **`createBlockingChild`** stays in Domain for other callers (e.g. legacy tests, chat proposals that already require parent `active`); TASK-006 UI must not introduce hidden activate to support it.
 - Remove `ChildAuthoringSection` (and Structure section) from Question Details so Details is not a duplicate authoring surface.
 - Preserve graph edges via existing domain ops; no visual-only children.
 
@@ -216,61 +245,64 @@ Ordered for reviewability; each slice should leave tests green.
 - Promote 达成条件 + 心得; wire `setNodeSummary` (and criterion add) from Details.
 - Update i18n keys; hide Status lifecycle ceremony.
 
-### Slice 2 — Node add-child
+### Slice 2 — Node add-child (`createChild` only)
 
 - Extend `LearningNode` / `TreeCanvas` / App command wiring with add-child control.
+- Call `createChild` only; no blocking checkbox; no `createBlockingChild` from this UX.
 - Reuse validation from [`validateChildDraft`](../../src/application/selectors/child-authoring.ts).
 - Extend tree view model only if needed for child count (optional light metadata).
 
-### Slice 3 — Node complete + implicit activate
+### Slice 3 — Domain direct complete + node Complete
 
-- Node-level Complete using existing `closeNode` + readiness.
-- Application helper: ensure active (silent `activateNode`) before close / blocking-child if retained.
-- Prove no Start Learning click required.
+- Domain: relax `closeNode` + LEGAL + `selectCloseReadiness` per Decision A′.
+- Node-level Complete (`已完成`) calls close/readiness **without** `activateNode`.
+- Domain unit tests for open→closed when convergence met; update tests that required activate-before-close.
+- **Regression (required):** Given Question A on `activeStack`, When complete ready Question B (sibling/other branch, still `open`), Then B is `closed` and A’s path `lifecycle` values + `activeStack` are unchanged; `assertActiveBijection` still holds.
 
 ### Slice 4 — Tests + acceptance hardening
 
 - Rewrite UI tests that assert `action-activate`, Details chat/add-child, lifecycle “学习中” in primary inspector.
 - Keep / extend node-chat persistence tests.
-- Add Given/When/Then coverage for: focus → chat; focus → add child; Details edits 心得; complete without Start Learning; no Details duplicate actions.
+- Add Given/When/Then coverage for: focus → chat; focus → add child; Details edits 心得; complete from `open` without Start Learning; no Details duplicate actions; A/B stack isolation on complete.
 
 ## Files likely to change
 
 | Area | Paths |
 | --- | --- |
+| **Domain (explicit)** | `src/domain/operations.ts` (`closeNode`), `src/domain/lifecycle.ts` |
+| Selectors | `src/application/selectors/close-readiness.ts`; `action-availability.ts` may shrink for UI |
 | Node UI | `src/ui/tree/LearningNode.tsx`, `TreeCanvas.tsx`, related CSS |
-| Details | `src/ui/contextual/NodeDetails.tsx`, possibly slim/retire `ChildAuthoringSection` from Details mount |
-| App wiring | `src/ui/App.tsx`, session helpers if implicit activate lives in workspace/application |
-| Selectors | `action-availability.ts` (may remain for internal use), `tree-view-model.ts`, close-readiness consumers |
+| Details | `src/ui/contextual/NodeDetails.tsx`, unmount `ChildAuthoringSection` from Details |
+| App wiring | `src/ui/App.tsx` (node complete / add-child commands — **no** activate-before-close helper) |
 | i18n | `src/ui/i18n/messages.ts`, `labels.ts` if lifecycle keys drop from primary UI |
-| Tests | `tests/ui/node-inspector.test.tsx`, `workspace-shell.test.tsx`, `tree-interactions.test.tsx`, `child-authoring.test.tsx`, `node-chat.test.tsx`, `tests/application/tree-ui.test.ts`; add focused TASK-006 UI tests as needed |
-
-Domain (`src/domain/**`) should stay unchanged unless Slice 3 proves an invariant cannot be satisfied via implicit activate — escalate in implementation notes rather than preemptively redesigning lifecycle.
+| Tests | Domain close/integrity tests; `tests/ui/node-inspector.test.tsx`, `workspace-shell.test.tsx`, `tree-interactions.test.tsx`, `child-authoring.test.tsx`, `node-chat.test.tsx`, `tests/application/tree-ui.test.ts`, `close-readiness` tests; **new** A/B stack-isolation complete regression |
 
 ## Acceptance mapping
 
 | AC | Plan coverage |
 | --- | --- |
-| No required Start Learning | Decision A + remove activate button |
+| No required Start Learning | Remove activate button + Decision A′ (complete without activate) |
 | No 未开始/学习中/Active Learning ceremony | Decision E + Details Status removal |
 | Click/focus sufficient | Already true for chat/inspect; keep |
 | Node Chat | Exists — preserve |
-| Node Add child | Decision C / Slice 2 |
+| Node Add child | Decision C / Slice 2 (`createChild` only) |
 | Details no Chat / Add child / parent back / Start-Pause-Resume | Decision D / Slice 1 |
 | Details primarily 达成条件 + 心得 | Decision D + F |
-| Completion ≠ Start Learning state | Decisions A + B |
+| Completion ≠ Start Learning state | Decisions A′ + B (Domain open→closed) |
 | No new started-learning persistence | Finding §3 |
 | Chat + graph not regressed | Preserve ops; regression tests |
 | zh-CN copy | Decision F |
+| Complete B ↛ mutate A stack | Decision A′ §4 + Slice 3 regression |
 
 ## Verification plan (post-approval)
 
 1. Unit/UI: inspector no longer mounts `action-activate`, `chat-open` (details), `action-add-sub-question`, `action-return-to-parent`, park/resume.
-2. Unit/UI: node exposes chat + add-child; complete path works from `open` without prior activate click.
-3. Unit: `setNodeSummary` / criterion updates from Details.
-4. Existing node-chat and child-graph tests remain green.
-5. Manual zh-CN pass on changed strings.
-6. CI `check` + `e2e` green on PR #27.
+2. Domain: `closeNode` succeeds from `open` when convergence met; rejects when unmet; **A active / complete B → A stack+lifecycles unchanged**.
+3. Unit/UI: node exposes chat + add-child (`createChild`); complete from `open` with **zero** `activateNode` calls in the command path.
+4. Unit: `setNodeSummary` / criterion updates from Details.
+5. Existing node-chat and child-graph tests remain green.
+6. Manual zh-CN pass on changed strings.
+7. CI `check` + `e2e` green on PR #27.
 
 ## Cursor handoff (next)
 
