@@ -5,13 +5,13 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-002-spatial-knowledge-canvas-visual-redesign
 integration_ref: main
 development:
-  stage: accepted
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: true
-    merge_verified: false
-  next_expected_actor: user
+    merge_verified: true
+  next_expected_actor: none
 artifacts:
   plan: ../plans/TASK-002-plan.md
   pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
@@ -469,7 +469,20 @@ Repository-visible evidence reviewed:
 
 No acceptance-blocking code or workflow regression was found in the reviewed diff/evidence.
 
+## Completion Evidence
+
+Acceptance review passed for PR #19 with repository-visible evidence:
+
+- implementation matches the approved plan and acceptance criteria;
+- GitHub Actions CI run #72 completed successfully on implementation head `32a9a80496b2b8c19aa66f86dbf14db3b0799d4d`;
+- `check` passed typecheck, unit tests, and build;
+- `e2e` passed the Playwright acceptance suite;
+- PR #19 merged successfully into `main`;
+- merge commit: `4cd33fc6769f503b656326906bacf18c21aa7ef0`;
+- post-merge CI on `main` for that push completed successfully;
+- `main` was re-read after merge before `merge_verified` was set;
+- presentation-layer redesign is present on `main` (`cluster-regions.ts`, quieter node/edge/chrome CSS, hover Node Chat).
+
 ## Cursor Gate
 
-Acceptance review complete (`acceptance_approved=true`). TASK-002 is now `accepted`.
-PR #19 remains open and unmerged; `merge_verified=false` until an explicit merge is performed and read back.
+TASK-002 is complete (`stage: done`, `merge_verified=true`). No further Cursor action is required for this task.
