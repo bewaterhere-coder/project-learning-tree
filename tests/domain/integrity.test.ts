@@ -73,6 +73,7 @@ describe("general integrity", () => {
 
     const forbidden = [
       "react",
+      "@xyflow/react",
       "zustand",
       "dexie",
       "indexeddb",

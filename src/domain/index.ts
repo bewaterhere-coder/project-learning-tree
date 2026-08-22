@@ -47,6 +47,7 @@ export {
   type LearningNode,
   type LearningPass,
   type LearningProject,
+  type LearningDepth,
   type LinkEvidenceToCriterion,
   type NodeId,
   type MoveCandidateToFrontier,

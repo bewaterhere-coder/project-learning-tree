@@ -1,0 +1,235 @@
+:root {
+  color-scheme: light;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  color: #1c2430;
+  background: #f4f1ea;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  height: 100%;
+}
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.shell-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 20px;
+  border-bottom: 1px solid #d7d0c4;
+  background: #fffaf2;
+}
+
+.shell-header h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.project-name,
+.stack-legend {
+  margin: 4px 0 0;
+  color: #5b6573;
+  font-size: 13px;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  min-height: 0;
+  flex: 1;
+}
+
+.tree-pane {
+  min-width: 0;
+  height: 100%;
+  background: #eef3f1;
+}
+
+.inspector-pane {
+  overflow: auto;
+  border-left: 1px solid #d7d0c4;
+  background: #fff;
+}
+
+.inspector {
+  padding: 16px 18px 32px;
+}
+
+.inspector h2,
+.inspector h3 {
+  margin: 16px 0 8px;
+  font-size: 14px;
+}
+
+.inspector-fields {
+  margin: 0;
+}
+
+.inspector-fields > div {
+  margin-bottom: 10px;
+}
+
+.inspector-fields dt {
+  color: #6b7380;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inspector-fields dd {
+  margin: 2px 0 0;
+}
+
+.empty {
+  color: #6b7380;
+}
+
+.node-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.node-actions button,
+.domain-error button {
+  border: 1px solid #2f5d50;
+  background: #2f5d50;
+  color: white;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.domain-error {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 16px;
+  background: #fde8e8;
+  color: #8a1f1f;
+  border-bottom: 1px solid #f0c2c2;
+}
+
+.learning-node {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  padding: 10px 12px 10px 16px;
+  border: 1px solid #c5cdd6;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.learning-node.lifecycle-open {
+  background: #f7f8fa;
+}
+
+.learning-node.lifecycle-active {
+  background: #f3fbf7;
+}
+
+.learning-node.lifecycle-parked {
+  background: #fff8ee;
+}
+
+.learning-node.lifecycle-closed {
+  background: #f2f2f2;
+  color: #66707c;
+}
+
+.learning-node.on-stack {
+  border-color: #1f7a63;
+  box-shadow: inset 0 0 0 1px #1f7a63;
+}
+
+.learning-node.focused {
+  outline: 3px solid #2f6fed;
+  outline-offset: 4px;
+}
+
+.stack-rail {
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 5px;
+  border-radius: 4px;
+  background: #1f7a63;
+}
+
+.node-badges {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.lifecycle-badge,
+.blocked-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.lifecycle-open .lifecycle-badge {
+  background: #e6e9ee;
+  color: #4d5661;
+}
+
+.lifecycle-active .lifecycle-badge {
+  background: #1f7a63;
+  color: white;
+}
+
+.lifecycle-parked .lifecycle-badge {
+  background: transparent;
+  color: #9a5b12;
+  border: 1px dashed #c47b22;
+}
+
+.lifecycle-closed .lifecycle-badge {
+  background: #d9dde3;
+  color: #4d5661;
+}
+
+.blocked-badge {
+  background: #f4d4d4;
+  color: #9b1c1c;
+}
+
+.node-question {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.react-flow__edge.edge-active-stack .react-flow__edge-path {
+  stroke: #1f7a63;
+  stroke-width: 3;
+}
+
+.react-flow__edge.edge-default .react-flow__edge-path {
+  stroke: #98a3b0;
+  stroke-width: 1.5;
+}
+
+.tree-canvas-host {
+  width: 100%;
+  height: 100%;
+}
