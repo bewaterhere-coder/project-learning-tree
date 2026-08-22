@@ -1,5 +1,6 @@
 import {
   evaluateConvergence,
+  type CriterionId,
   type DomainSnapshot,
   type NodeId,
 } from "../../domain/index.js";
@@ -9,13 +10,13 @@ export type CloseRequirement =
   | {
       kind: "criterion";
       met: boolean;
-      criterionId: string;
+      criterionId: CriterionId;
       description: string;
     }
   | {
       kind: "evidence";
       met: boolean;
-      criterionId: string;
+      criterionId: CriterionId;
       description: string;
     }
   | {
@@ -43,8 +44,8 @@ export function selectCloseReadiness(
   const failures = result.ok ? result.evaluation.failures : [result.error];
   const canClose = result.ok && result.evaluation.canClose;
 
-  const unmetCriteria = new Set<string>();
-  const unmetEvidence = new Set<string>();
+  const unmetCriteria = new Set<CriterionId>();
+  const unmetEvidence = new Set<CriterionId>();
   let unmetSummary = false;
   let unresolvedChildIds: NodeId[] = [];
   let blockingFailed = false;

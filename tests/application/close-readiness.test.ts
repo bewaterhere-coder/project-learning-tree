@@ -4,7 +4,11 @@ import {
   dispatchCommand,
   selectCloseReadiness,
 } from "../../src/application/index.js";
-import { setNodeSummary } from "../../src/domain/index.js";
+import {
+  addCriterion,
+  evaluateConvergence,
+  setNodeSummary,
+} from "../../src/domain/index.js";
 import {
   createBlockedBranchFixture,
   createClosableNodeFixture,
@@ -88,6 +92,75 @@ describe("selectCloseReadiness", () => {
     }
     expect(blocking.count).toBe(2);
     expect(blocking.questions).toEqual(["Child A", "Child B"]);
+  });
+
+  it("includes required criteria and evidence as requirements, omitting optional criteria", () => {
+    const { snapshot, ids, ports } = prepareActiveChild();
+    const optional = addCriterion(
+      snapshot,
+      {
+        nodeId: ids.childA,
+        description: "Nice to have",
+        required: false,
+        evidenceRequired: false,
+      },
+      ports,
+    );
+    if (!optional.ok) {
+      throw new Error(optional.error.kind);
+    }
+    const readiness = selectCloseReadiness(optional.snapshot, ids.childA);
+    const criteria = readiness.requirements.filter(
+      (requirement) => requirement.kind === "criterion",
+    );
+    const evidence = readiness.requirements.filter(
+      (requirement) => requirement.kind === "evidence",
+    );
+    expect(criteria).toHaveLength(1);
+    expect(criteria[0]?.description).toBe("Understood at the target depth");
+    expect(criteria[0]?.met).toBe(true);
+    expect(evidence).toHaveLength(1);
+    expect(evidence[0]?.met).toBe(true);
+    expect(
+      readiness.requirements.some(
+        (requirement) =>
+          requirement.kind === "criterion" &&
+          requirement.description === "Nice to have",
+      ),
+    ).toBe(false);
+  });
+
+  it("keeps allowed false when convergence passes but the node is not active", () => {
+    const ports = sequentialFixturePorts();
+    const branch = createBlockedBranchFixture(ports);
+    const closable = createClosableNodeFixture(
+      branch.snapshot,
+      branch.ids.childB,
+      ports,
+    );
+    expect(closable.nodes[branch.ids.childB]?.lifecycle).toBe("open");
+    const evaluation = evaluateConvergence(closable, {
+      nodeId: branch.ids.childB,
+    });
+    expect(evaluation.ok && evaluation.evaluation.canClose).toBe(true);
+    expect(selectCloseReadiness(closable, branch.ids.childB).allowed).toBe(false);
+  });
+
+  it("includes met requirements when only summary is missing", () => {
+    const { snapshot, ids } = prepareActiveChild({ includeSummary: false });
+    const readiness = selectCloseReadiness(snapshot, ids.childA);
+    expect(
+      readiness.requirements.find((requirement) => requirement.kind === "criterion")
+        ?.met,
+    ).toBe(true);
+    expect(
+      readiness.requirements.find((requirement) => requirement.kind === "evidence")
+        ?.met,
+    ).toBe(true);
+    expect(
+      readiness.requirements.find((requirement) => requirement.kind === "summary")
+        ?.met,
+    ).toBe(false);
   });
 
   it("allows complete when Domain convergence passes on an active node", () => {

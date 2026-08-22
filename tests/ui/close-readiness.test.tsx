@@ -45,7 +45,9 @@ describe("close readiness UI", () => {
     expect(screen.getByTestId("summary-required-marker")).toHaveTextContent("*");
     expect(screen.getByTestId("summary-status")).toHaveTextContent("Not filled yet");
     expect(screen.getByTestId("action-close")).toBeDisabled();
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Learning summary");
+    expect(screen.getByTestId("close-unmet")).toHaveTextContent(
+      "Add a learning summary",
+    );
     expect(screen.queryByTestId("domain-error")).toBeNull();
   });
 
@@ -67,7 +69,9 @@ describe("close readiness UI", () => {
       nodeId: branch.ids.childA,
     });
     const { unmount } = renderFocused(focusedMissing.snapshot);
-    expect(screen.getByTestId("close-unmet")).toHaveTextContent("Learning summary");
+    expect(screen.getByTestId("close-unmet")).toHaveTextContent(
+      "Add a learning summary",
+    );
 
     const added = setNodeSummary(focusedMissing.snapshot, {
       nodeId: branch.ids.childA,

@@ -1,8 +1,11 @@
 import {
   applyNodeChanges,
   Background,
+  Handle,
+  Position,
   ReactFlow,
   type NodeMouseHandler,
+  type NodeProps,
   type OnMove,
   type OnNodeDrag,
   type OnNodesChange,
@@ -14,7 +17,17 @@ import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
 import { LearningNode } from "./LearningNode.js";
 import { toReactFlow, type LearningFlowNode } from "./to-react-flow.js";
 
-const nodeTypes = { learningNode: LearningNode };
+function FlowLearningNode({ data }: NodeProps<LearningFlowNode>) {
+  return (
+    <>
+      <Handle type="target" position={Position.Top} isConnectable={false} />
+      <LearningNode data={data} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} />
+    </>
+  );
+}
+
+const nodeTypes = { learningNode: FlowLearningNode };
 
 export function TreeCanvas({
   model,

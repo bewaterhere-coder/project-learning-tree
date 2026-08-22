@@ -66,9 +66,10 @@ describe("i18n message catalogs", () => {
     }
   });
 
-  it("interpolates params in both locales", () => {
+  it("interpolates params in both locales and leaves unknown tokens", () => {
     expect(t("en-US", "node.blocked", { count: 2 })).toBe("2 open sub-questions");
     expect(t("zh-CN", "node.blocked", { count: 2 })).toBe("有 2 个子问题待解决");
+    expect(t("en-US", "node.blocked")).toBe("{count} open sub-questions");
   });
 
   it("covers every DomainError presentation key in both catalogs", () => {

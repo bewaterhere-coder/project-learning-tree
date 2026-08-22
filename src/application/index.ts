@@ -33,6 +33,7 @@ export {
 export { createSession, type TreeSession } from "./session.js";
 export type {
   Criterion,
+  CriterionId,
   DomainError,
   DomainSnapshot,
   Evidence,

@@ -320,7 +320,7 @@ describe("node dragging", () => {
 describe("i18n catalogs", () => {
   it("covers Project Sidebar and Inspector chrome in en-US and zh-CN", async () => {
     const user = userEvent.setup();
-    const { workspace } = createDemoWorkspaceFixture();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
     render(
       <App
         initialWorkspace={workspace}
@@ -341,6 +341,23 @@ describe("i18n catalogs", () => {
       "Current learning path:",
     );
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
+    expect(screen.getByTestId("inspector-depth")).toHaveTextContent("Level 1");
+
+    await user.click(screen.getByTestId(`node-${projectA.ids.q12}`));
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent(
+      "Continue later",
+    );
+    await user.click(screen.getByTestId(`node-${projectA.ids.q11}`));
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Completed");
+    await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("Learning");
+    expect(screen.getByTestId("action-close")).toHaveTextContent("Complete");
+    expect(screen.getByTestId("inspector-blocked")).toHaveTextContent(
+      "open sub-questions",
+    );
+    expect(screen.getByTestId(`lifecycle-badge-${projectA.ids.q1}`)).toHaveTextContent(
+      "Learning",
+    );
 
     await user.click(screen.getByTestId("locale-zh"));
     expect(screen.getByTestId("sidebar-title")).toHaveTextContent("学习项目");
@@ -349,10 +366,11 @@ describe("i18n catalogs", () => {
         level: 2,
       }),
     ).toHaveTextContent("问题详情");
-    expect(screen.getByTestId("action-activate")).toHaveTextContent("开始学习");
-    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("待开始");
+    expect(screen.getByTestId("action-close")).toHaveTextContent("完成问题");
+    expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("学习中");
     expect(document.documentElement.lang).toBe("zh-CN");
 
+    const inspector = screen.getByTestId("node-inspector").textContent ?? "";
     const chrome = document.body.textContent ?? "";
     for (const forbidden of [
       "Open",
@@ -363,8 +381,14 @@ describe("i18n catalogs", () => {
       "Dismiss",
       "Cannot close",
       "without a summary",
+      "unsatisfied",
+      "satisfied",
     ]) {
       expect(chrome).not.toContain(forbidden);
     }
+    expect(inspector).not.toMatch(/\bopen\b/);
+    expect(inspector).not.toMatch(/\bactive\b/);
+    expect(inspector).not.toMatch(/\bclosed\b/);
+    expect(inspector).not.toMatch(/\bparked\b/);
   });
 });

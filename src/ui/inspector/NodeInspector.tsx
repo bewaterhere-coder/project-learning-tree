@@ -86,14 +86,12 @@ export function NodeActions({
 }: {
   nodeId: string;
   availability: ActionAvailability;
-  readiness?: CloseReadiness;
+  readiness: CloseReadiness;
   locale: WorkspaceLocale;
   actionError?: string;
   onCommand: (command: UiCommand) => void;
 }) {
-  const unmet = (readiness?.requirements ?? []).filter(
-    (requirement) => !requirement.met,
-  );
+  const unmet = readiness.requirements.filter((requirement) => !requirement.met);
 
   return (
     <div className="node-actions" data-testid="node-actions">
@@ -133,7 +131,7 @@ export function NodeActions({
         <button
           type="button"
           data-testid="action-close"
-          disabled={readiness !== undefined && !readiness.allowed}
+          disabled={!readiness.allowed}
           onClick={() => onCommand({ type: "closeNode", nodeId })}
         >
           {t(locale, "actions.close")}
@@ -224,7 +222,7 @@ export function NodeInspector({
   return (
     <section className="inspector" data-testid="node-inspector">
       <InspectorChrome locale={locale} onClose={onClose} />
-      {availability ? (
+      {availability && readiness ? (
         <NodeActions
           nodeId={inspector.nodeId}
           availability={availability}
