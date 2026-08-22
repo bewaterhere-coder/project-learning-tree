@@ -5,10 +5,10 @@ repository: bewaterhere-coder/project-learning-tree
 task_ref: task/TASK-006-simplify-question-interaction-details
 integration_ref: main
 pr:
-  number: null
+  number: 27
   head_ref: task/TASK-006-simplify-question-interaction-details
   base_ref: main
-  state: pending
+  state: open
 development:
   stage: planning
   gates:
@@ -16,7 +16,7 @@ development:
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-006-plan.md
 transport:
