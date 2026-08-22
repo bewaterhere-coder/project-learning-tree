@@ -514,6 +514,16 @@ export function App({
             onRestoreProject={(projectId) =>
               commit(restoreProject(workspaceRef.current, projectId), true)
             }
+            onUpdateProject={(projectId, input) => {
+              const next = updateWorkspaceProjectMetadata(
+                workspaceRef.current,
+                projectId,
+                input,
+              );
+              const failed = isProjectMetadataCommand(next.lastErrorCommand);
+              commit(next, !failed);
+              return !failed;
+            }}
             onDeleteProject={async (projectId: ProjectId) => {
               await permanentlyDeleteArchivedProject({
                 workspace: workspaceRef.current,
