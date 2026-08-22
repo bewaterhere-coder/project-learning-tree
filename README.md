@@ -41,6 +41,7 @@ AI is an advisor. The domain engine is the authority for state transitions. Doma
 3. M1 Domain Engine is complete: `docs/milestones/M1-domain-engine.md`.
 4. M2 Tree UI: `docs/milestones/M2-tree-ui.md`.
 5. M2.1 Multi-Project Workspace: `docs/milestones/M2.1-multi-project-workspace.md`.
+6. M2.3 Question Authoring: `docs/milestones/M2.3-question-authoring.md`.
 
 ```bash
 npm install
@@ -51,7 +52,7 @@ npm run dev
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented.
+M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented. M2.2 Localization & Close Preflight is implemented. M2.3 Question Authoring Semantics is implemented.
 
 ## License
 

@@ -110,4 +110,19 @@ describe("isGlobalDomainError", () => {
       }),
     ).toBe(true);
   });
+
+  it("keeps authoring failures local", () => {
+    expect(
+      isGlobalDomainError({ kind: "QuestionRequired" }, "createChild"),
+    ).toBe(false);
+    expect(
+      isGlobalDomainError({ kind: "GoalRequired" }, "createBlockingChild"),
+    ).toBe(false);
+    expect(
+      isGlobalDomainError(
+        { kind: "NotADirectChild", parentId: "p", childId: "c" },
+        "markChildBlocking",
+      ),
+    ).toBe(false);
+  });
 });

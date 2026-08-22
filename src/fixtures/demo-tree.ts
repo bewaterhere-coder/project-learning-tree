@@ -5,6 +5,7 @@ import {
   addEvidence,
   closeNode,
   createBlockingChild,
+  createChild,
   createProject,
   declareCriterionSatisfied,
   defaultPorts,
@@ -257,6 +258,70 @@ export interface SecondDemoTreeIds {
 export interface SecondDemoTreeFixture {
   snapshot: DomainSnapshot;
   ids: SecondDemoTreeIds;
+}
+
+export interface MixedChildrenIds {
+  parent: NodeId;
+  ordinary: NodeId;
+  blocking: NodeId;
+}
+
+export interface MixedChildrenFixture {
+  snapshot: DomainSnapshot;
+  ids: MixedChildrenIds;
+}
+
+export function createMixedChildrenFixture(
+  ports: Ports = sequentialFixturePorts(2000),
+): MixedChildrenFixture {
+  let snapshot = unwrap(
+    createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
+    "createProject mixed",
+  );
+  snapshot = unwrap(
+    addCoreQuestion(
+      snapshot,
+      { question: "Parent", goal: "Understand parent", targetDepth: "L1" },
+      ports,
+    ),
+    "addCoreQuestion Parent",
+  );
+  const parent = snapshot.pass.rootNodeIds[0];
+  if (!parent) {
+    throw new Error("createMixedChildrenFixture: missing parent");
+  }
+  snapshot = unwrap(activateNode(snapshot, { nodeId: parent }), "activateNode");
+  snapshot = unwrap(
+    createChild(
+      snapshot,
+      {
+        parentId: parent,
+        question: "Ordinary child",
+        goal: "Explore without blocking",
+      },
+      ports,
+    ),
+    "createChild ordinary",
+  );
+  snapshot = unwrap(
+    createBlockingChild(
+      snapshot,
+      {
+        parentId: parent,
+        question: "Blocking child",
+        goal: "Unblock parent",
+      },
+      ports,
+    ),
+    "createBlockingChild",
+  );
+  const ordinary = snapshot.nodes[parent]?.childIds[0];
+  const blocking = snapshot.nodes[parent]?.childIds[1];
+  if (!ordinary || !blocking) {
+    throw new Error("createMixedChildrenFixture: missing children");
+  }
+  snapshot = unwrap(focusNode(snapshot, { nodeId: parent }), "focusNode");
+  return { snapshot, ids: { parent, ordinary, blocking } };
 }
 
 export function createSecondDemoTreeFixture(

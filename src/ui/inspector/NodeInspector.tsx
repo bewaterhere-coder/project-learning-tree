@@ -1,10 +1,12 @@
 import type {
   ActionAvailability,
+  AuthoringAvailability,
   CloseReadiness,
   CloseRequirement,
   InspectorViewModel,
   UiCommand,
 } from "../../application/index.js";
+import { ChildAuthoringSection } from "./ChildAuthoringSection.js";
 import type { WorkspaceLocale } from "../../workspace/index.js";
 import {
   criterionStatusKey,
@@ -183,16 +185,20 @@ export function NodeInspector({
   inspector,
   availability,
   readiness,
+  authoring,
   locale,
   actionError,
+  authoringError,
   onCommand,
   onClose,
 }: {
   inspector: InspectorViewModel;
   availability?: ActionAvailability;
   readiness?: CloseReadiness;
+  authoring?: AuthoringAvailability;
   locale: WorkspaceLocale;
   actionError?: string;
+  authoringError?: string;
   onCommand: (command: UiCommand) => void;
   onClose: () => void;
 }) {
@@ -229,6 +235,16 @@ export function NodeInspector({
           readiness={readiness}
           locale={locale}
           actionError={actionError}
+          onCommand={onCommand}
+        />
+      ) : null}
+      {authoring ? (
+        <ChildAuthoringSection
+          parentId={inspector.nodeId}
+          children={inspector.children}
+          availability={authoring}
+          locale={locale}
+          authoringError={authoringError}
           onCommand={onCommand}
         />
       ) : null}

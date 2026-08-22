@@ -20,6 +20,7 @@ import {
   type CloseNode,
   type ConvergenceEvaluation,
   type CreateBlockingChild,
+  type CreateChild,
   type CreateProject,
   type DeclareCriterionSatisfied,
   type DomainEvent,
@@ -29,6 +30,7 @@ import {
   type FocusNode,
   type LearningNode,
   type LinkEvidenceToCriterion,
+  type MarkChildBlocking,
   type MoveCandidateToFrontier,
   type NodeId,
   type ParkNode,
@@ -36,6 +38,7 @@ import {
   type ReopenNode,
   type ResumeNode,
   type SetNodeSummary,
+  type UnmarkChildBlocking,
 } from "./types.js";
 
 function ok(
@@ -119,6 +122,49 @@ function rejectIfClosed(
     };
   }
   return undefined;
+}
+
+function rejectIfBlankAuthoring(
+  question: string,
+  goal: string,
+): DomainError | undefined {
+  if (question.trim() === "") {
+    return { kind: "QuestionRequired" };
+  }
+  if (goal.trim() === "") {
+    return { kind: "GoalRequired" };
+  }
+  return undefined;
+}
+
+function appendUnique(ids: NodeId[], id: NodeId): NodeId[] {
+  return ids.includes(id) ? ids : [...ids, id];
+}
+
+function requireDirectChild(
+  parent: LearningNode,
+  child: LearningNode,
+  parentId: NodeId,
+  childId: NodeId,
+): DomainError | undefined {
+  if (child.parentId !== parentId || !parent.childIds.includes(childId)) {
+    return { kind: "NotADirectChild", parentId, childId };
+  }
+  return undefined;
+}
+
+function attachChild(
+  parent: LearningNode,
+  childId: NodeId,
+  options: { blocking: boolean },
+): LearningNode {
+  return {
+    ...parent,
+    childIds: appendUnique(parent.childIds, childId),
+    blockingChildIds: options.blocking
+      ? appendUnique(parent.blockingChildIds, childId)
+      : [...parent.blockingChildIds],
+  };
 }
 
 function ancestorsAllowActivation(
@@ -292,9 +338,13 @@ export function createBlockingChild(
       attempted: "create-blocking-child",
     });
   }
+  const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
+  if (authoringError) {
+    return fail(authoringError);
+  }
   const child = createOpenNode(ports, {
-    question: command.question,
-    goal: command.goal,
+    question: command.question.trim(),
+    goal: command.goal.trim(),
     targetDepth: command.targetDepth,
     parentId: command.parentId,
   });
@@ -303,16 +353,142 @@ export function createBlockingChild(
   if (!parent) {
     return fail({ kind: "NodeNotFound", nodeId: command.parentId });
   }
-  next.nodes[command.parentId] = {
-    ...parent,
-    childIds: [...parent.childIds, child.id],
-    blockingChildIds: [...parent.blockingChildIds, child.id],
-  };
+  next.nodes[command.parentId] = attachChild(parent, child.id, {
+    blocking: true,
+  });
   return ok(next, [
     {
       type: "BlockingChildCreated",
       parentId: command.parentId,
       childId: child.id,
+    },
+  ]);
+}
+
+export function createChild(
+  snapshot: DomainSnapshot,
+  command: CreateChild,
+  ports: Ports,
+): DomainResult<DomainSnapshot> {
+  const parentFound = requireNode(snapshot, command.parentId);
+  if (!parentFound.ok) {
+    return fail(parentFound.error);
+  }
+  const closed = rejectIfClosed(parentFound.node, "create-child");
+  if (closed) {
+    return fail(closed);
+  }
+  const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
+  if (authoringError) {
+    return fail(authoringError);
+  }
+  const child = createOpenNode(ports, {
+    question: command.question.trim(),
+    goal: command.goal.trim(),
+    targetDepth: command.targetDepth,
+    parentId: command.parentId,
+  });
+  const next = putNode(snapshot, child);
+  const parent = next.nodes[command.parentId];
+  if (!parent) {
+    return fail({ kind: "NodeNotFound", nodeId: command.parentId });
+  }
+  next.nodes[command.parentId] = attachChild(parent, child.id, {
+    blocking: false,
+  });
+  return ok(next, [
+    {
+      type: "ChildCreated",
+      parentId: command.parentId,
+      childId: child.id,
+    },
+  ]);
+}
+
+export function markChildBlocking(
+  snapshot: DomainSnapshot,
+  command: MarkChildBlocking,
+): DomainResult<DomainSnapshot> {
+  const parentFound = requireNode(snapshot, command.parentId);
+  if (!parentFound.ok) {
+    return fail(parentFound.error);
+  }
+  const childFound = requireNode(snapshot, command.childId);
+  if (!childFound.ok) {
+    return fail(childFound.error);
+  }
+  const closed = rejectIfClosed(parentFound.node, "mark-child-blocking");
+  if (closed) {
+    return fail(closed);
+  }
+  const relationship = requireDirectChild(
+    parentFound.node,
+    childFound.node,
+    command.parentId,
+    command.childId,
+  );
+  if (relationship) {
+    return fail(relationship);
+  }
+  const next = cloneSnapshot(snapshot);
+  const parent = next.nodes[command.parentId];
+  if (!parent) {
+    return fail({ kind: "NodeNotFound", nodeId: command.parentId });
+  }
+  next.nodes[command.parentId] = {
+    ...parent,
+    blockingChildIds: appendUnique(parent.blockingChildIds, command.childId),
+  };
+  return ok(next, [
+    {
+      type: "ChildMarkedBlocking",
+      parentId: command.parentId,
+      childId: command.childId,
+    },
+  ]);
+}
+
+export function unmarkChildBlocking(
+  snapshot: DomainSnapshot,
+  command: UnmarkChildBlocking,
+): DomainResult<DomainSnapshot> {
+  const parentFound = requireNode(snapshot, command.parentId);
+  if (!parentFound.ok) {
+    return fail(parentFound.error);
+  }
+  const childFound = requireNode(snapshot, command.childId);
+  if (!childFound.ok) {
+    return fail(childFound.error);
+  }
+  const closed = rejectIfClosed(parentFound.node, "unmark-child-blocking");
+  if (closed) {
+    return fail(closed);
+  }
+  const relationship = requireDirectChild(
+    parentFound.node,
+    childFound.node,
+    command.parentId,
+    command.childId,
+  );
+  if (relationship) {
+    return fail(relationship);
+  }
+  const next = cloneSnapshot(snapshot);
+  const parent = next.nodes[command.parentId];
+  if (!parent) {
+    return fail({ kind: "NodeNotFound", nodeId: command.parentId });
+  }
+  next.nodes[command.parentId] = {
+    ...parent,
+    blockingChildIds: parent.blockingChildIds.filter(
+      (id) => id !== command.childId,
+    ),
+  };
+  return ok(next, [
+    {
+      type: "ChildUnmarkedBlocking",
+      parentId: command.parentId,
+      childId: command.childId,
     },
   ]);
 }
@@ -355,16 +531,18 @@ export function promoteFrontierItem(
     });
   }
 
+  const parentId =
+    command.placement.kind === "root" ? undefined : command.placement.parentId;
   let parent: LearningNode | undefined;
-  if (command.parentId !== undefined) {
-    const parentFound = requireNode(snapshot, command.parentId);
+  if (parentId !== undefined) {
+    const parentFound = requireNode(snapshot, parentId);
     if (!parentFound.ok) {
       return fail(parentFound.error);
     }
     if (parentFound.node.lifecycle === "closed") {
       return fail({
         kind: "InvalidLifecycleTransition",
-        nodeId: command.parentId,
+        nodeId: parentId,
         from: parentFound.node.lifecycle,
         attempted: "promote-frontier-item",
       });
@@ -375,23 +553,21 @@ export function promoteFrontierItem(
   const node = createOpenNode(ports, {
     question: item.question,
     goal: item.question,
-    parentId: command.parentId,
+    parentId,
   });
   const next = putNode(snapshot, node);
   next.pass.frontier = next.pass.frontier.filter(
     (entry) => entry.id !== command.frontierItemId,
   );
 
-  if (parent && command.parentId) {
-    const liveParent = next.nodes[command.parentId];
+  if (parent && parentId) {
+    const liveParent = next.nodes[parentId];
     if (!liveParent) {
-      return fail({ kind: "NodeNotFound", nodeId: command.parentId });
+      return fail({ kind: "NodeNotFound", nodeId: parentId });
     }
-    next.nodes[command.parentId] = {
-      ...liveParent,
-      childIds: [...liveParent.childIds, node.id],
-      blockingChildIds: [...liveParent.blockingChildIds, node.id],
-    };
+    next.nodes[parentId] = attachChild(liveParent, node.id, {
+      blocking: command.placement.kind === "blockingChild",
+    });
   } else {
     next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
   }

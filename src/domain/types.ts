@@ -89,6 +89,9 @@ export type DomainEvent =
   | { type: "NodeFocused"; nodeId: NodeId }
   | { type: "NodeActivated"; nodeId: NodeId }
   | { type: "BlockingChildCreated"; parentId: NodeId; childId: NodeId }
+  | { type: "ChildCreated"; parentId: NodeId; childId: NodeId }
+  | { type: "ChildMarkedBlocking"; parentId: NodeId; childId: NodeId }
+  | { type: "ChildUnmarkedBlocking"; parentId: NodeId; childId: NodeId }
   | { type: "BlockingChildActivated"; parentId: NodeId; childId: NodeId }
   | { type: "CandidateMovedToFrontier"; frontierItemId: FrontierItemId }
   | { type: "FrontierItemPromoted"; frontierItemId: FrontierItemId; nodeId: NodeId }
@@ -139,15 +142,37 @@ export interface CreateBlockingChild {
   targetDepth?: LearningDepth;
 }
 
+export interface CreateChild {
+  parentId: NodeId;
+  question: string;
+  goal: string;
+  targetDepth?: LearningDepth;
+}
+
+export interface MarkChildBlocking {
+  parentId: NodeId;
+  childId: NodeId;
+}
+
+export interface UnmarkChildBlocking {
+  parentId: NodeId;
+  childId: NodeId;
+}
+
 export interface MoveCandidateToFrontier {
   sourceNodeId: NodeId;
   question: string;
   reason?: string;
 }
 
+export type FrontierPlacement =
+  | { kind: "root" }
+  | { kind: "child"; parentId: NodeId }
+  | { kind: "blockingChild"; parentId: NodeId };
+
 export interface PromoteFrontierItem {
   frontierItemId: FrontierItemId;
-  parentId?: NodeId;
+  placement: FrontierPlacement;
 }
 
 export interface ParkNode {
