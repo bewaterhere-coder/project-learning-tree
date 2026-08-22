@@ -78,7 +78,7 @@ npm run dev
 → operate the product yourself (Vite dev server)
 
 npm run test:e2e:headed
-→ open a real Chromium window and watch Playwright operate the product
+→ open a real Chromium window and run the existing acceptance tests
   (production preview, not npm run dev; needs a local display)
 
 npm run test:e2e:ui
