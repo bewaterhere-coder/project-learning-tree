@@ -6,7 +6,7 @@ development:
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
+    acceptance_approved: true
     merge_verified: false
   next_expected_actor: chatgpt
 artifacts:
@@ -133,11 +133,15 @@ Relevant automated tests must remain green and new tests must cover the material
 
 ## Gate
 
-Plan approved on re-review. Implementation is complete on PR #18 and awaits Acceptance review.
+Acceptance review passed for PR #18 with repository-visible evidence:
+
+- implementation matches the approved plan and acceptance criteria;
+- PR #18 is mergeable;
+- GitHub Actions CI run #54 completed successfully;
+- `check` passed typecheck, unit tests, and build;
+- `e2e` passed the Playwright acceptance suite.
 
 - `development.stage`: `acceptance`
-- `acceptance_approved`: **false** (must not be self-set)
-- `next_expected_actor`: `chatgpt`
+- `acceptance_approved`: **true**
+- `merge_verified`: **false** until the accepted PR is merged and `main` is re-read
 - Implementation evidence: https://github.com/bewaterhere-coder/project-learning-tree/pull/18
-
-`acceptance_approved` remains false until Acceptance review passes with repository-visible CI checks.
