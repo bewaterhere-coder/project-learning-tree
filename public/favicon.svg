@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Learn Tree">
+  <rect width="32" height="32" rx="8" fill="#2f6f5f" />
+  <path
+    fill="none"
+    stroke="#f7f5f0"
+    stroke-width="2.2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M16 25 V13 M16 18 L10 11 M16 18 L22 11 M10 11 L8 8 M10 11 L13 8 M22 11 L19 8 M22 11 L24 8"
+  />
+</svg>
