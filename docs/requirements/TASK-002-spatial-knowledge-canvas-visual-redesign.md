@@ -14,7 +14,7 @@ development:
   next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-002-plan.md
-  pr: null
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/19
 ---
 
 # TASK-002 — Spatial Knowledge Canvas Visual Redesign
