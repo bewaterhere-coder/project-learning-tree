@@ -435,15 +435,16 @@ Update [`tests/application/bootstrap.test.ts`](../../tests/application/bootstrap
 - Redefining Frontier `placement.kind === "root"`
 - Rewriting `completePass` acceptance rules (beyond relying on existing API + B′ close guard)
 
-## Planning gate
+**Gate:** `acceptance` — implementation complete on this branch; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 | Item | Status |
 | --- | --- |
 | Requirement ready | true |
-| Canonical plan written | this file (revised) |
-| Plan approved | false — revised; awaiting re-review |
-| Implementation | blocked until `plan_approved=true` |
-| Next expected actor | chatgpt (Plan re-review) |
+| Canonical plan written | this file |
+| Plan approved | true |
+| Implementation | complete on this branch |
+| Acceptance approved | false — awaiting ChatGPT |
+| Next expected actor | chatgpt (acceptance review) |
 
 ## Decisions locked for re-review
 

@@ -10,13 +10,13 @@ pr:
   base_ref: main
   state: draft
 development:
-  stage: implementation
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     merge_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 artifacts:
   plan: ../plans/TASK-003-plan.md
 ---
@@ -315,8 +315,8 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-Canonical implementation plan: `docs/plans/TASK-003-plan.md` (revised for PR review `5000617595`, approved by review `5000630434`).
+Canonical implementation plan: `docs/plans/TASK-003-plan.md` (approved by review `5000630434`).
 
-Development stage is `implementation`. `plan_approved: true`. Next expected actor: Cursor.
+Development stage is `acceptance`. `plan_approved: true`. `acceptance_approved: false`. Next expected actor: ChatGPT (acceptance review).
 
-Cursor may implement the approved Plan on this same task branch and PR. Do not create another implementation PR. After implementation and required test evidence are remotely visible, advance this Requirement to `acceptance` with `acceptance_approved: false` and hand back to ChatGPT for acceptance review.
+Implementation is on this same task branch / PR #20. Do not create another PR.
