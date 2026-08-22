@@ -40,3 +40,34 @@ test("creates, reloads, archives, and restores a project", async ({ page }) => {
   );
   await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
 });
+
+test("cancels and confirms permanent delete of an archived project", async ({ page }) => {
+  await openApp(page);
+  await createProject(page, "E2E Delete Me");
+  const projectId = await selectedProjectId(page);
+
+  await page.getByTestId(`project-actions-${projectId}`).click();
+  await expect(page.getByTestId(`project-delete-${projectId}`)).toHaveCount(0);
+  await page.getByTestId(`project-archive-${projectId}`).click();
+  await expect(page.getByTestId("workspace-empty")).toBeVisible();
+
+  await page.getByTestId("archived-toggle").click();
+  await page.getByTestId(`archived-actions-${projectId}`).click();
+  await page.getByTestId(`project-delete-${projectId}`).click();
+  await expect(page.getByTestId("delete-confirm-dialog")).toContainText("E2E Delete Me");
+  await page.getByTestId("delete-confirm-cancel").click();
+  await expect(page.getByTestId("delete-confirm-dialog")).toHaveCount(0);
+  await expect(page.getByTestId("archived-list")).toContainText("E2E Delete Me");
+
+  await page.getByTestId(`archived-actions-${projectId}`).click();
+  await page.getByTestId(`project-delete-${projectId}`).click();
+  await page.getByTestId("delete-confirm-submit").click();
+  await expect(page.getByTestId("workspace-empty")).toBeVisible();
+  await expect(page.getByTestId("archived-toggle")).toHaveCount(0);
+
+  await page.reload();
+  await page.getByTestId("shell").waitFor();
+  await expect(page.getByTestId("workspace-empty")).toBeVisible();
+  await expect(page.getByTestId("archived-toggle")).toHaveCount(0);
+  await expect(page.locator('[data-testid^="project-item-"]')).toHaveCount(0);
+});

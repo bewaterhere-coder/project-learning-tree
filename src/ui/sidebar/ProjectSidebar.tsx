@@ -12,6 +12,7 @@ import {
 import { Pane, PaneDivider, PaneGroup } from "../chrome/Pane.js";
 import { t } from "../i18n/index.js";
 import { Button } from "../primitives/Button.js";
+import { ConfirmDialog } from "../primitives/ConfirmDialog.js";
 import { Field, TextInput } from "../primitives/Field.js";
 import { Menu } from "../primitives/Menu.js";
 
@@ -34,6 +35,7 @@ export function ProjectSidebar({
   onUpdateProject,
   onArchiveProject,
   onRestoreProject,
+  onDeleteProject,
   onOpenCreate,
   createPending = false,
 }: {
@@ -62,6 +64,7 @@ export function ProjectSidebar({
   ) => boolean;
   onArchiveProject: (projectId: ProjectId) => void;
   onRestoreProject: (projectId: ProjectId) => void;
+  onDeleteProject: (projectId: ProjectId) => void | Promise<void>;
   onOpenCreate?: () => void;
   createPending?: boolean;
 }) {
@@ -73,6 +76,7 @@ export function ProjectSidebar({
   const [nameError, setNameError] = useState<string>();
   const [submitting, setSubmitting] = useState(false);
   const [menuId, setMenuId] = useState<string>();
+  const [pendingDelete, setPendingDelete] = useState<ProjectSummary>();
   const [dragWidth, setDragWidth] = useState<number>();
   const [dragHeight, setDragHeight] = useState<number>();
   const dragWidthRef = useRef<number | null>(null);
@@ -140,6 +144,7 @@ export function ProjectSidebar({
   };
 
   return (
+    <>
     <aside
       className={open ? "project-sidebar" : "project-sidebar collapsed"}
       data-testid="project-sidebar"
@@ -404,6 +409,18 @@ export function ProjectSidebar({
                           >
                             {t(locale, "sidebar.restore")}
                           </button>
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="menu-item-danger"
+                            data-testid={`project-delete-${summary.projectId}`}
+                            onClick={() => {
+                              setPendingDelete(summary);
+                              setMenuId(undefined);
+                            }}
+                          >
+                            {t(locale, "sidebar.deletePermanently")}
+                          </button>
                         </ProjectRow>
                       ))}
                     </ul>
@@ -438,6 +455,23 @@ export function ProjectSidebar({
         />
       ) : null}
     </aside>
+      {pendingDelete ? (
+        <ConfirmDialog
+          title={t(locale, "sidebar.deleteConfirmTitle", {
+            name: pendingDelete.name,
+          })}
+          body={t(locale, "sidebar.deleteConfirmBody")}
+          cancelLabel={t(locale, "sidebar.deleteConfirmCancel")}
+          confirmLabel={t(locale, "sidebar.deleteConfirmSubmit")}
+          onCancel={() => setPendingDelete(undefined)}
+          onConfirm={() => {
+            const projectId = pendingDelete.projectId;
+            setPendingDelete(undefined);
+            void onDeleteProject(projectId);
+          }}
+        />
+      ) : null}
+    </>
   );
 }
 

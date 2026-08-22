@@ -115,6 +115,62 @@ describe("production workspace UI", () => {
     await user.click(screen.getByTestId(`project-archive-${projectA.snapshot.project.id}`));
     expect(screen.getByTestId("workspace-empty")).toBeInTheDocument();
   });
+
+  it("deletes an archived project after confirmation and leaves cancel unchanged", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
+    const storage = createMemoryPreferenceStorage();
+    render(<App initialWorkspace={workspace} preferenceStorage={storage} />);
+
+    await user.click(screen.getByTestId(`project-actions-${projectA.snapshot.project.id}`));
+    expect(
+      screen.queryByTestId(`project-delete-${projectA.snapshot.project.id}`),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByTestId(`project-archive-${projectA.snapshot.project.id}`));
+
+    await user.click(screen.getByTestId("archived-toggle"));
+    await user.click(screen.getByTestId(`archived-actions-${projectA.snapshot.project.id}`));
+    expect(
+      screen.getByTestId(`project-restore-${projectA.snapshot.project.id}`),
+    ).toBeInTheDocument();
+    await user.click(screen.getByTestId(`project-delete-${projectA.snapshot.project.id}`));
+    expect(screen.getByTestId("delete-confirm-dialog")).toHaveTextContent("M2 Demo Tree");
+    await user.click(screen.getByTestId("delete-confirm-cancel"));
+    expect(screen.queryByTestId("delete-confirm-dialog")).not.toBeInTheDocument();
+    expect(screen.getByTestId("archived-list")).toHaveTextContent("M2 Demo Tree");
+
+    await user.click(screen.getByTestId(`archived-actions-${projectA.snapshot.project.id}`));
+    await user.click(screen.getByTestId(`project-delete-${projectA.snapshot.project.id}`));
+    await user.click(screen.getByTestId("delete-confirm-submit"));
+    expect(screen.queryByTestId("archived-list")).not.toBeInTheDocument();
+    expect(
+      screen.getByTestId(`project-item-${projectB.snapshot.project.id}`),
+    ).toBeInTheDocument();
+  });
+
+  it("enters Product Empty Workspace after deleting the final archived project", async () => {
+    const user = userEvent.setup();
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    let prepared = archiveProject(workspace, projectA.snapshot.project.id);
+    prepared = archiveProject(prepared, prepared.projects[1]!.projectId);
+    render(
+      <App
+        initialWorkspace={prepared}
+        preferenceStorage={createMemoryPreferenceStorage()}
+      />,
+    );
+    await user.click(screen.getByTestId("archived-toggle"));
+    const firstId = prepared.projects[0]!.projectId;
+    await user.click(screen.getByTestId(`archived-actions-${firstId}`));
+    await user.click(screen.getByTestId(`project-delete-${firstId}`));
+    await user.click(screen.getByTestId("delete-confirm-submit"));
+    const secondId = prepared.projects[1]!.projectId;
+    await user.click(screen.getByTestId(`archived-actions-${secondId}`));
+    await user.click(screen.getByTestId(`project-delete-${secondId}`));
+    await user.click(screen.getByTestId("delete-confirm-submit"));
+    expect(screen.getByTestId("workspace-empty")).toBeInTheDocument();
+    expect(screen.queryByTestId("archived-toggle")).not.toBeInTheDocument();
+  });
 });
 
 describe("persistence write channels", () => {

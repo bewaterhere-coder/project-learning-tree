@@ -1,3 +1,4 @@
+import type { ProjectId } from "../application/index.js";
 import type { PreferenceStorage } from "../workspace/index.js";
 import { conversationKey, type ConversationIdentity } from "./identity.js";
 import { emptyConversation } from "./session.js";
@@ -19,6 +20,7 @@ export interface ConversationStore {
   save(conversation: NodeConversation): Promise<void>;
   loadRegistry(): Promise<ConversationRegistry>;
   saveRegistry(registry: ConversationRegistry): Promise<void>;
+  deleteForProject(projectId: ProjectId): Promise<void>;
 }
 
 export function createMemoryConversationStore(
@@ -48,6 +50,16 @@ export function createMemoryConversationStore(
         return;
       }
       writeRegistry(backing, registry);
+    },
+    deleteForProject: async (projectId) => {
+      const registry = readRegistry(backing);
+      const conversations: ConversationRegistry["conversations"] = {};
+      for (const [key, conversation] of Object.entries(registry.conversations)) {
+        if (conversation.identity.projectId !== projectId) {
+          conversations[key] = conversation;
+        }
+      }
+      writeRegistry(backing, { conversations });
     },
   };
 }

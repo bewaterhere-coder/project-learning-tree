@@ -7,6 +7,7 @@ import {
   archiveProject,
   createWorkspace,
   createWorkspaceProject,
+  deleteArchivedProject,
   restoreProject,
   selectedProject,
   selectProject,
@@ -109,5 +110,71 @@ describe("create / archive / restore", () => {
     expect(revived.selectedProjectId).toBe(projectB.snapshot.project.id);
     expect(revived.projects[1]?.archived).toBe(false);
     expect(revived.projects[1]?.snapshot).toBe(workspace.projects[1]?.snapshot);
+  });
+});
+
+describe("permanent delete archived project", () => {
+  it("removes only the archived project and reports deleted: true", () => {
+    const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
+    const archived = archiveProject(workspace, projectB.snapshot.project.id);
+    const snapshotA = archived.projects[0]?.snapshot;
+    const result = deleteArchivedProject(archived, projectB.snapshot.project.id);
+    expect(result.deleted).toBe(true);
+    if (result.deleted !== true) {
+      throw new Error("expected deletion");
+    }
+    expect(result.projectId).toBe(projectB.snapshot.project.id);
+    expect(result.workspace.projects.map((project) => project.projectId)).toEqual([
+      projectA.snapshot.project.id,
+    ]);
+    expect(result.workspace.projects[0]?.snapshot).toBe(snapshotA);
+    expect(result.workspace.selectedProjectId).toBe(projectA.snapshot.project.id);
+  });
+
+  it("returns deleted: false for active or missing projects without mutating workspace", () => {
+    const { workspace, projectA } = createDemoWorkspaceFixture();
+    const active = deleteArchivedProject(workspace, projectA.snapshot.project.id);
+    expect(active).toEqual({ workspace, deleted: false });
+    expect(active.workspace).toBe(workspace);
+
+    const missing = deleteArchivedProject(workspace, "missing-project");
+    expect(missing).toEqual({ workspace, deleted: false });
+    expect(missing.workspace).toBe(workspace);
+  });
+
+  it("clears selection when the deleted project was selected, and empties the final project", () => {
+    const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
+    const bothArchived = archiveProject(
+      archiveProject(workspace, projectA.snapshot.project.id),
+      projectB.snapshot.project.id,
+    );
+    expect(bothArchived.selectedProjectId).toBeNull();
+    const first = deleteArchivedProject(bothArchived, projectA.snapshot.project.id);
+    expect(first.deleted).toBe(true);
+    if (first.deleted !== true) {
+      throw new Error("expected deletion");
+    }
+    expect(first.workspace.projects).toHaveLength(1);
+    expect(first.workspace.selectedProjectId).toBeNull();
+
+    const last = deleteArchivedProject(first.workspace, projectB.snapshot.project.id);
+    expect(last.deleted).toBe(true);
+    if (last.deleted !== true) {
+      throw new Error("expected deletion");
+    }
+    expect(last.workspace.projects).toEqual([]);
+    expect(last.workspace.selectedProjectId).toBeNull();
+  });
+
+  it("archive then restore preserves project identity and snapshot", () => {
+    const { workspace, projectB } = createDemoWorkspaceFixture();
+    const snapshot = workspace.projects[1]?.snapshot;
+    const layout = workspace.projects[1]?.layout;
+    const archived = archiveProject(workspace, projectB.snapshot.project.id);
+    const restored = restoreProject(archived, projectB.snapshot.project.id);
+    expect(restored.projects[1]?.projectId).toBe(projectB.snapshot.project.id);
+    expect(restored.projects[1]?.snapshot).toBe(snapshot);
+    expect(restored.projects[1]?.layout).toEqual(layout);
+    expect(restored.projects[1]?.archived).toBe(false);
   });
 });

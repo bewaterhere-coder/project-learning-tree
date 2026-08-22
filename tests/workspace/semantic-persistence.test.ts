@@ -10,6 +10,7 @@ import {
   createMemoryPreferenceStorage,
   createWorkspace,
   createWorkspaceProject,
+  deleteArchivedProject,
   hydrateSemanticWorkspace,
   hydrateWorkspacePreferences,
   parseSemanticWorkspace,
@@ -166,6 +167,28 @@ describe("semantic persistence", () => {
     saveSemanticWorkspace(storage, focused);
     expect(storage.writes.every((key) => key === WORKSPACE_SEMANTIC_KEY)).toBe(true);
     expect(storage.writes.length).toBe(6);
+  });
+
+  it("persists permanent delete and does not resurrect the project on reload", () => {
+    const { workspace, projectA, projectB } = createDemoWorkspaceFixture();
+    const storage = trackingStorage();
+    const archived = archiveProject(workspace, projectB.snapshot.project.id);
+    const deleted = deleteArchivedProject(archived, projectB.snapshot.project.id);
+    expect(deleted.deleted).toBe(true);
+    if (deleted.deleted !== true) {
+      throw new Error("expected deletion");
+    }
+    saveSemanticWorkspace(storage, deleted.workspace);
+    const reloaded = hydrateSemanticWorkspace(storage);
+    expect(reloaded.projects.map((project) => project.projectId)).toEqual([
+      projectA.snapshot.project.id,
+    ]);
+    expect(
+      reloaded.projects.some(
+        (project) => project.projectId === projectB.snapshot.project.id,
+      ),
+    ).toBe(false);
+    expect(reloaded.projects[0]?.snapshot).toEqual(archived.projects[0]?.snapshot);
   });
 
   it("does not require a semantic write for layout-only mutations", () => {
