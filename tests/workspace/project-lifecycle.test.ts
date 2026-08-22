@@ -43,12 +43,14 @@ describe("create / archive / restore", () => {
     expect(next.selectedProjectId).toBe(next.projects[0]?.projectId);
     expect(next.projects[0]?.archived).toBe(false);
     expect(next.projects[0]?.snapshot.project.name).toBe("Agents");
-    expect(next.projects[0]?.snapshot.pass.rootNodeIds).toHaveLength(1);
+    expect(next.projects[0]?.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(next.projects[0]?.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
     expect(next.projects[0]?.snapshot.pass.activeStack).toEqual([]);
-    const rootId = next.projects[0]?.snapshot.pass.projectRootNodeId;
-    expect(rootId).toBeDefined();
+    for (const rootId of next.projects[0]?.snapshot.pass.rootNodeIds ?? []) {
+      expect(next.projects[0]?.snapshot.nodes[rootId]?.parentId).toBeUndefined();
+    }
     expect(next.projects[0]?.bootstrap?.generatedQuestionCount).toBe(
-      next.projects[0]?.snapshot.nodes[rootId!]?.childIds.length,
+      next.projects[0]?.snapshot.pass.rootNodeIds.length,
     );
   });
 

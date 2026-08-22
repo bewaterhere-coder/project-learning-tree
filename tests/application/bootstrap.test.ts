@@ -24,15 +24,9 @@ describe("bootstrapLearningProject", () => {
 
     expect(result.snapshot.project.name).toBe("Vite");
     expect(result.snapshot.project.source).toBe("https://github.com/vitejs/vite");
-    expect(result.snapshot.pass.rootNodeIds).toHaveLength(1);
-    const projectRootId = result.snapshot.pass.projectRootNodeId;
-    expect(projectRootId).toBe(result.snapshot.pass.rootNodeIds[0]);
-    const projectRoot = result.snapshot.nodes[projectRootId!];
-    expect(projectRoot?.parentId).toBeUndefined();
-    expect(projectRoot?.lifecycle).toBe("open");
-    expect(projectRoot?.question).toBe("Vite");
+    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
 
-    const coreQuestionIds = projectRoot?.childIds ?? [];
+    const coreQuestionIds = result.snapshot.pass.rootNodeIds;
     expect(coreQuestionIds.length).toBeGreaterThan(0);
     expect(coreQuestionIds.length).toBeLessThanOrEqual(CORE_QUESTION_LIMIT);
     expect(result.snapshot.pass.activeStack).toEqual([]);
@@ -43,10 +37,11 @@ describe("bootstrapLearningProject", () => {
 
     for (const nodeId of coreQuestionIds) {
       const node = result.snapshot.nodes[nodeId];
-      expect(node?.parentId).toBe(projectRootId);
+      expect(node?.parentId).toBeUndefined();
       expect(node?.lifecycle).toBe("open");
       expect(node?.goal.length).toBeGreaterThan(0);
       expect(node?.definitionOfDone.length).toBeGreaterThan(0);
+      expect(node?.question).not.toBe("Vite");
     }
 
     expect(result.record.generatedQuestionCount).toBe(coreQuestionIds.length);
@@ -82,9 +77,11 @@ describe("bootstrapLearningProject", () => {
       throw new Error(result.error.kind);
     }
     expect(result.record.evidenceStatus).toBe("partial");
-    expect(result.snapshot.pass.rootNodeIds).toHaveLength(1);
-    const rootId = result.snapshot.pass.projectRootNodeId!;
-    expect(result.snapshot.nodes[rootId]?.childIds.length).toBeGreaterThan(0);
+    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(result.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
+    for (const rootId of result.snapshot.pass.rootNodeIds) {
+      expect(result.snapshot.nodes[rootId]?.parentId).toBeUndefined();
+    }
   });
 
   it("creates the project with fallback evidence when the provider rejects", async () => {
@@ -96,9 +93,8 @@ describe("bootstrapLearningProject", () => {
     if (!result.ok) {
       throw new Error(result.error.kind);
     }
-    expect(result.snapshot.pass.rootNodeIds).toHaveLength(1);
-    const rootId = result.snapshot.pass.projectRootNodeId!;
-    expect(result.snapshot.nodes[rootId]?.childIds.length).toBeGreaterThan(0);
+    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(result.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
     expect(result.record.evidenceStatus).toBe("fallback");
   });
 

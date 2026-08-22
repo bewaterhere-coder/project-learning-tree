@@ -36,7 +36,7 @@ describe("project sidebar", () => {
     expect(itemB).toHaveTextContent("M2.1 Demo Tree B");
     expect(
       screen.getByTestId(`project-completion-${projectA.snapshot.project.id}`),
-    ).toHaveAttribute("data-completion", String(1 / 5));
+    ).toHaveAttribute("data-completion", String(1 / 4));
     expect(
       screen.getByTestId(`project-active-${projectA.snapshot.project.id}`),
     ).toHaveTextContent("Q1");
@@ -339,7 +339,7 @@ describe("i18n catalogs", () => {
       }),
     ).toHaveTextContent("Question details");
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Enter this question",
+      "Start learning",
     );
     expect(screen.getByTestId("active-stack")).toHaveTextContent("Q1");
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");

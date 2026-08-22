@@ -36,15 +36,11 @@ describe("multi-project workspace", () => {
       throw new Error("missing project B");
     }
 
-    expect(a.snapshot.pass.activeStack).toEqual([
-      projectA.snapshot.pass.projectRootNodeId,
-      projectA.ids.q1,
-    ]);
+    expect(a.snapshot.pass.activeStack).toEqual([projectA.ids.q1]);
+    expect(a.snapshot.pass.projectRootNodeId).toBeUndefined();
     expect(a.snapshot.pass.currentFocusNodeId).toBe(projectA.ids.q2);
-    expect(b.snapshot.pass.activeStack).toEqual([
-      projectB.snapshot.pass.projectRootNodeId,
-      projectB.ids.alpha,
-    ]);
+    expect(b.snapshot.pass.activeStack).toEqual([projectB.ids.alpha]);
+    expect(b.snapshot.pass.projectRootNodeId).toBeUndefined();
     expect(b.snapshot.pass.currentFocusNodeId).toBe(projectB.ids.alpha1);
   });
 
@@ -61,7 +57,6 @@ describe("multi-project workspace", () => {
     expect(switched.projects[0]?.snapshot).toBe(snapshotA);
     expect(switched.projects[1]?.snapshot).toBe(snapshotB);
     expect(switched.projects[0]?.snapshot.pass.activeStack).toEqual([
-      projectA.snapshot.pass.projectRootNodeId,
       projectA.ids.q1,
     ]);
     expect(switched.projects[0]?.snapshot.pass.currentFocusNodeId).toBe(
@@ -98,7 +93,6 @@ describe("multi-project workspace", () => {
     );
     expect(back.projects[0]?.snapshot).toBe(snapshotA);
     expect(back.projects[0]?.snapshot.pass.activeStack).toEqual([
-      projectA.snapshot.pass.projectRootNodeId,
       projectA.ids.q1,
     ]);
     expect(back.projects[0]?.snapshot.pass.currentFocusNodeId).toBe(

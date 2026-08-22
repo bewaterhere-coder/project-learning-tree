@@ -33,7 +33,6 @@ export function LearningNode({
       data-on-stack={data.isOnActiveStack ? "true" : "false"}
       data-focus={data.isCurrentFocus ? "true" : "false"}
       data-recommended={data.isRecommended ? "true" : "false"}
-      data-project-root={data.isProjectRoot ? "true" : "false"}
     >
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <p

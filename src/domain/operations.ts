@@ -26,7 +26,6 @@ import {
   type DomainEvent,
   type DomainResult,
   type DomainSnapshot,
-  type EnsureProjectRoot,
   type EvaluateConvergence,
   type FocusNode,
   type LearningNode,
@@ -41,7 +40,6 @@ import {
   type SetNodeSummary,
   type UnmarkChildBlocking,
   type UpdateProjectMetadata,
-  PROJECT_ROOT_ORIENTATION_GOAL,
 } from "./types.js";
 
 function ok(
@@ -226,38 +224,6 @@ export function createProject(
   return ok(snapshot, [{ type: "ProjectCreated", projectId, passId }]);
 }
 
-export function ensureProjectRoot(
-  snapshot: DomainSnapshot,
-  ports: Ports,
-  command: EnsureProjectRoot = {},
-): DomainResult<DomainSnapshot> {
-  const existingId = snapshot.pass.projectRootNodeId;
-  if (existingId !== undefined) {
-    const existing = snapshot.nodes[existingId];
-    if (existing && snapshot.pass.rootNodeIds.includes(existingId)) {
-      return ok(cloneSnapshot(snapshot), []);
-    }
-  }
-
-  const nodeId = command.nodeId ?? ports.id();
-  if (snapshot.nodes[nodeId]) {
-    return fail({ kind: "InvalidActiveStack", reason: "project root id already used" });
-  }
-
-  const rootNode = createOpenNode(ports, {
-    id: nodeId,
-    question: snapshot.project.name,
-    goal: PROJECT_ROOT_ORIENTATION_GOAL,
-  });
-
-  const next = putNode(snapshot, rootNode);
-  next.pass.projectRootNodeId = nodeId;
-  if (!next.pass.rootNodeIds.includes(nodeId)) {
-    next.pass.rootNodeIds = [nodeId, ...next.pass.rootNodeIds];
-  }
-  return ok(next, [{ type: "ProjectRootEnsured", nodeId }]);
-}
-
 export function updateProjectMetadata(
   snapshot: DomainSnapshot,
   command: UpdateProjectMetadata,
@@ -275,13 +241,6 @@ export function updateProjectMetadata(
   if (command.description !== undefined) {
     next.project.description = command.description.trim() || undefined;
   }
-  const rootId = next.pass.projectRootNodeId;
-  if (rootId !== undefined) {
-    const root = next.nodes[rootId];
-    if (root) {
-      next.nodes[rootId] = { ...root, question: name };
-    }
-  }
   return ok(next, [{ type: "ProjectMetadataUpdated", projectId: next.project.id }]);
 }
 
@@ -290,37 +249,20 @@ export function addCoreQuestion(
   command: AddCoreQuestion,
   ports: Ports,
 ): DomainResult<DomainSnapshot> {
-  const rootId = snapshot.pass.projectRootNodeId;
-  if (rootId === undefined || !snapshot.nodes[rootId]) {
-    return fail({ kind: "ProjectRootRequired" });
-  }
-  const root = snapshot.nodes[rootId];
-  if (!root) {
-    return fail({ kind: "ProjectRootRequired" });
-  }
-  if (root.childIds.length >= CORE_QUESTION_LIMIT) {
+  if (snapshot.pass.rootNodeIds.length >= CORE_QUESTION_LIMIT) {
     return fail({ kind: "CoreQuestionLimitReached", limit: CORE_QUESTION_LIMIT });
   }
   const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
   if (authoringError) {
     return fail(authoringError);
   }
-  const closed = rejectIfClosed(root, "add-core-question");
-  if (closed) {
-    return fail(closed);
-  }
   const node = createOpenNode(ports, {
     question: command.question.trim(),
     goal: command.goal.trim(),
     targetDepth: command.targetDepth,
-    parentId: rootId,
   });
   const next = putNode(snapshot, node);
-  const liveRoot = next.nodes[rootId];
-  if (!liveRoot) {
-    return fail({ kind: "ProjectRootRequired" });
-  }
-  next.nodes[rootId] = attachChild(liveRoot, node.id, { blocking: false });
+  next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
   return ok(next, [{ type: "CoreQuestionAdded", nodeId: node.id }]);
 }
 

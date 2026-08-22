@@ -14,12 +14,10 @@ export interface CoreQuestionAuthoring {
 export function selectCoreQuestionAuthoring(
   snapshot: DomainSnapshot,
 ): CoreQuestionAuthoring {
-  const rootId = snapshot.pass.projectRootNodeId;
-  const used =
-    rootId !== undefined ? (snapshot.nodes[rootId]?.childIds.length ?? 0) : 0;
+  const used = snapshot.pass.rootNodeIds.length;
   const remaining = Math.max(0, CORE_QUESTION_LIMIT - used);
   return {
-    canAdd: remaining > 0 && rootId !== undefined,
+    canAdd: remaining > 0,
     remaining,
     limit: CORE_QUESTION_LIMIT,
     atLimit: remaining === 0,

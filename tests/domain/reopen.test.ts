@@ -73,7 +73,7 @@ describe("reopen", () => {
     }
 
     expect(reopened.lifecycle).toBe("open");
-    expect(snapshot.pass.activeStack).toEqual([projectRootId]);
+    expect(snapshot.pass.activeStack).toEqual([]);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
     expect(reopened.conversationThreadId).toBe(before.conversationThreadId);
     expect(reopened.summary).toBe(before.summary);

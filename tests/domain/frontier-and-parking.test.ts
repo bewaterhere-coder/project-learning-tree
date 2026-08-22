@@ -86,7 +86,7 @@ describe("frontier and parking", () => {
     expect(promoted.pass.frontier).toHaveLength(0);
     expect(promoted.nodes[newRoot]?.question).toBe("Later topic");
     expect(promoted.nodes[newRoot]?.lifecycle).toBe("open");
-    expect(promoted.pass.activeStack).toEqual([projectRootId, rootId]);
+    expect(promoted.pass.activeStack).toEqual([rootId]);
 
     expectError(
       promoteFrontierItem(
@@ -239,7 +239,7 @@ describe("frontier and parking", () => {
 
     const parked = unwrap(parkNode(snapshot, { nodeId: rootId }));
     expect(parked.nodes[rootId]?.lifecycle).toBe("parked");
-    expect(parked.pass.activeStack).toEqual([projectRootId]);
+    expect(parked.pass.activeStack).toEqual([]);
     expect(parked.nodes[rootId]?.conversationThreadId).toBe(threadId);
     expect(parked.nodes[rootId]?.definitionOfDone[0]?.id).toBe(criterion.id);
     expect(parked.nodes[rootId]?.childIds).toEqual([childId]);
@@ -248,7 +248,7 @@ describe("frontier and parking", () => {
 
     const resumed = unwrap(resumeNode(parked, { nodeId: rootId }));
     expect(resumed.nodes[rootId]?.lifecycle).toBe("active");
-    expect(resumed.pass.activeStack).toEqual([projectRootId, rootId]);
+    expect(resumed.pass.activeStack).toEqual([rootId]);
     expect(resumed.nodes[rootId]?.conversationThreadId).toBe(threadId);
     expect(resumed.nodes[rootId]?.definitionOfDone[0]?.description).toBe(
       "Keep this criterion",
@@ -258,7 +258,7 @@ describe("frontier and parking", () => {
 
   it("rejects parking a node that is not the Active Stack leaf", () => {
     const ports = sequentialPorts();
-    const { snapshot: parentActive, rootId, projectRootId } = activateRoot(
+    const { snapshot: parentActive, rootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
     const { snapshot, childId } = createActivatedChild(
@@ -272,11 +272,7 @@ describe("frontier and parking", () => {
     );
     expectError(parkNode(withLeaf, { nodeId: rootId }), "NotActiveStackLeaf");
     expect(withLeaf.nodes[rootId]?.lifecycle).toBe("active");
-    expect(withLeaf.pass.activeStack).toEqual([
-      projectRootId,
-      rootId,
-      childId,
-    ]);
+    expect(withLeaf.pass.activeStack).toEqual([rootId, childId]);
   });
 
   it("returnToParent only changes Current Focus", () => {

@@ -21,7 +21,7 @@ describe("node inspector", () => {
     expect(screen.getByTestId("inspector-question")).toHaveTextContent("Q2");
     expect(screen.getByTestId("inspector-lifecycle")).toHaveTextContent("To start");
     expect(screen.getByTestId("action-activate")).toHaveTextContent(
-      "Enter this question",
+      "Start learning",
     );
 
     await user.click(screen.getByTestId(`node-${ids.q1}`));

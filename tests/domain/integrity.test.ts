@@ -9,10 +9,8 @@ import {
   closeNode,
   completePass,
   createProject,
-  ensureProjectRoot,
   parkNode,
   resumeNode,
-  setNodeSummary,
 } from "../../src/domain/index.js";
 import {
   activateRoot,
@@ -21,7 +19,6 @@ import {
   coreQuestionIds,
   createProjectWithRoots,
   expectError,
-  requireProjectRootId,
   sequentialPorts,
   unwrap,
 } from "./helpers.js";
@@ -60,7 +57,12 @@ describe("general integrity", () => {
     const { snapshot } = activateRoot(createProjectWithRoots(ports, ["Q1"]));
     expect(JSON.stringify(snapshot)).not.toMatch(/"lifecycle":"blocked"/);
     for (const node of Object.values(snapshot.nodes)) {
-      expect(node.lifecycle === "open" || node.lifecycle === "active" || node.lifecycle === "closed" || node.lifecycle === "parked").toBe(true);
+      expect(
+        node.lifecycle === "open" ||
+          node.lifecycle === "active" ||
+          node.lifecycle === "closed" ||
+          node.lifecycle === "parked",
+      ).toBe(true);
       expect("blocked" in node).toBe(false);
     }
     assertActiveBijection(snapshot);
@@ -84,9 +86,9 @@ describe("general integrity", () => {
       "openai",
       "anthropic",
       "octokit",
-      "from \"node:http\"",
+      'from "node:http"',
       "from 'node:http'",
-      "from \"node:fs\"",
+      'from "node:fs"',
       "from 'node:fs'",
     ];
     for (const file of domainSourceFiles()) {
@@ -107,17 +109,13 @@ describe("general integrity", () => {
 
   it("completes a pass when every root is closed and the stack is empty", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId, projectRootId } = activateRoot(
+    const { snapshot: active, rootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1"]),
     );
-    const closedChild = closePrepared(active, rootId, ports);
-    let ready = unwrap(
-      setNodeSummary(closedChild, {
-        nodeId: projectRootId,
-        summary: "Project oriented.",
-      }),
-    );
-    ready = unwrap(closeNode(ready, { nodeId: projectRootId }));
+    const ready = closePrepared(active, rootId, ports);
+    expect(ready.nodes[rootId]?.lifecycle).toBe("closed");
+    expect(ready.pass.activeStack).toEqual([]);
+    expect(ready.pass.projectRootNodeId).toBeUndefined();
     const completed = unwrap(completePass(ready));
     expect(completed.pass.status).toBe("completed");
     expect(completed.pass.activeStack).toEqual([]);
@@ -126,7 +124,6 @@ describe("general integrity", () => {
   it("enforces the five core-question limit", () => {
     const ports = sequentialPorts();
     let snapshot = unwrap(createProject({ name: "Limit" }, ports));
-    snapshot = unwrap(ensureProjectRoot(snapshot, ports));
     for (let index = 0; index < 5; index += 1) {
       snapshot = unwrap(
         addCoreQuestion(
@@ -136,6 +133,8 @@ describe("general integrity", () => {
         ),
       );
     }
+    expect(snapshot.pass.rootNodeIds).toHaveLength(5);
+    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
     expectError(
       addCoreQuestion(snapshot, { question: "Q6", goal: "G6" }, ports),
       "CoreQuestionLimitReached",
@@ -149,9 +148,7 @@ describe("general integrity", () => {
     const q1 = coreQuestionIds(snapshot)[0]!;
     snapshot = unwrap(activateNode(snapshot, { nodeId: q1 }));
     assertActiveBijection(snapshot);
-    expect(snapshot.pass.activeStack).toEqual([
-      requireProjectRootId(snapshot),
-      q1,
-    ]);
+    expect(snapshot.pass.activeStack).toEqual([q1]);
+    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
   });
 });
