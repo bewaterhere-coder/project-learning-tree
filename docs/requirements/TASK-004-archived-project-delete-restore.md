@@ -8,15 +8,15 @@ pr:
   number: 22
   head_ref: task/TASK-004-archived-project-delete-restore
   base_ref: main
-  state: draft
+  state: merged
 development:
-  stage: accepted
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: true
-    merge_verified: false
-  next_expected_actor: chatgpt
+    merge_verified: true
+  next_expected_actor: null
 artifacts:
   plan: ../plans/TASK-004-plan.md
 ---
@@ -333,10 +333,12 @@ Do not expand this task into:
 - changing active-project archive semantics unrelated to this requirement;
 - replacing `archived: boolean` with a new lifecycle model without a demonstrated blocker.
 
-## Cursor Gate
+## Completion
 
 Canonical implementation plan: `docs/plans/TASK-004-plan.md` (approved).
 
-Development stage is `accepted`. `plan_approved: true`. `acceptance_approved: true`. Next expected actor: ChatGPT for final merge/read-back.
+TASK-004 is complete. PR #22 was accepted, squash-merged into `main`, and merge read-back was verified.
 
-Acceptance evidence was reviewed on PR #22 at head `9ebac15ac23544f5333b0cc5820fb222732c3d89`; CI run #91 completed successfully. Keep the same task branch / PR. Task is not `done` until PR merge and merge read-back are verified.
+Merge commit: `29b2d80314ae232797a97a65c016199c69919ef1`.
+
+Final state: `stage: done`, `acceptance_approved: true`, `merge_verified: true`.
