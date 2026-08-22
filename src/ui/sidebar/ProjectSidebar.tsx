@@ -1,5 +1,8 @@
 import { useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { ProjectSummary } from "../../application/index.js";
+import {
+  resolveProjectName,
+  type ProjectSummary,
+} from "../../application/index.js";
 import type { PaneReleaseResult, ProjectId, WorkspaceLocale } from "../../workspace/index.js";
 import {
   COLLAPSED_SIDEBAR_WIDTH,
@@ -22,11 +25,13 @@ export function ProjectSidebar({
   summaries,
   archivedSummaries,
   createError,
+  editError,
   onSelectProject,
   onToggle,
   onSidebarCommit,
   onArchivedCommit,
   onCreateProject,
+  onUpdateProject,
   onArchiveProject,
   onRestoreProject,
   onOpenCreate,
@@ -41,21 +46,27 @@ export function ProjectSidebar({
   summaries: ProjectSummary[];
   archivedSummaries: ProjectSummary[];
   createError?: string;
+  editError?: string;
   onSelectProject: (projectId: ProjectId) => void;
   onToggle: () => void;
   onSidebarCommit: (next: PaneReleaseResult) => void;
   onArchivedCommit: (next: PaneReleaseResult) => void;
   onCreateProject: (input: {
-    name: string;
+    name?: string;
     source?: string;
     description?: string;
   }) => boolean | Promise<boolean>;
+  onUpdateProject: (
+    projectId: ProjectId,
+    input: { name: string; source?: string; description?: string },
+  ) => boolean;
   onArchiveProject: (projectId: ProjectId) => void;
   onRestoreProject: (projectId: ProjectId) => void;
   onOpenCreate?: () => void;
   createPending?: boolean;
 }) {
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<ProjectId>();
   const [name, setName] = useState("");
   const [source, setSource] = useState("");
   const [description, setDescription] = useState("");
@@ -72,28 +83,56 @@ export function ProjectSidebar({
   const displayHeight = dragHeight ?? archivedHeight;
   const dragging = dragWidth !== undefined || dragHeight !== undefined;
   const createBusy = createPending || submitting;
+  const formOpen = creating || editingId !== undefined;
 
-  const submitCreate = async (): Promise<void> => {
+  const resetForm = (): void => {
+    setName("");
+    setSource("");
+    setDescription("");
+    setNameError(undefined);
+    setCreating(false);
+    setEditingId(undefined);
+  };
+
+  const beginEdit = (summary: ProjectSummary): void => {
+    setCreating(false);
+    setEditingId(summary.projectId);
+    setName(summary.name);
+    setSource(summary.source ?? "");
+    setDescription(summary.description ?? "");
+    setNameError(undefined);
+    setMenuId(undefined);
+  };
+
+  const submitForm = async (): Promise<void> => {
     if (createBusy) {
       return;
     }
-    if (name.trim() === "") {
-      setNameError(t(locale, "sidebar.projectNameEmpty"));
+    const resolvedName = resolveProjectName({ name, source });
+    if (resolvedName === undefined) {
+      setNameError(t(locale, "sidebar.projectNameOrSource"));
       return;
     }
     setSubmitting(true);
     try {
+      if (editingId !== undefined) {
+        const ok = onUpdateProject(editingId, {
+          name: resolvedName,
+          source: source.trim() || undefined,
+          description: description.trim() || undefined,
+        });
+        if (ok) {
+          resetForm();
+        }
+        return;
+      }
       const ok = await onCreateProject({
-        name,
+        name: name.trim() || resolvedName,
         source: source.trim() || undefined,
         description: description.trim() || undefined,
       });
       if (ok) {
-        setName("");
-        setSource("");
-        setDescription("");
-        setNameError(undefined);
-        setCreating(false);
+        resetForm();
       }
     } finally {
       setSubmitting(false);
@@ -130,7 +169,9 @@ export function ProjectSidebar({
               aria-label={t(locale, "sidebar.create")}
               title={t(locale, "sidebar.create")}
               onClick={() => {
+                setEditingId(undefined);
                 setCreating((value) => !value);
+                setNameError(undefined);
                 onOpenCreate?.();
               }}
             >
@@ -139,29 +180,28 @@ export function ProjectSidebar({
           </>
         ) : null}
       </div>
-      {open && creating ? (
+      {open && formOpen ? (
         <form
           className="project-create"
-          data-testid="project-create-form"
+          data-testid={editingId ? "project-edit-form" : "project-create-form"}
           onSubmit={(event) => {
             event.preventDefault();
-            void submitCreate();
+            void submitForm();
           }}
           onKeyDown={(event) => {
             if (event.key === "Escape") {
               event.preventDefault();
-              setCreating(false);
-              setNameError(undefined);
+              resetForm();
             }
           }}
         >
           <Field
             label={t(locale, "sidebar.projectName")}
-            required
+            required={editingId !== undefined}
             error={nameError}
           >
             <TextInput
-              data-testid="project-name-input"
+              data-testid={editingId ? "project-edit-name-input" : "project-name-input"}
               value={name}
               autoFocus
               onChange={(event) => setName(event.target.value)}
@@ -172,7 +212,9 @@ export function ProjectSidebar({
             helper={t(locale, "sidebar.projectSourceHelper")}
           >
             <TextInput
-              data-testid="project-source-input"
+              data-testid={
+                editingId ? "project-edit-source-input" : "project-source-input"
+              }
               value={source}
               placeholder={t(locale, "sidebar.projectSourcePlaceholder")}
               onChange={(event) => setSource(event.target.value)}
@@ -180,34 +222,47 @@ export function ProjectSidebar({
           </Field>
           <Field label={t(locale, "sidebar.projectDescription")}>
             <TextInput
-              data-testid="project-description-input"
+              data-testid={
+                editingId
+                  ? "project-edit-description-input"
+                  : "project-description-input"
+              }
               value={description}
               placeholder={t(locale, "sidebar.projectDescriptionPlaceholder")}
               onChange={(event) => setDescription(event.target.value)}
             />
           </Field>
-          {createError ? (
-            <p className="field-error" role="alert" data-testid="project-create-error">
-              {createError}
+          {(editingId ? editError : createError) ? (
+            <p
+              className="field-error"
+              role="alert"
+              data-testid={editingId ? "project-edit-error" : "project-create-error"}
+            >
+              {editingId ? editError : createError}
             </p>
           ) : null}
           <div className="authoring-actions">
             <Button
               variant="primary"
               type="submit"
-              data-testid="project-create-submit"
+              data-testid={
+                editingId ? "project-edit-submit" : "project-create-submit"
+              }
               disabled={createBusy}
               aria-busy={createBusy}
             >
-              {createBusy ? t(locale, "project.creating") : t(locale, "project.create")}
+              {editingId
+                ? t(locale, "project.editSave")
+                : createBusy
+                  ? t(locale, "project.creating")
+                  : t(locale, "project.create")}
             </Button>
             <Button
               variant="ghost"
-              data-testid="project-create-cancel"
-              onClick={() => {
-                setCreating(false);
-                setNameError(undefined);
-              }}
+              data-testid={
+                editingId ? "project-edit-cancel" : "project-create-cancel"
+              }
+              onClick={resetForm}
             >
               {t(locale, "project.cancel")}
             </Button>
@@ -238,6 +293,14 @@ export function ProjectSidebar({
                     }
                     onCloseMenu={() => setMenuId(undefined)}
                   >
+                    <button
+                      type="button"
+                      role="menuitem"
+                      data-testid={`project-edit-${summary.projectId}`}
+                      onClick={() => beginEdit(summary)}
+                    >
+                      {t(locale, "sidebar.edit")}
+                    </button>
                     <button
                       type="button"
                       role="menuitem"

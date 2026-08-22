@@ -16,6 +16,7 @@ import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createActivatedChild,
   createProjectWithRoots,
   expectError,
@@ -147,8 +148,7 @@ describe("definition of done and convergence", () => {
   it("rejects linking Evidence onto the wrong Criterion or another node", () => {
     const ports = sequentialPorts();
     let snapshot = createProjectWithRoots(ports, ["A", "B"]);
-    const aId = snapshot.pass.rootNodeIds[0];
-    const bId = snapshot.pass.rootNodeIds[1];
+    const [aId, bId] = coreQuestionIds(snapshot);
     if (!aId || !bId) {
       throw new Error("missing roots");
     }
@@ -202,17 +202,17 @@ describe("definition of done and convergence", () => {
 
   it("does not change Current Focus when closing a leaf", () => {
     const ports = sequentialPorts();
-    const { snapshot: active, rootId } = activateRoot(
+    const { snapshot: active, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q1", "Q2"]),
     );
-    const otherId = active.pass.rootNodeIds[1];
+    const otherId = coreQuestionIds(active)[1];
     if (!otherId) {
       throw new Error("missing other");
     }
     const focused = unwrap(focusNode(active, { nodeId: otherId }));
     const closed = closePrepared(focused, rootId, ports);
     expect(closed.pass.currentFocusNodeId).toBe(otherId);
-    expect(closed.pass.activeStack).toEqual([]);
+    expect(closed.pass.activeStack).toEqual([projectRootId]);
     expect(closed.nodes[rootId]?.lifecycle).toBe("closed");
   });
 

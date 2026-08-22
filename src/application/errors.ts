@@ -11,6 +11,7 @@ const CLOSE_PREREQUISITE_KINDS: ReadonlySet<DomainError["kind"]> = new Set([
   "CriterionNotSatisfied",
   "MissingRequiredEvidence",
   "UnresolvedBlockingChildren",
+  "ProjectRootChildrenOpen",
 ]);
 
 const NODE_ACTION_COMMANDS: ReadonlySet<UiCommand["type"]> = new Set([
@@ -67,6 +68,10 @@ export function isAuthoringCommand(
 
 export function isProjectCreateCommand(command?: string): boolean {
   return command === "createProject";
+}
+
+export function isProjectMetadataCommand(command?: string): boolean {
+  return command === "updateProjectMetadata";
 }
 
 export function isGlobalDomainError(
@@ -172,6 +177,13 @@ export function presentDomainError(
       return { key: "error.GoalRequired", params: {} };
     case "ProjectNameRequired":
       return { key: "error.ProjectNameRequired", params: {} };
+    case "ProjectRootRequired":
+      return { key: "error.ProjectRootRequired", params: {} };
+    case "ProjectRootChildrenOpen":
+      return {
+        key: "error.ProjectRootChildrenOpen",
+        params: { count: error.openChildIds.length },
+      };
     case "NotADirectChild":
       return { key: "error.NotADirectChild", params: {} };
   }

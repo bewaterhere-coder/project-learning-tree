@@ -13,6 +13,7 @@ export {
   createChild,
   createProject,
   declareCriterionSatisfied,
+  ensureProjectRoot,
   evaluateConvergence,
   focusNode,
   linkEvidenceToCriterion,
@@ -25,11 +26,14 @@ export {
   returnToParent,
   setNodeSummary,
   unmarkChildBlocking,
+  updateProjectMetadata,
 } from "./operations.js";
 export { defaultPorts } from "./ports.js";
 export type { Ports } from "./ports.js";
 export {
   CORE_QUESTION_LIMIT,
+  migratedProjectRootId,
+  PROJECT_ROOT_ORIENTATION_GOAL,
   type ActivateBlockingChild,
   type ActivateNode,
   type AddCoreQuestion,
@@ -46,6 +50,7 @@ export {
   type DomainEvent,
   type DomainResult,
   type DomainSnapshot,
+  type EnsureProjectRoot,
   type Evidence,
   type FocusNode,
   type FrontierItem,
@@ -68,4 +73,5 @@ export {
   type ResumeNode,
   type SetNodeSummary,
   type UnmarkChildBlocking,
+  type UpdateProjectMetadata,
 } from "./types.js";

@@ -16,6 +16,7 @@ import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createActivatedChild,
   createProjectWithRoots,
   expectError,
@@ -74,7 +75,7 @@ describe("ordinary child authoring", () => {
   it("allows createChild from open, active, and parked parents, but rejects closed parents", () => {
     const ports = sequentialPorts();
     const open = createProjectWithRoots(ports, ["Root"]);
-    const rootId = open.pass.rootNodeIds[0];
+    const rootId = coreQuestionIds(open)[0];
     if (!rootId) {
       throw new Error("missing root");
     }
@@ -232,7 +233,11 @@ describe("ordinary child authoring", () => {
       throw new Error("missing child");
     }
     const activated = unwrap(activateNode(created, { nodeId: childId }));
-    expect(activated.pass.activeStack).toEqual([rootId, childId]);
+    expect(activated.pass.activeStack).toEqual([
+      active.pass.projectRootNodeId,
+      rootId,
+      childId,
+    ]);
     expect(activated.nodes[childId]?.lifecycle).toBe("active");
     expectError(
       activateBlockingChild(created, { parentId: rootId, childId }),
@@ -291,8 +296,7 @@ describe("blocking relationship conversion", () => {
   it("rejects a non-direct child and keeps relationship arrays unique and idempotent", () => {
     const ports = sequentialPorts();
     const started = createProjectWithRoots(ports, ["A", "B"]);
-    const aId = started.pass.rootNodeIds[0];
-    const bId = started.pass.rootNodeIds[1];
+    const [aId, bId] = coreQuestionIds(started);
     if (!aId || !bId) {
       throw new Error("missing roots");
     }

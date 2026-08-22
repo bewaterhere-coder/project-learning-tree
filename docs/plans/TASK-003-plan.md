@@ -1,7 +1,7 @@
 ---
 task_id: TASK-003
 title: Project Root, Editable Metadata, and Hierarchical Tree Initialization
-status: plan_review
+status: implementation
 requirement: ../requirements/TASK-003-project-root-editable-metadata-tree-init.md
 ---
 
@@ -9,9 +9,7 @@ requirement: ../requirements/TASK-003-project-root-editable-metadata-tree-init.m
 
 This is the canonical implementation plan for TASK-003. It records code evidence for the requirement’s planning surface and the smallest change that satisfies the acceptance criteria.
 
-**Gate:** `plan_review` — revised per PR review `5000617595`; awaiting re-review (`plan_approved=true`).
-
-Implementation of product code is forbidden until that gate is recorded after Plan review. Writing this file is not Done for the task.
+**Gate:** `implementation` — Plan approved (`plan_approved=true`). Product implementation in progress on this branch.
 
 ## Review revisions (PR review 5000617595)
 

@@ -12,7 +12,7 @@ describe("selectProjectSummary", () => {
 
     expect(summary.projectId).toBe(snapshot.project.id);
     expect(summary.name).toBe("M2 Demo Tree");
-    expect(summary.completionLevel).toBe(1 / 4);
+    expect(summary.completionLevel).toBe(1 / 5);
     expect(summary.activeQuestion).toBe("Q1");
     expect(summary.isBlocked).toBe(true);
     expect(summary.unresolvedBlockerCount).toBe(1);

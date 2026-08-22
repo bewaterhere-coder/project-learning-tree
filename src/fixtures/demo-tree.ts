@@ -9,6 +9,7 @@ import {
   createProject,
   declareCriterionSatisfied,
   defaultPorts,
+  ensureProjectRoot,
   focusNode,
   linkEvidenceToCriterion,
   parkNode,
@@ -18,6 +19,23 @@ import {
   type NodeId,
   type Ports,
 } from "../domain/index.js";
+
+function withProjectRoot(snapshot: DomainSnapshot, ports: Ports): DomainSnapshot {
+  return unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
+}
+
+function projectRootId(snapshot: DomainSnapshot): NodeId {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (!rootId) {
+    throw new Error("expected project root");
+  }
+  return rootId;
+}
+
+function coreQuestionIds(snapshot: DomainSnapshot): NodeId[] {
+  const root = snapshot.nodes[projectRootId(snapshot)];
+  return root ? [...root.childIds] : [];
+}
 
 export interface DemoTreeIds {
   q1: NodeId;
@@ -142,9 +160,9 @@ export function createClosableNodeFixture(
 export function createBlockedBranchFixture(
   ports: Ports = sequentialFixturePorts(),
 ): BlockedBranchFixture {
-  let snapshot = unwrap(
-    createProject({ name: "Blocked Branch Fixture" }, ports),
-    "createProject",
+  let snapshot = withProjectRoot(
+    unwrap(createProject({ name: "Blocked Branch Fixture" }, ports), "createProject"),
+    ports,
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -154,7 +172,7 @@ export function createBlockedBranchFixture(
     ),
     "addCoreQuestion",
   );
-  const parent = snapshot.pass.rootNodeIds[0];
+  const parent = coreQuestionIds(snapshot)[0];
   if (!parent) {
     throw new Error("createBlockedBranchFixture: missing parent");
   }
@@ -186,9 +204,12 @@ export function createBlockedBranchFixture(
 export function createDemoTreeFixture(
   ports: Ports = sequentialFixturePorts(),
 ): DemoTreeFixture {
-  let snapshot = unwrap(
-    createProject({ name: "M2 Demo Tree", source: "fixture" }, ports),
-    "createProject",
+  let snapshot = withProjectRoot(
+    unwrap(
+      createProject({ name: "M2 Demo Tree", source: "fixture" }, ports),
+      "createProject",
+    ),
+    ports,
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -206,8 +227,7 @@ export function createDemoTreeFixture(
     ),
     "addCoreQuestion Q2",
   );
-  const q1 = snapshot.pass.rootNodeIds[0];
-  const q2 = snapshot.pass.rootNodeIds[1];
+  const [q1, q2] = coreQuestionIds(snapshot);
   if (!q1 || !q2) {
     throw new Error("createDemoTreeFixture: missing roots");
   }
@@ -274,9 +294,12 @@ export interface MixedChildrenFixture {
 export function createMixedChildrenFixture(
   ports: Ports = sequentialFixturePorts(2000),
 ): MixedChildrenFixture {
-  let snapshot = unwrap(
-    createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
-    "createProject mixed",
+  let snapshot = withProjectRoot(
+    unwrap(
+      createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
+      "createProject mixed",
+    ),
+    ports,
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -286,7 +309,7 @@ export function createMixedChildrenFixture(
     ),
     "addCoreQuestion Parent",
   );
-  const parent = snapshot.pass.rootNodeIds[0];
+  const parent = coreQuestionIds(snapshot)[0];
   if (!parent) {
     throw new Error("createMixedChildrenFixture: missing parent");
   }
@@ -327,9 +350,12 @@ export function createMixedChildrenFixture(
 export function createSecondDemoTreeFixture(
   ports: Ports = sequentialFixturePorts(1000),
 ): SecondDemoTreeFixture {
-  let snapshot = unwrap(
-    createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
-    "createProject B",
+  let snapshot = withProjectRoot(
+    unwrap(
+      createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
+      "createProject B",
+    ),
+    ports,
   );
   snapshot = unwrap(
     addCoreQuestion(
@@ -347,8 +373,7 @@ export function createSecondDemoTreeFixture(
     ),
     "addCoreQuestion Beta",
   );
-  const alpha = snapshot.pass.rootNodeIds[0];
-  const beta = snapshot.pass.rootNodeIds[1];
+  const [alpha, beta] = coreQuestionIds(snapshot);
   if (!alpha || !beta) {
     throw new Error("createSecondDemoTreeFixture: missing roots");
   }

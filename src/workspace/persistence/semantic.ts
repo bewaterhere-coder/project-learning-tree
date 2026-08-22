@@ -4,7 +4,9 @@ import {
   isEvidenceStatus,
   LEARNING_TREE_ADAPTER_ID,
   LEARNING_TREE_ADAPTER_VERSION,
+  migrateSnapshotHierarchy,
   type DomainSnapshot,
+  type ProjectId,
   type ProjectLearningBootstrapRecord,
 } from "../../application/index.js";
 import {
@@ -40,6 +42,12 @@ const PREFERENCE_ONLY_KEYS = [
   "chatBinding",
 ] as const;
 
+export interface SemanticHydrationResult {
+  workspace: LearningWorkspace;
+  /** Project ids whose hierarchy was migrated this load (for preference reconciliation). */
+  migratedProjectIds: ProjectId[];
+}
+
 export function serializeSemanticWorkspace(
   workspace: LearningWorkspace,
 ): StoredWorkspaceSemantics {
@@ -68,15 +76,41 @@ export function saveSemanticWorkspace(
 export function loadSemanticWorkspace(
   storage: PreferenceStorage,
 ): LearningWorkspace {
+  return loadSemanticWorkspaceWithMigration(storage).workspace;
+}
+
+export function loadSemanticWorkspaceWithMigration(
+  storage: PreferenceStorage,
+): SemanticHydrationResult {
   const raw = storage.getItem(WORKSPACE_SEMANTIC_KEY);
   if (raw === null || raw === "") {
-    return createWorkspace([]);
+    return { workspace: createWorkspace([]), migratedProjectIds: [] };
   }
   try {
     const parsed = parseSemanticWorkspace(JSON.parse(raw));
-    return parsed ?? createWorkspace([]);
+    if (!parsed) {
+      return { workspace: createWorkspace([]), migratedProjectIds: [] };
+    }
+    const migratedProjectIds: ProjectId[] = [];
+    const projects = parsed.projects.map((project) => {
+      const result = migrateSnapshotHierarchy(project.snapshot);
+      if (result.migrated) {
+        migratedProjectIds.push(project.projectId);
+      }
+      return result.migrated
+        ? { ...project, snapshot: result.snapshot }
+        : project;
+    });
+    const workspace = normalizeWorkspaceSelection({
+      ...parsed,
+      projects,
+    });
+    if (migratedProjectIds.length > 0) {
+      saveSemanticWorkspace(storage, workspace);
+    }
+    return { workspace, migratedProjectIds };
   } catch {
-    return createWorkspace([]);
+    return { workspace: createWorkspace([]), migratedProjectIds: [] };
   }
 }
 
@@ -84,6 +118,16 @@ export function hydrateSemanticWorkspace(
   storage: PreferenceStorage,
 ): LearningWorkspace {
   return normalizeWorkspaceSelection(loadSemanticWorkspace(storage));
+}
+
+export function hydrateSemanticWorkspaceWithMigration(
+  storage: PreferenceStorage,
+): SemanticHydrationResult {
+  const result = loadSemanticWorkspaceWithMigration(storage);
+  return {
+    workspace: normalizeWorkspaceSelection(result.workspace),
+    migratedProjectIds: result.migratedProjectIds,
+  };
 }
 
 export function parseSemanticWorkspace(

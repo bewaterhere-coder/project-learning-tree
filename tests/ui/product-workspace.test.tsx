@@ -48,7 +48,9 @@ describe("production workspace UI", () => {
     render(<App preferenceStorage={createMemoryPreferenceStorage()} />);
     await user.click(screen.getByTestId("project-create-open"));
     await user.click(screen.getByTestId("project-create-submit"));
-    expect(screen.getByText("Enter a project name.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Enter a project name or a GitHub repository."),
+    ).toBeInTheDocument();
     expect(screen.queryByTestId("domain-error")).not.toBeInTheDocument();
   });
 

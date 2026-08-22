@@ -8,7 +8,7 @@ import {
   type RepositoryEvidenceProvider,
   type UiCommand,
 } from "../application/index.js";
-import { defaultPorts } from "../domain/index.js";
+import { defaultPorts, updateProjectMetadata } from "../domain/index.js";
 import {
   clampArchivedPaneHeight,
   clampChatWidth,
@@ -133,14 +133,18 @@ export type CreateWorkspaceProjectOptions = {
 
 export async function createWorkspaceProject(
   workspace: LearningWorkspace,
-  command: { name: string; source?: string; description?: string },
+  command: { name?: string; source?: string; description?: string },
   portsOrOptions: Ports | CreateWorkspaceProjectOptions = {},
 ): Promise<LearningWorkspace> {
   const options = isPorts(portsOrOptions)
     ? { ports: portsOrOptions }
     : portsOrOptions;
   const result = await bootstrapLearningProject(
-    command,
+    {
+      name: command.name?.trim() || "",
+      source: command.source,
+      description: command.description,
+    },
     options.ports ?? defaultPorts(),
     options.provider,
   );
@@ -164,6 +168,37 @@ export async function createWorkspaceProject(
     selectedProjectId: project.projectId,
     lastError: undefined,
     lastErrorCommand: undefined,
+  };
+}
+
+export function updateWorkspaceProjectMetadata(
+  workspace: LearningWorkspace,
+  projectId: ProjectId,
+  command: { name: string; source?: string; description?: string },
+): LearningWorkspace {
+  const current = workspace.projects.find(
+    (project) => project.projectId === projectId,
+  );
+  if (!current) {
+    return workspace;
+  }
+  const result = updateProjectMetadata(current.snapshot, command);
+  if (!result.ok) {
+    return {
+      ...workspace,
+      lastError: result.error,
+      lastErrorCommand: "updateProjectMetadata",
+    };
+  }
+  return {
+    ...workspace,
+    lastError: undefined,
+    lastErrorCommand: undefined,
+    projects: workspace.projects.map((project) =>
+      project.projectId === projectId
+        ? { ...project, snapshot: result.snapshot }
+        : project,
+    ),
   };
 }
 

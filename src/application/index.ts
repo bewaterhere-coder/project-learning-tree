@@ -2,6 +2,7 @@ export { dispatchCommand, type UiCommand } from "./commands.js";
 export {
   bootstrapLearningProject,
   isEmptyFirstLayer,
+  resolveProjectName,
   CANONICAL_CONTRACT_ID,
   CANONICAL_CONTRACT_VERSION,
   LEARNING_TREE_ADAPTER_ID,
@@ -11,6 +12,10 @@ export {
   type EvidenceStatus,
   type ProjectLearningBootstrapRecord,
 } from "./bootstrap.js";
+export {
+  migrateSnapshotHierarchy,
+  type HierarchyMigrationResult,
+} from "./hierarchy-migration.js";
 export { isEvidenceStatus } from "../framework/index.js";
 export type {
   RepositoryEvidenceProvider,
@@ -22,6 +27,7 @@ export {
   isClosePrerequisiteError,
   isGlobalDomainError,
   isProjectCreateCommand,
+  isProjectMetadataCommand,
   presentDomainError,
   type DomainErrorPresentation,
 } from "./errors.js";

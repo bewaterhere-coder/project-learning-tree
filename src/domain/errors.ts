@@ -35,4 +35,10 @@ export type DomainError =
   | { kind: "QuestionRequired" }
   | { kind: "GoalRequired" }
   | { kind: "ProjectNameRequired" }
+  | { kind: "ProjectRootRequired" }
+  | {
+      kind: "ProjectRootChildrenOpen";
+      nodeId: NodeId;
+      openChildIds: NodeId[];
+    }
   | { kind: "NotADirectChild"; parentId: NodeId; childId: NodeId };

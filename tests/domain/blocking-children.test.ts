@@ -10,6 +10,7 @@ import {
   activateRoot,
   assertActiveBijection,
   closePrepared,
+  coreQuestionIds,
   createActivatedChild,
   createProjectWithRoots,
   expectError,
@@ -43,13 +44,13 @@ describe("blocking children", () => {
     expect(snapshot.nodes[rootId]?.blockingChildIds).toEqual([childId]);
     expect(snapshot.pass.activeStack).toEqual(stackBefore);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
-    expect(Object.keys(snapshot.nodes)).toHaveLength(2);
+    expect(Object.keys(snapshot.nodes)).toHaveLength(3);
     assertActiveBijection(snapshot);
   });
 
   it("5-7. allows multiple unresolved Blocking Children and only one active branch", () => {
     const ports = sequentialPorts();
-    const { snapshot: parentActive, rootId } = activateRoot(
+    const { snapshot: parentActive, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q2"]),
     );
     const first = createActivatedChild(parentActive, rootId, "Q2.1", ports);
@@ -66,7 +67,11 @@ describe("blocking children", () => {
         childId: first.childId,
       }),
     );
-    expect(activatedFirst.pass.activeStack).toEqual([rootId, first.childId]);
+    expect(activatedFirst.pass.activeStack).toEqual([
+      projectRootId,
+      rootId,
+      first.childId,
+    ]);
     expect(activatedFirst.nodes[first.childId]?.lifecycle).toBe("active");
     expect(activatedFirst.nodes[second.childId]?.lifecycle).toBe("open");
     assertActiveBijection(activatedFirst);
@@ -74,7 +79,11 @@ describe("blocking children", () => {
     const switched = unwrap(
       activateNode(activatedFirst, { nodeId: second.childId }),
     );
-    expect(switched.pass.activeStack).toEqual([rootId, second.childId]);
+    expect(switched.pass.activeStack).toEqual([
+      projectRootId,
+      rootId,
+      second.childId,
+    ]);
     expect(switched.nodes[second.childId]?.lifecycle).toBe("active");
     expect(switched.nodes[first.childId]?.lifecycle).toBe("open");
     expect(switched.nodes[first.childId]?.lifecycle).not.toBe("active");
@@ -91,7 +100,7 @@ describe("blocking children", () => {
 
   it("8-9. parent stays derived Blocked until the final Blocking Child closes", () => {
     const ports = sequentialPorts();
-    const { snapshot: parentActive, rootId } = activateRoot(
+    const { snapshot: parentActive, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q2"]),
     );
     const first = createActivatedChild(parentActive, rootId, "Q2.1", ports);
@@ -106,7 +115,7 @@ describe("blocking children", () => {
 
     snapshot = closePrepared(snapshot, first.childId, ports);
     expect(snapshot.nodes[first.childId]?.lifecycle).toBe("closed");
-    expect(snapshot.pass.activeStack).toEqual([rootId]);
+    expect(snapshot.pass.activeStack).toEqual([projectRootId, rootId]);
     expect(isBlocked(snapshot, rootId)).toBe(true);
     expect(snapshot.nodes[rootId]?.lifecycle).toBe("active");
 
@@ -118,16 +127,16 @@ describe("blocking children", () => {
     );
     snapshot = closePrepared(snapshot, second.childId, ports);
     expect(isBlocked(snapshot, rootId)).toBe(false);
-    expect(snapshot.pass.activeStack).toEqual([rootId]);
+    expect(snapshot.pass.activeStack).toEqual([projectRootId, rootId]);
     assertActiveBijection(snapshot);
   });
 
   it("does not change Current Focus when activating a blocking child", () => {
     const ports = sequentialPorts();
-    const { snapshot: parentActive, rootId } = activateRoot(
+    const { snapshot: parentActive, rootId, projectRootId } = activateRoot(
       createProjectWithRoots(ports, ["Q2", "Other"]),
     );
-    const otherId = parentActive.pass.rootNodeIds[1];
+    const otherId = coreQuestionIds(parentActive)[1];
     if (!otherId) {
       throw new Error("missing other");
     }
@@ -142,13 +151,17 @@ describe("blocking children", () => {
       activateBlockingChild(focused, { parentId: rootId, childId }),
     );
     expect(activated.pass.currentFocusNodeId).toBe(otherId);
-    expect(activated.pass.activeStack).toEqual([rootId, childId]);
+    expect(activated.pass.activeStack).toEqual([
+      projectRootId,
+      rootId,
+      childId,
+    ]);
   });
 
   it("rejects creating a blocking child from a non-active parent", () => {
     const ports = sequentialPorts();
     const snapshot = createProjectWithRoots(ports, ["Q1"]);
-    const rootId = snapshot.pass.rootNodeIds[0];
+    const rootId = coreQuestionIds(snapshot)[0];
     if (!rootId) {
       throw new Error("missing root");
     }

@@ -96,12 +96,27 @@ export function loadWorkspacePreferences(
 export function hydrateWorkspacePreferences(
   workspace: LearningWorkspace,
   storage: PreferenceStorage,
+  options: { clearPositionsForProjectIds?: readonly string[] } = {},
 ): LearningWorkspace {
   const stored = loadWorkspacePreferences(storage);
+  const clearIds = new Set(options.clearPositionsForProjectIds ?? []);
   if (stored === undefined) {
     return normalizeChatBindings(workspace);
   }
-  return normalizeChatBindings(applyStoredPreferences(workspace, stored));
+  const applied = normalizeChatBindings(applyStoredPreferences(workspace, stored));
+  if (clearIds.size === 0) {
+    return applied;
+  }
+  const cleared = {
+    ...applied,
+    projects: applied.projects.map((project) =>
+      clearIds.has(project.projectId)
+        ? { ...project, layout: { ...project.layout, nodePositions: {} } }
+        : project,
+    ),
+  };
+  saveWorkspacePreferences(storage, cleared);
+  return cleared;
 }
 
 export function applyStoredPreferences(
