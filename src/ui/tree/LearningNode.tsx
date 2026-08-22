@@ -16,6 +16,7 @@ export function LearningNode({ data }: { data: LearningFlowNode["data"] }) {
   return (
     <div
       className={className}
+      data-node-id={data.id}
       data-lifecycle={data.lifecycle}
       data-blocked={data.isBlocked ? "true" : "false"}
       data-on-stack={data.isOnActiveStack ? "true" : "false"}
