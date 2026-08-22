@@ -2,96 +2,60 @@
 task_id: TASK-001
 title: Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
 development:
-  stage: planning
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     merge_verified: false
   next_expected_actor: cursor
 artifacts:
   plan: ../plans/TASK-001-plan.md
-  pr: null
+  pr: https://github.com/bewaterhere-coder/project-learning-tree/pull/17
 ---
 
 # TASK-001 — Learning Node Content, Direct Chat, and Dynamic Multi-Edge Routing
 
 ## Goal
 
-Upgrade the Learning Tree graph so that each Learning Node is a readable learning unit, provides a direct node-bound conversation entry, and supports clear multi-edge relationships whose visual attachment adapts to node position.
+Upgrade the Learning Tree graph so each Learning Node is a readable learning unit, provides a direct node-bound conversation entry, and supports clear multi-edge rendering whose visual attachment adapts to node position.
 
-The graph should communicate what each question is about without forcing the user to open a separate panel, while preserving the existing principle that conversation belongs to a Learning Node and that graph rendering is not the semantic source of truth.
+## Expected behavior
 
-## Problem
+### Readable Learning Node
 
-The current graph experience is too structurally sparse:
-
-- nodes can feel like empty/title-only graph shells instead of meaningful question units;
-- entering a conversation is not direct enough from the node itself;
-- edge attachment can look wrong when nodes move relative to each other;
-- a node must be able to participate in multiple relationships without a one-in/one-out visual or data-model assumption.
-
-## Expected Behavior
-
-### 1. A Node is a readable question unit
-
-Each normal Learning Node must directly show enough information for the user to understand what it represents.
-
-At minimum, render:
+Each materialized Learning Node must show enough information to understand the question without opening another panel:
 
 - question/title;
-- question detail or short description/summary;
-- relevant state information when useful;
-- a direct Chat entry.
+- question detail/goal or equivalent short description;
+- relevant state cues;
+- direct Chat entry.
 
-Long detail text may be visually truncated to preserve scanability, but the node must not collapse to a title-only shell when detail exists.
+Long detail text may be visually truncated. Full conversation history, evidence, DoD, and learning recap do not belong inside the graph node.
 
-### 2. Direct Chat entry on every eligible Node
+### Direct Node Chat
 
-Each eligible Learning Node must expose a visible Chat icon/action.
+- Node body click keeps the existing behavior: Focus Node + open Inspector; it must not open Chat.
+- Node Chat action opens Conversation and binds it to that Node.
+- Node Chat may update Current Focus as required for follow-focus binding, but must **not** open Inspector/Contextual Workspace as an additional side effect.
+- Chat interaction must not accidentally trigger node dragging, panning, or the node-body click handler.
 
-Interaction contract:
+### Multiple visible links, tree semantics preserved
 
-```text
-click node body
-→ Focus Node
+The current semantic hierarchy remains a tree:
 
-click node Chat action
-→ Open Conversation Panel
-→ bind Conversation to that Node
-```
+- at most one semantic parent (`parentId`);
+- many semantic children (`childIds`);
+- Blocking / Active Stack / receded state remain flags on existing parent→child relationships;
+- Frontier is not a materialized graph edge.
 
-`Focus` and `Open Chat` remain separate actions.
+The UI must support all legitimate simultaneous graph links allowed by that model, especially one incoming parent edge plus multiple outgoing child edges. It must not impose a one-in/one-out rendering restriction.
 
-Focusing or selecting a node alone must not automatically open Chat.
+Multi-parent domain semantics are out of scope and require a separate Product/Domain decision.
 
-The Chat action must not accidentally trigger unintended node drag, selection, or graph interaction.
+### Dynamic edge attachment
 
-### 3. Node and Conversation responsibilities remain separate
-
-Node responsibility:
-
-> Quickly communicate what this learning question is about.
-
-Conversation responsibility:
-
-> Explore the question deeply.
-
-Do not render full conversation history inside the graph node.
-
-### 4. One Node supports multiple relationships
-
-The graph and UI must not assume that one node has only one incoming and one outgoing relationship.
-
-A node may have multiple incoming and outgoing edges, including relationships already supported by the domain such as child, parent, blocking, frontier, or other semantic relationships.
-
-UI handle structure must not restrict domain relationship cardinality.
-
-### 5. Edge attachment adapts to relative node position
-
-Edge rendering must not globally force all connections through fixed left/right handles.
-
-The visual attachment side should be derived from current source/target positions.
+Visual attachment is derived from current node geometry, not semantic state.
 
 Expected directional behavior:
 
@@ -102,166 +66,73 @@ target below source     → source.bottom → target.top
 target above source     → source.top    → target.bottom
 ```
 
-For diagonal placement, choose a sensible primary direction based on relative geometry.
+For diagonal placement, use the dominant axis; ties may prefer vertical to match the default tree layout.
 
-### 6. Edge routing updates after node movement
+Dragging nodes must update attachment/routing from live node positions rather than stale persisted positions.
 
-When a node is dragged and its relative position changes, the edge attachment/routing should update accordingly.
+Multiple edges using one side should remain distinguishable where practical without introducing a heavy routing subsystem unless evidence shows it is necessary.
 
-Example:
+## Architecture constraints
 
-```text
-Before:
-A → B
+Preserve:
 
-After B moves above A:
-B
-↑
-A
-```
+- `DomainSnapshot` as semantic source of truth;
+- `@xyflow/react` graph state/rendering as derived view state;
+- existing Focus semantics;
+- Conversation ownership, identity, pinning and persistence;
+- project switching and per-project pin behavior;
+- Blocking / Frontier / Learning Loop semantics;
+- semantic persistence boundaries;
+- existing semantic edge metadata.
 
-The edge should use a top/bottom relationship rather than continuing to visually force a stale left/right attachment.
+Visual `sourceHandle` / `targetHandle` values must remain derived UI state and must not become persisted domain truth.
 
-### 7. Multiple edges remain readable
+Do not redesign Workspace ownership, Domain architecture, or introduce Elk/Dagre/custom pathfinding without evidence.
 
-Multiple edges may use the same side of a node.
+## Approved Plan
 
-Avoid, where practical:
+Canonical implementation plan: `docs/plans/TASK-001-plan.md`.
 
-- all edges collapsing into the exact same visual path;
-- all connections occupying one indistinguishable pixel location;
-- routes unnecessarily crossing through node content.
+Plan review resolved two blockers:
 
-The implementation may use XYFlow-compatible techniques such as multiple handles, handle offsets, custom edges, Bezier/smooth routing, or another minimal routing strategy consistent with the existing architecture.
+1. multi-link support is explicitly rendering support within the existing one-parent/many-children tree domain, not implicit multi-parent semantics;
+2. Node Chat uses node focus + Chat binding without `focusAndOpenInspector`, so Chat does not open Inspector.
 
-Connector mechanics must remain visually secondary to the learning content.
-
-## Architecture Constraints
-
-Preserve the current project boundaries and contracts:
-
-- `DomainSnapshot` remains the semantic source of truth;
-- `@xyflow/react` graph state/rendering is not domain truth;
-- Focus semantics remain separate from Chat opening;
-- existing Conversation ownership and persistence remain intact;
-- existing project switching and per-project pin behavior remain intact;
-- Blocking / Frontier / Learning Loop semantics remain intact;
-- existing semantic edge metadata must be preserved;
-- do not redesign Workspace ownership or the domain architecture for this task.
-
-Reference project constraints:
-
-- `.coco/project.md`
-- `AGENTS.md`
-- `docs/product/interaction-spec.md`
-- `docs/product/domain-model.md`
-
-## Routing / Persistence Constraint
-
-Visual routing is derived presentation state.
-
-Prefer:
-
-```text
-Semantic Edge
-+
-Node Positions
-→ Derived Handle / Edge Routing
-```
-
-Do not make layout-derived `sourceHandle` / `targetHandle` values into permanent domain truth merely to solve rendering.
-
-If the current XYFlow integration requires handle identifiers at render time, derive them from current layout or maintain them in view state rather than changing semantic relationship meaning.
-
-## Scope
-
-In scope:
-
-- Learning Node presentation;
-- node detail/summary rendering;
-- direct node Chat action;
-- Conversation binding from the node Chat action;
-- dynamic edge attachment/routing;
-- multiple-edge rendering support;
-- relevant tests and regression coverage.
-
-## Non-Goals
-
-Do not use this task to:
-
-- redesign the entire Learning Tree UI;
-- add new learning-domain relationship types unless required by an existing contract;
-- move Conversation ownership into Node components;
-- persist graph routing as semantic domain data;
-- add future milestone functionality unrelated to this requirement;
-- introduce a heavy graph-layout or routing subsystem without evidence it is necessary.
-
-## Planning Questions Requiring Code Evidence
-
-Cursor should inspect the current implementation and determine:
-
-1. which component currently owns Learning Node rendering;
-2. how node data maps from `DomainSnapshot` into XYFlow node data;
-3. how Focus and Conversation open/binding are currently wired;
-4. how handles and edges are currently constructed;
-5. whether multiple edges are already supported semantically and only need rendering changes;
-6. the smallest robust way to derive source/target attachment sides after node movement;
-7. whether multiple handle offsets or custom edge routing are needed for readable same-side multi-edges;
-8. which existing tests protect Focus, pin, project switching, persistence, and Conversation behavior.
-
-## Acceptance Criteria
+## Acceptance criteria
 
 ### Node rendering
 
-- Every normal Learning Node with detail content visibly communicates more than only its title.
-- Long content does not break node layout.
-- Each eligible Node has a visible direct Chat action.
+- Node visibly communicates more than title-only content when detail exists.
+- Long detail does not break layout.
+- Every eligible materialized node has a visible direct Chat action.
 
-### Chat interaction
+### Chat
 
-- Clicking the node Chat action opens Conversation.
-- Conversation binds to the clicked Node.
-- Clicking Chat does not produce unintended graph drag/selection behavior.
-- Focusing/clicking the Node body alone still does not automatically open Chat.
+- Node Chat opens Conversation and binds to the clicked node.
+- Node Chat does not open Inspector when Inspector was closed.
+- Node Chat does not cause unintended drag/pan/body-click behavior.
+- Node body click still focuses and opens Inspector without opening Chat.
 
-### Edge routing
+### Routing
 
-Representative relative placements render with sensible attachment sides:
+- Right, left, above, and below placements select sensible attachment sides.
+- Dragging across those relative positions updates attachment from live positions.
+- Routing state is not persisted into semantic DomainSnapshot.
 
-- target right of source;
-- target left of source;
-- target above source;
-- target below source.
+### Multiple links
 
-Dragging nodes across those relative positions causes routing/attachment to update.
-
-### Multiple edges
-
-- One Node can visibly maintain multiple incoming/outgoing relationships.
-- Multiple edges remain attached after node movement.
-- The implementation does not impose a one-in/one-out domain restriction.
+- One node can visibly maintain multiple outgoing child edges and one incoming + multiple outgoing edges.
+- Multiple edges remain attached after movement.
+- No multi-parent semantic relationship is introduced.
 
 ### Regression
 
-Existing behavior remains valid for:
+Existing behavior remains valid for project switching, Focus, per-project pinning, node dragging, semantic persistence, Conversation persistence, Blocking / Frontier semantics, and Learning Loop behavior.
 
-- project switching;
-- Focus;
-- per-project pin behavior;
-- node dragging;
-- semantic persistence;
-- Conversation persistence;
-- Blocking / Frontier semantics;
-- Learning Loop behavior.
+Relevant automated tests must remain green and new tests must cover the material behavior introduced by this task.
 
-Relevant existing automated tests must continue to pass, and new tests must cover the material behavior introduced here.
+## Gate
 
-## Definition of Done
+Plan approved on re-review. Implementation is now authorized according to `docs/plans/TASK-001-plan.md`.
 
-This task is not Done when the Plan is written.
-
-Current Gate is `planning`.
-
-Cursor may inspect code, analyze impact, and create/update `docs/plans/TASK-001-plan.md`.
-
-Implementation is forbidden until `plan_approved=true` is recorded after Plan review.
+The task is not complete after implementation code is written. It must later enter Acceptance with repository-visible implementation and verification evidence; `acceptance_approved` remains false until that review passes.
