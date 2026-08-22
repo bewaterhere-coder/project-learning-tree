@@ -315,8 +315,8 @@ Do not expand this task into:
 
 ## Cursor Gate
 
-Canonical implementation plan: `docs/plans/TASK-003-plan.md`.
+Canonical implementation plan: `docs/plans/TASK-003-plan.md` (revised for PR review `5000617595`).
 
-Development stage is `plan_review`. Next expected actor: ChatGPT (Plan review).
+Development stage is `plan_review`. `plan_approved: false`. Next expected actor: ChatGPT (Plan re-review).
 
 Cursor must **not** implement product code until Plan review records `plan_approved=true`. Keep all further work on this same task branch and PR.
