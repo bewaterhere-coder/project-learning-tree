@@ -30,7 +30,7 @@ Create Project
 - Vitest
 - Pure domain engine with no dependency on React, persistence, LLM providers, GitHub, or network APIs
 
-Zustand and Dexie/IndexedDB remain deferred past M2.
+Zustand and Dexie/IndexedDB remain deferred past M2. Workspace UI preferences (sidebar, inspector, viewport, node positions, locale) may use localStorage. DomainSnapshot must not be persisted there.
 
 AI is an advisor. The domain engine is the authority for state transitions. DomainSnapshot is the single source of truth.
 
@@ -40,6 +40,7 @@ AI is an advisor. The domain engine is the authority for state transitions. Doma
 2. Review `docs/product/interaction-spec.md` and `docs/product/domain-model.md`.
 3. M1 Domain Engine is complete: `docs/milestones/M1-domain-engine.md`.
 4. M2 Tree UI: `docs/milestones/M2-tree-ui.md`.
+5. M2.1 Multi-Project Workspace: `docs/milestones/M2.1-multi-project-workspace.md`.
 
 ```bash
 npm install
@@ -50,7 +51,7 @@ npm run dev
 
 ## Status
 
-M1 Domain Engine is complete. M2 Tree UI is implemented.
+M1 Domain Engine is complete. M2 Tree UI is implemented. M2.1 Multi-Project Workspace is implemented.
 
 ## License
 

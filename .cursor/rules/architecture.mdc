@@ -5,12 +5,15 @@ alwaysApply: true
 
 # Architecture Rules
 
-- Dependencies point inward: UI/Infrastructure → Application → Domain.
+- Dependencies point inward: UI/Infrastructure → Workspace → Application → Domain.
 - Domain must remain framework-independent and browser-independent.
 - Do not add infrastructure for future milestones preemptively.
 - Prefer explicit domain operations over UI-driven state mutation.
 - Keep the first implementation local-first.
 - DomainSnapshot is the single source of truth for learning state.
-- UI may keep viewport, zoom, hover, and panel chrome locally.
+- Workspace layout is the source of truth for UI chrome (sidebar, inspector, viewport, node positions, locale).
+- UI may keep viewport, zoom, hover, and panel chrome in Workspace layout, including localStorage for those preferences only.
+- UI must not persist DomainSnapshot.
 - UI must not store lifecycle, activeStack, currentFocus, blocked, DoD satisfaction, evidence relationships, or parent/child relationships.
 - XYFlow nodes/edges are a derived view and must not become the domain source of truth.
+- Node dragging may update WorkspaceLayout.nodePositions only. It must not call Domain operations or change parent/child.

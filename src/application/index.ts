@@ -11,6 +11,10 @@ export {
   type InspectorViewModel,
 } from "./selectors/inspector-view-model.js";
 export {
+  selectProjectSummary,
+  type ProjectSummary,
+} from "./selectors/project-summary.js";
+export {
   selectTreeViewModel,
   type TreeEdgeView,
   type TreeNodeView,
@@ -24,4 +28,5 @@ export type {
   Evidence,
   NodeId,
   NodeLifecycle,
+  ProjectId,
 } from "../domain/index.js";

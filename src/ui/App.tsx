@@ -1,86 +1,252 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  createSession,
-  dispatchCommand,
   formatDomainError,
   selectActionAvailability,
   selectInspectorViewModel,
+  selectProjectSummary,
   selectTreeViewModel,
   type DomainSnapshot,
-  type TreeSession,
   type UiCommand,
 } from "../application/index.js";
-import { createDemoTreeFixture } from "../fixtures/demo-tree.js";
+import { createDemoWorkspaceFixture } from "../fixtures/demo-workspace.js";
+import {
+  applyNodeDragStop,
+  applySelectedCommand,
+  createWorkspace,
+  focusAndOpenInspector,
+  hydrateWorkspacePreferences,
+  saveWorkspacePreferences,
+  selectProject,
+  selectedProject,
+  setInspectorOpen,
+  setSelectedViewport,
+  updateSelectedLayout,
+  updateShell,
+  type LearningWorkspace,
+  type NodePosition,
+  type PreferenceStorage,
+  type Viewport,
+} from "../workspace/index.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
+import { t } from "./i18n/index.js";
 import { NodeInspector } from "./inspector/NodeInspector.js";
+import { createBrowserPreferenceStorage } from "./persistence/browser-storage.js";
+import { ProjectSidebar } from "./sidebar/ProjectSidebar.js";
+import { ResizeHandle } from "./chrome/ResizeHandle.js";
 import { TreeCanvas } from "./tree/TreeCanvas.js";
 import "@xyflow/react/dist/style.css";
 import "./styles.css";
 
 export function App({
   initialSnapshot,
+  initialWorkspace,
+  preferenceStorage,
 }: {
   initialSnapshot?: DomainSnapshot;
+  initialWorkspace?: LearningWorkspace;
+  preferenceStorage?: PreferenceStorage;
 }) {
-  const [session, setSession] = useState<TreeSession>(() =>
-    createSession(initialSnapshot ?? createDemoTreeFixture().snapshot),
+  const storage = useMemo(
+    () => preferenceStorage ?? createBrowserPreferenceStorage(),
+    [preferenceStorage],
   );
+  const [workspace, setWorkspace] = useState<LearningWorkspace>(() => {
+    const base =
+      initialWorkspace ??
+      (initialSnapshot
+        ? createWorkspace([initialSnapshot])
+        : createDemoWorkspaceFixture().workspace);
+    return hydrateWorkspacePreferences(base, storage);
+  });
 
+  useEffect(() => {
+    saveWorkspacePreferences(storage, workspace);
+  }, [storage, workspace]);
+
+  const current = selectedProject(workspace);
+  const locale = workspace.shell.locale;
   const tree = useMemo(
-    () => selectTreeViewModel(session.snapshot),
-    [session.snapshot],
+    () => selectTreeViewModel(current.snapshot),
+    [current.snapshot],
   );
   const inspector = useMemo(
-    () => selectInspectorViewModel(session.snapshot),
-    [session.snapshot],
+    () => selectInspectorViewModel(current.snapshot),
+    [current.snapshot],
   );
   const availability = useMemo(() => {
     if (inspector.nodeId === undefined) {
       return undefined;
     }
-    return selectActionAvailability(session.snapshot, inspector.nodeId);
-  }, [inspector.nodeId, session.snapshot]);
+    return selectActionAvailability(current.snapshot, inspector.nodeId);
+  }, [inspector.nodeId, current.snapshot]);
+  const summaries = useMemo(
+    () =>
+      workspace.projects.map((project) => selectProjectSummary(project.snapshot)),
+    [workspace.projects],
+  );
 
   const dispatch = useCallback((command: UiCommand) => {
-    setSession((current) => dispatchCommand(current, command));
+    setWorkspace((currentWorkspace) =>
+      applySelectedCommand(currentWorkspace, command),
+    );
+  }, []);
+
+  const handleFocusNode = useCallback((nodeId: string) => {
+    setWorkspace((currentWorkspace) =>
+      focusAndOpenInspector(currentWorkspace, nodeId),
+    );
+  }, []);
+
+  const handleNodeDragStop = useCallback(
+    (positions: Record<string, NodePosition>) => {
+      setWorkspace((currentWorkspace) =>
+        applyNodeDragStop(currentWorkspace, positions),
+      );
+    },
+    [],
+  );
+
+  const handleViewportChange = useCallback((viewport: Viewport) => {
+    setWorkspace((currentWorkspace) =>
+      setSelectedViewport(currentWorkspace, viewport),
+    );
   }, []);
 
   return (
     <div className="shell">
       <header className="shell-header">
         <div>
-          <h1>Project Learning Tree</h1>
-          <p className="project-name">{session.snapshot.project.name}</p>
+          <h1>{t(locale, "app.title")}</h1>
+          <p className="project-name">{current.snapshot.project.name}</p>
         </div>
-        <p className="stack-legend" data-testid="active-stack">
-          Active Stack:{" "}
-          {tree.activeStack.length === 0
-            ? "(empty)"
-            : tree.activeStack
-                .map((id) => tree.nodes.find((node) => node.id === id)?.question ?? id)
-                .join(" → ")}
-        </p>
+        <div className="header-tools">
+          <p className="stack-legend" data-testid="active-stack">
+            {t(locale, "app.activeStack")}{" "}
+            {tree.activeStack.length === 0
+              ? t(locale, "app.activeStackEmpty")
+              : tree.activeStack
+                  .map(
+                    (id) =>
+                      tree.nodes.find((node) => node.id === id)?.question ?? id,
+                  )
+                  .join(" → ")}
+          </p>
+          <div className="locale-switch" data-testid="locale-switch">
+            <button
+              type="button"
+              data-testid="locale-en"
+              data-active={locale === "en-US" ? "true" : "false"}
+              onClick={() =>
+                setWorkspace((currentWorkspace) =>
+                  updateShell(currentWorkspace, { locale: "en-US" }),
+                )
+              }
+            >
+              {t(locale, "app.localeEn")}
+            </button>
+            <button
+              type="button"
+              data-testid="locale-zh"
+              data-active={locale === "zh-CN" ? "true" : "false"}
+              onClick={() =>
+                setWorkspace((currentWorkspace) =>
+                  updateShell(currentWorkspace, { locale: "zh-CN" }),
+                )
+              }
+            >
+              {t(locale, "app.localeZh")}
+            </button>
+          </div>
+        </div>
       </header>
-      {session.lastError ? (
+      {workspace.lastError ? (
         <DomainErrorBanner
-          message={formatDomainError(session.lastError)}
+          message={formatDomainError(workspace.lastError)}
           onDismiss={() => dispatch({ type: "dismissError" })}
         />
       ) : null}
       <div className="workspace">
+        <ProjectSidebar
+          locale={locale}
+          open={workspace.shell.projectSidebarOpen}
+          width={workspace.shell.projectSidebarWidth}
+          selectedProjectId={workspace.selectedProjectId}
+          summaries={summaries}
+          onSelectProject={(projectId) =>
+            setWorkspace((currentWorkspace) =>
+              selectProject(currentWorkspace, projectId),
+            )
+          }
+          onToggle={() =>
+            setWorkspace((currentWorkspace) =>
+              updateShell(currentWorkspace, {
+                projectSidebarOpen: !currentWorkspace.shell.projectSidebarOpen,
+              }),
+            )
+          }
+          onResize={(width) =>
+            setWorkspace((currentWorkspace) =>
+              updateShell(currentWorkspace, { projectSidebarWidth: width }),
+            )
+          }
+        />
         <main className="tree-pane" data-testid="tree-canvas">
           <TreeCanvas
+            key={workspace.selectedProjectId}
             model={tree}
-            onFocusNode={(nodeId) => dispatch({ type: "focusNode", nodeId })}
+            savedPositions={current.layout.nodePositions}
+            viewport={current.layout.viewport}
+            onFocusNode={handleFocusNode}
+            onNodeDragStop={handleNodeDragStop}
+            onViewportChange={handleViewportChange}
           />
+          {current.layout.inspectorOpen ? (
+            <aside
+              className="inspector-overlay"
+              data-testid="inspector-overlay"
+              data-width={String(current.layout.inspectorWidth)}
+              style={{ width: current.layout.inspectorWidth }}
+            >
+              <NodeInspector
+                inspector={inspector}
+                availability={availability}
+                locale={locale}
+                onCommand={dispatch}
+                onClose={() =>
+                  setWorkspace((currentWorkspace) =>
+                    setInspectorOpen(currentWorkspace, false),
+                  )
+                }
+              />
+              <ResizeHandle
+                invert
+                testId="inspector-resize"
+                onDelta={(delta) =>
+                  setWorkspace((currentWorkspace) =>
+                    updateSelectedLayout(currentWorkspace, {
+                      inspectorWidth:
+                        selectedProject(currentWorkspace).layout.inspectorWidth +
+                        delta,
+                    }),
+                  )
+                }
+              />
+            </aside>
+          ) : (
+            <button
+              type="button"
+              className="inspector-open"
+              data-testid="inspector-open"
+              onClick={() =>
+                setWorkspace((currentWorkspace) =>
+                  setInspectorOpen(currentWorkspace, true),
+                )
+              }
+            >
+              {t(locale, "inspector.open")}
+            </button>
+          )}
         </main>
-        <aside className="inspector-pane">
-          <NodeInspector
-            inspector={inspector}
-            availability={availability}
-            onCommand={dispatch}
-          />
-        </aside>
       </div>
     </div>
   );

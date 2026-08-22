@@ -56,8 +56,8 @@ function unwrap(result: DomainResult<DomainSnapshot>, context: string): DomainSn
   return result.snapshot;
 }
 
-export function sequentialFixturePorts(): Ports {
-  let sequence = 0;
+export function sequentialFixturePorts(start = 0): Ports {
+  let sequence = start;
   return {
     now: () => "2026-08-22T00:00:00.000Z",
     id: () => `fix-${++sequence}`,
@@ -233,4 +233,70 @@ export function createDemoTreeFixture(
   snapshot = unwrap(focusNode(snapshot, { nodeId: q2 }), "focusNode Q2");
 
   return { snapshot, ids: { q1, q11, q12, q2 } };
+}
+
+export interface SecondDemoTreeIds {
+  alpha: NodeId;
+  alpha1: NodeId;
+  beta: NodeId;
+}
+
+export interface SecondDemoTreeFixture {
+  snapshot: DomainSnapshot;
+  ids: SecondDemoTreeIds;
+}
+
+export function createSecondDemoTreeFixture(
+  ports: Ports = sequentialFixturePorts(1000),
+): SecondDemoTreeFixture {
+  let snapshot = unwrap(
+    createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
+    "createProject B",
+  );
+  snapshot = unwrap(
+    addCoreQuestion(
+      snapshot,
+      { question: "Alpha", goal: "Understand Alpha", targetDepth: "L1" },
+      ports,
+    ),
+    "addCoreQuestion Alpha",
+  );
+  snapshot = unwrap(
+    addCoreQuestion(
+      snapshot,
+      { question: "Beta", goal: "Understand Beta", targetDepth: "L1" },
+      ports,
+    ),
+    "addCoreQuestion Beta",
+  );
+  const alpha = snapshot.pass.rootNodeIds[0];
+  const beta = snapshot.pass.rootNodeIds[1];
+  if (!alpha || !beta) {
+    throw new Error("createSecondDemoTreeFixture: missing roots");
+  }
+  snapshot = unwrap(
+    activateNode(snapshot, { nodeId: alpha }),
+    "activateNode Alpha",
+  );
+  snapshot = unwrap(
+    createBlockingChild(
+      snapshot,
+      {
+        parentId: alpha,
+        question: "Alpha.1",
+        goal: "Unblock Alpha via Alpha.1",
+      },
+      ports,
+    ),
+    "createBlockingChild Alpha.1",
+  );
+  const alpha1 = snapshot.nodes[alpha]?.childIds[0];
+  if (!alpha1) {
+    throw new Error("createSecondDemoTreeFixture: missing Alpha.1");
+  }
+  snapshot = unwrap(
+    focusNode(snapshot, { nodeId: alpha1 }),
+    "focusNode Alpha.1",
+  );
+  return { snapshot, ids: { alpha, alpha1, beta } };
 }

@@ -11,6 +11,7 @@ export default defineConfig({
           include: [
             "tests/domain/**/*.test.ts",
             "tests/application/**/*.test.ts",
+            "tests/workspace/**/*.test.ts",
           ],
           environment: "node",
           setupFiles: ["tests/setup.ts"],
