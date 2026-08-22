@@ -6,6 +6,7 @@ export {
   closeChat,
   createWorkspace,
   createWorkspaceProject,
+  deleteArchivedProject,
   followCurrentNode,
   focusAndOpenInspector,
   moveFloatingChat,
@@ -105,5 +106,8 @@ export type {
   WorkspaceLocale,
   WorkspaceShellLayout,
 } from "./types.js";
-export type { CreateWorkspaceProjectOptions } from "./session.js";
+export type {
+  CreateWorkspaceProjectOptions,
+  DeleteArchivedProjectResult,
+} from "./session.js";
 export type { NodeId, ProjectId } from "../application/index.js";
