@@ -9,7 +9,7 @@ requirement: ../requirements/TASK-007-ui-theme-recipe-system.md
 
 This is the canonical implementation plan for TASK-007. It records code evidence from the Planning Gate and the smallest change that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — Plan ready; awaiting ChatGPT review (`plan_approved=true`) before any product implementation.
+**Gate:** `plan_review` — Plan revised after REQUEST CHANGES; awaiting ChatGPT re-review (`plan_approved` remains `false`) before any product implementation.
 
 **Hard constraints (Plan + Implementation):**
 
@@ -17,6 +17,26 @@ This is the canonical implementation plan for TASK-007. It records code evidence
 - No Domain / learning-semantics changes.
 - No layout, font, spacing, Chat, Details, or Project UX redesign — color/theme infrastructure only.
 - Independent of TASK-005 / TASK-006 scope even where files overlap.
+
+## Review revisions (PR #28)
+
+Three blocking findings addressed in this revision:
+
+1. **Everforest variant is binding** — TASK-007 evaluation uses **Medium for both light and dark**. Soft is out of scope for this task; implementation must not reopen Soft-vs-Medium.
+2. **Visual A/B is 4 × 2 = 8 screenshots** — same representative product scene for every recipe × resolved scheme pair. Partial dark smoke coverage is insufficient.
+3. **Third-party attribution is mandatory** — vendored palette data must preserve upstream copyright/license notice text (not a bare “MIT” label). Prefer `docs/third-party/theme-palettes.md` as the repository-level notices artifact, with each palette source file pointing to it (and/or embedding the same notice block).
+
+### Binding decisions (confirmed in review — no longer open)
+
+| Decision | Binding choice |
+| --- | --- |
+| Rosé Pine dark | **Moon** (not Main) |
+| Preference schema | Keep `LAYOUT_VERSION = 2`; missing/unknown `themeRecipeId` → `DEFAULT_THEME_RECIPE_ID` deterministically |
+| Palette source | Local typed tables only; **no** palette npm dependencies |
+| Evaluation default | **Rosé Pine** via one constant; permanent product default remains an Acceptance decision |
+| Axes | Theme Recipe ⊥ `system \| light \| dark` |
+| Everforest | **Medium** light + **Medium** dark |
+| Visual evidence | Exactly **8** comparable screenshots (4 recipes × 2 schemes), same scene |
 
 ---
 
@@ -159,11 +179,17 @@ src/ui/theme/
     everforest.ts
     nord.ts
   palettes/
-    provenance.ts         # license/source comments + re-exports or tables
+    provenance.ts         # pointers to notices artifact + shared citation helpers
     rose-pine.ts          # typed hex tables (Dawn / Moon)
     catppuccin.ts         # Latte / Mocha
-    everforest.ts         # light / dark
-    nord.ts               # light mapping / Polar Night
+    everforest.ts         # Medium light / Medium dark only
+    nord.ts               # Snow Storm light mapping / Polar Night
+```
+
+Repository-level notices (required):
+
+```text
+docs/third-party/theme-palettes.md
 ```
 
 **Types:**
@@ -235,9 +261,9 @@ Rules:
 
 | Recipe | Light source | Dark source | Notes |
 | --- | --- | --- | --- |
-| **Rosé Pine** | **Dawn** | **Moon** | Prefer **Moon** over Main dark: Moon’s surface ladder (`base` / `surface` / `overlay`) maps more clearly to canvas → surface → elevated → node than Main’s flatter dark. Document in recipe file comment. Accents: `pine`/`foam`/`iris`/`rose`/`gold`/`love` mapped to accent / clusters / warning / danger carefully (love → danger, gold → warning, iris → selected/focus). |
+| **Rosé Pine** | **Dawn** | **Moon** | **Binding:** Moon (not Main). Moon’s surface ladder (`base` / `surface` / `overlay`) maps more clearly to canvas → surface → elevated → node than Main’s flatter dark. Accents: `pine`/`foam`/`iris`/`rose`/`gold`/`love` → accent / clusters / warning / danger (love → danger, gold → warning, iris → selected/focus). |
 | **Catppuccin** | **Latte** | **Mocha** | Canonical requirement. Use Crust/Mantle/Base/Surface0–2 for surface ladder; Blue/Lavender/Sapphire/etc. for accent/clusters; Green/Yellow/Red/Peach for success/warning/danger/parked. |
-| **Everforest** | Official light (Soft or Medium — pick **Medium** unless Soft clearly wins hierarchy in implementation check) | Matching dark Soft/Medium | Map `bg0/bg1/bg2/bg3` → canvas/surface/elevated/node; `fg`/`grey*` → text; `green`/`yellow`/`red`/`orange`/`blue`/`purple`/`aqua` → accent/status/clusters. Keep status quiet. |
+| **Everforest** | **Medium light** | **Medium dark** | **Binding for TASK-007:** Medium × both schemes only. Do not select Soft at implementation time. Map Medium `bg0/bg1/bg2/bg3` → canvas/surface/elevated/node; `fg`/`grey*` → text; `green`/`yellow`/`red`/`orange`/`blue`/`purple`/`aqua` → accent/status/clusters. Keep status quiet. |
 | **Nord** | Derived **light** from Snow Storm (`nord4–6`) + Frost accents | **Polar Night** (`nord0–3`) + Frost/Aurora | Nord has no first-party “Nord Light” product theme; light mapping uses Snow Storm backgrounds with Polar/Frost accents for text/accent. Dark uses Polar Night. Aurora (`nord11–15`) for danger/warning/clusters; Frost (`nord7–10`) for accent/selected. |
 
 Each recipe file exports explicit `light` / `dark` maps and a short comment citing canonical role → semantic role.
@@ -251,16 +277,24 @@ Each recipe file exports explicit `light` / `dark` maps and a short comment citi
 | Add `@catppuccin/palette`, `@rose-pine/palette`, … | Canonical imports | Multiple deps for static hex; Everforest/Nord packaging inconsistent; runtime weight with no behavior |
 | **Local typed tables (chosen)** | Zero new runtime deps; uniform API; explicit provenance; matches “avoid deps that add no real value” | Must copy hex carefully and cite licenses |
 
-**Provenance / license (all MIT; record in `palettes/provenance.ts` header):**
+**Provenance / license (compliant attribution — binding):**
 
-| Palette | Canonical source | License |
-| --- | --- | --- |
-| Rosé Pine | https://github.com/rose-pine/palette (Dawn / Moon hex) | MIT |
-| Catppuccin | https://github.com/catppuccin/palette (Latte / Mocha) | MIT |
-| Everforest | https://github.com/sainnhe/everforest | MIT |
-| Nord | https://github.com/nordtheme/nord | MIT |
+Saying “MIT” alone is **not** enough. Implementation must preserve the relevant upstream copyright notice and permission notice text.
 
-Do **not** vendor CSS frameworks or theme engines — hex + comments only.
+| Palette | Canonical source | Upstream copyright (preserve) | License |
+| --- | --- | --- | --- |
+| Rosé Pine | https://github.com/rose-pine/palette (Dawn / Moon hex) | `Copyright (c) mvllow` | MIT |
+| Catppuccin | https://github.com/catppuccin/palette (Latte / Mocha) | `Copyright (c) 2021 Catppuccin` | MIT |
+| Everforest | https://github.com/sainnhe/everforest (Medium light/dark) | `Copyright (c) 2019 sainnhe` | MIT |
+| Nord | https://github.com/nordtheme/nord | `Copyright (c) 2016-present Sven Greb <development@svengreb.de>` | MIT |
+
+**Required delivery shape:**
+
+1. Add `docs/third-party/theme-palettes.md` containing, for each palette: project name, source URL, full MIT license text including the copyright line above (or an equally complete notice block copied from the upstream LICENSE).
+2. Each vendored palette module (`src/ui/theme/palettes/*.ts`) must cite that notices file in a file header (path + palette id). Optional: `provenance.ts` re-exports a constant map of `{ id, noticesPath, sourceUrl }` for tests.
+3. Unit test (or import-boundary-style check) asserts the notices artifact exists and mentions all four palette ids / copyright strings.
+
+Do **not** vendor CSS frameworks or theme engines — hex tables + compliant notices only.
 
 ### E. Orthogonality: Recipe × Color Scheme
 
@@ -377,23 +411,29 @@ First paint: `main.tsx` / boot path already applies theme hint where used; ensur
 
 ### E2E / visual A/B
 
-1. **Opt-in acceptance screenshots** (preferred for four-way A/B):  
+**Binding:** produce **exactly 8** comparable screenshots — `4 recipes × 2 resolved schemes` — of the **same** representative product scene. Partial dark “smoke” coverage is not acceptable for TASK-007 evaluation.
+
+1. **Opt-in acceptance screenshots:**  
    `e2e/acceptance/task-007-theme-recipes.spec.ts` gated by `E2E_ACCEPTANCE_SHOTS=1`.  
-   Seed the **same** demo workspace ([`createDemoWorkspaceFixture`](../../src/fixtures/demo-workspace.js)); force `colorScheme: "light"`; for each recipe id: set recipe (via Settings or storage seed), wait for shell, screenshot shell (and optionally focused-details once).  
-   Output under e.g. `docs/milestones/task-007-theme-recipes/`:
+   Seed the **same** demo workspace ([`createDemoWorkspaceFixture`](../../src/fixtures/demo-workspace.js)). For each `(themeRecipeId, resolvedScheme)` pair: set recipe + force scheme (`light`/`dark`, not `system`), wait for shell/`data-theme`/`data-theme-recipe`, screenshot the same shell framing.  
+   Output under `docs/milestones/task-007-theme-recipes/`:
 
    ```text
    light-rose-pine.png
    light-catppuccin.png
    light-everforest.png
    light-nord.png
-   dark-rose-pine.png   # minimum dark coverage: one shared scene × four recipes OR one recipe × dark smoke — prefer four dark shell shots if cheap
-   …
+   dark-rose-pine.png
+   dark-catppuccin.png
+   dark-everforest.png
+   dark-nord.png
    ```
 
-2. **Regression visual (optional thin):** one snapshot in `e2e/visual/` for default recipe light shell if CI cost is acceptable; otherwise keep visual CI unchanged and rely on acceptance shots + unit token tests.
+2. Acceptance harness must fail (or clearly report incomplete) if fewer than these eight files are produced for a shot run.
 
-3. Do not assert pixel equality across recipes — screenshots are for **human A/B**, not cross-recipe snapshot matching.
+3. **Regression visual (optional thin):** one CI snapshot in `e2e/visual/` for default recipe light shell if cost is acceptable; otherwise keep visual CI unchanged and rely on the eight acceptance shots + unit token tests. The eight acceptance shots remain the Plan’s required A/B evidence regardless.
+
+4. Do not assert pixel equality across recipes — screenshots are for **human A/B**, not cross-recipe snapshot matching.
 
 ### Commands before acceptance
 
@@ -404,12 +444,12 @@ First paint: `main.tsx` / boot path already applies theme hint where used; ensur
 ## Implementation sequence (post–plan approval only)
 
 1. Types + defaults + preference parse/serialize + semantic `PREFERENCE_ONLY_KEYS` (no UI yet).
-2. Palette tables + recipe resolvers + registry + unit token completeness tests.
+2. `docs/third-party/theme-palettes.md` notices + Medium Everforest / Dawn·Moon / Latte·Mocha / Nord palette tables + recipe resolvers + registry + token completeness + notices presence tests.
 3. Extend `apply-theme` + App wiring; strip/relocate CSS `:root` hex into recipes; add `--color-backdrop`.
 4. Settings selector + i18n.
 5. Theme-resolution / persistence / i18n tests.
-6. Acceptance screenshot harness for four recipes.
-7. Contrast pass + mapping tweaks.
+6. Acceptance screenshot harness emitting all **8** recipe×scheme shots of one scene.
+7. Contrast pass + mapping tweaks (still Medium Everforest only).
 8. Rebase/merge awareness vs TASK-006 if still open (see below).
 
 ---
@@ -451,22 +491,26 @@ First paint: `main.tsx` / boot path already applies theme hint where used; ensur
 | zh-CN Settings | i18n keys |
 | Immediate coherent update | `useLayoutEffect` apply vars |
 | Automated tests | Unit + UI + acceptance shots |
-| Visual A/B | Four light (+ dark coverage) screenshots |
+| Visual A/B | **8** screenshots: 4 recipes × light/dark, same scene |
 | Tooling green | typecheck / test / build / e2e |
-| No framework migration | Dependency decision |
+| No framework migration | Local tables + `docs/third-party/theme-palettes.md` |
 
 ---
 
-## Open questions for ChatGPT Review
+## Confirmed decisions (closed)
 
-1. Confirm **Moon** (not Main) as Rosé Pine dark variant.
-2. Confirm **no LAYOUT_VERSION bump** (default missing `themeRecipeId` on v2).
-3. Confirm **local vendored palettes** (no `@catppuccin/palette` / `@rose-pine/palette` deps).
-4. Confirm evaluation default **Rosé Pine** via single constant; final product default deferred to acceptance.
-5. Confirm acceptance screenshots under `docs/milestones/task-007-theme-recipes/` with `E2E_ACCEPTANCE_SHOTS=1` is sufficient visual evidence (vs forcing CI `toHaveScreenshot` for all four).
+Previously open Plan questions are closed by PR #28 review:
+
+1. Rosé Pine dark = **Moon**.
+2. Keep `LAYOUT_VERSION = 2`; missing/unknown `themeRecipeId` defaults deterministically to Rosé Pine.
+3. Local typed palette tables only; no palette npm packages.
+4. Evaluation default = **Rosé Pine** (`DEFAULT_THEME_RECIPE_ID`); permanent product default deferred to Acceptance.
+5. Theme Recipe remains orthogonal to `system | light | dark`.
+6. Everforest = **Medium** for light and dark.
+7. Visual evidence = **8** acceptance screenshots under `docs/milestones/task-007-theme-recipes/` via `E2E_ACCEPTANCE_SHOTS=1` (not optional dark smoke; CI `toHaveScreenshot` for all eight is not required if the eight acceptance files are produced).
 
 ---
 
 ## Stop condition
 
-This Plan completes the Planning Gate. **No product implementation** until ChatGPT sets `plan_approved: true` and advances the Requirement stage.
+This Plan revision addresses REQUEST CHANGES and returns to ChatGPT for re-review. `plan_approved` stays `false`. **No product implementation** until ChatGPT sets `plan_approved: true` and advances the Requirement stage.
