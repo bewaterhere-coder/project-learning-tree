@@ -1,0 +1,14 @@
+---
+description: Domain semantics for learning nodes and tree convergence
+alwaysApply: true
+---
+
+# Domain Rules
+
+- Conversation belongs to a Learning Node.
+- The tree is progressively materialized.
+- Never generate a full knowledge tree eagerly.
+- Only blocking questions become child nodes.
+- Non-blocking adjacent questions belong in Frontier.
+- Closing a node requires a convergence check.
+- AI suggestions never directly mutate domain state.
