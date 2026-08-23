@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -177,3 +177,17 @@ Verify at minimum:
 - **Regression:** node movement, edge rendering, chat binding/persistence, proposal creation, localization, and theme behavior are explicit acceptance surfaces.
 
 No unresolved material product decision remains for planning.
+
+## Cursor Planning Gate
+
+Cursor completed Plan mode on this branch:
+
+1. audited drag persistence (`TreeCanvas` / `applyNodeDragStop` / `nodePositions`) and identified multi-select drag + cluster underlay as the coupling risks;
+2. audited motion surfaces (`ConfirmDialog`, `Menu`, Chat/Inspector mount) and existing `--motion-*` tokens;
+3. audited Node Chat chrome (`ChatHeader`, composer, context) and proposal cards;
+4. wrote `docs/plans/PR-038-canvas-chat-interaction-polish-plan.md` with binding decisions D1–D13, slices, tests, and material risks;
+5. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
+
+**Do not implement product code until ChatGPT reviews and approves the Plan** (`plan_approved=true`).
+
+Do not create another Task, branch, or PR for planning/implementation of this same requirement.
