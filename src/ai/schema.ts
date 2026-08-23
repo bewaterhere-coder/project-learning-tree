@@ -4,6 +4,11 @@ export function parseChatReply(value: unknown): ChatReply | undefined {
   if (!isRecord(value) || typeof value.answer !== "string") {
     return undefined;
   }
+  const suggestions = Array.isArray(value.suggestions)
+    ? value.suggestions.filter(
+        (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+      )
+    : undefined;
   if (!Array.isArray(value.proposals)) {
     return undefined;
   }
@@ -15,7 +20,7 @@ export function parseChatReply(value: unknown): ChatReply | undefined {
     }
     proposals.push(proposal);
   }
-  return { answer: value.answer, proposals };
+  return { answer: value.answer, suggestions, proposals };
 }
 
 function parseProposal(value: unknown): LearningProposal | undefined {

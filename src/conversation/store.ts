@@ -129,6 +129,11 @@ function parseConversation(value: unknown): NodeConversation | undefined {
     identity,
     messages: value.messages.filter(isMessage),
     proposals: Array.isArray(value.proposals) ? (value.proposals as NodeConversation["proposals"]) : [],
+    suggestions: Array.isArray(value.suggestions)
+      ? value.suggestions.filter(
+          (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
+        )
+      : [],
     status:
       value.status === "thinking" || value.status === "error" ? value.status : "idle",
     error:

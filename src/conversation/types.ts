@@ -19,6 +19,7 @@ export interface NodeConversation {
   identity: ConversationIdentity;
   messages: ConversationMessage[];
   proposals: LearningProposal[];
+  suggestions: string[];
   status: ConversationStatus;
   error?: ConversationError;
   pendingRequestId?: string;

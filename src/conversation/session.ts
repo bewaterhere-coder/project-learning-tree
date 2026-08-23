@@ -25,6 +25,7 @@ export function emptyConversation(
     identity,
     messages: [],
     proposals: [],
+    suggestions: [],
     status: "idle",
   };
 }
@@ -79,6 +80,7 @@ export function applyAssistantReply(
   requestId: string,
   answer: string,
   proposals: LearningProposal[],
+  suggestions: string[] = [],
   createdAt = nowIso(),
 ): NodeConversation | undefined {
   if (conversation.pendingRequestId !== requestId) {
@@ -97,6 +99,7 @@ export function applyAssistantReply(
       ...conversation.proposals,
       ...proposals.map((proposal) => ({ ...proposal })),
     ],
+    suggestions: [...conversation.suggestions, ...suggestions],
     status: "idle",
     error: undefined,
     pendingRequestId: undefined,
@@ -138,9 +141,10 @@ export function routeReplyToIdentity(
   requestId: string,
   answer: string,
   proposals: LearningProposal[],
+  suggestions: string[] = [],
 ): ConversationRegistry {
   const current = getConversation(registry, identity);
-  const next = applyAssistantReply(current, requestId, answer, proposals);
+  const next = applyAssistantReply(current, requestId, answer, proposals, suggestions);
   if (next === undefined) {
     return registry;
   }

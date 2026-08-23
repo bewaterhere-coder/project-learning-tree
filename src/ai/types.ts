@@ -54,5 +54,6 @@ export type LearningProposal =
 
 export interface ChatReply {
   answer: string;
+  suggestions?: string[];
   proposals: LearningProposal[];
 }
