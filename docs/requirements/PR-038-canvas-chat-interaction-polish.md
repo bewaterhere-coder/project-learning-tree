@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -188,6 +188,16 @@ Cursor completed Plan mode on this branch:
 4. wrote `docs/plans/PR-038-canvas-chat-interaction-polish-plan.md` with binding decisions D1–D13, slices, tests, and material risks;
 5. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
 
-**Do not implement product code until ChatGPT reviews and approves the Plan** (`plan_approved=true`).
+## Plan Review — Approved
 
-Do not create another Task, branch, or PR for planning/implementation of this same requirement.
+ChatGPT reviewed the canonical Plan against this Requirement and approved implementation.
+
+Approval notes:
+
+- D1–D13 are accepted.
+- Preserve single-node drag semantics; disabling accidental XYFlow multi-select drag is preferred over persisting a group of moved nodes.
+- Keep floating/docking/context controls secondary; do not reintroduce them as prominent chrome during implementation.
+- Motion must remain restrained and must not add pointer-tracking latency.
+- Proposal actions must remain text-level affordances rather than visually returning to button/card treatment.
+
+Implementation is authorized on the existing PR #38 branch only. After implementation, return evidence for acceptance review.
