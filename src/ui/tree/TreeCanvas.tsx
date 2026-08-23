@@ -175,6 +175,24 @@ function mergeDerivedNodes(
   });
 }
 
+function normalizeSingleSelection(
+  nodes: LearningFlowNode[],
+  preferId: string | null,
+): LearningFlowNode[] {
+  const selectedIds = nodes.filter((node) => node.selected).map((node) => node.id);
+  if (selectedIds.length <= 1) {
+    return nodes;
+  }
+  const keepId =
+    preferId ??
+    nodes.find((node) => node.data.isCurrentFocus)?.id ??
+    selectedIds[0];
+  return nodes.map((node) => ({
+    ...node,
+    selected: node.id === keepId,
+  }));
+}
+
 export function TreeCanvas({
   model,
   savedPositions,
@@ -225,6 +243,7 @@ export function TreeCanvas({
   nodesRef.current = nodes;
   const modelRef = useRef(model);
   modelRef.current = model;
+  const draggingNodeIdRef = useRef<string | null>(null);
 
   if (derived.nodes !== derivedNodes) {
     setDerivedNodes(derived.nodes);
@@ -296,11 +315,13 @@ export function TreeCanvas({
         if (selectedById.size === 0) {
           return current;
         }
-        return current.map((node) =>
+        const patched = current.map((node) =>
           selectedById.has(node.id)
             ? { ...node, selected: selectedById.get(node.id) }
             : node,
         );
+        // PR-038: never leave multiple learning nodes selected.
+        return normalizeSingleSelection(patched, draggingNodeIdRef.current);
       });
     }
 
@@ -310,15 +331,41 @@ export function TreeCanvas({
     if (layoutChanges.length === 0) {
       return;
     }
-    setNodes(
-      (current) =>
-        applyNodeChanges(layoutChanges, current) as LearningFlowNode[],
-    );
+    setNodes((current) => {
+      const positionChanges = layoutChanges.filter(
+        (change) => change.type === "position" && "id" in change,
+      ) as Array<{ id: string; type: "position"; dragging?: boolean }>;
+      const positionIds = [...new Set(positionChanges.map((change) => change.id))];
+      // PR-038: only one learning node may translate; gesture target wins —
+      // never prefer current-focus over the node actually being dragged.
+      let applied = layoutChanges;
+      if (positionIds.length > 1) {
+        const draggingMarked = positionChanges.find(
+          (change) => change.dragging === true,
+        )?.id;
+        const keepId =
+          draggingNodeIdRef.current ?? draggingMarked ?? positionIds[0];
+        applied = layoutChanges.filter(
+          (change) =>
+            change.type !== "position" ||
+            ("id" in change && String(change.id) === keepId),
+        );
+      }
+      return applyNodeChanges(applied, current) as LearningFlowNode[];
+    });
+  }, []);
+
+  const handleNodeDragStart: OnNodeDrag = useCallback((_event, node) => {
+    if (isClusterNodeId(node.id)) {
+      return;
+    }
+    draggingNodeIdRef.current = node.id;
   }, []);
 
   const handleNodeDragStop: OnNodeDrag = useCallback(
     (_event, node) => {
       if (isClusterNodeId(node.id)) {
+        draggingNodeIdRef.current = null;
         return;
       }
       const live = nodesRef.current;
@@ -329,6 +376,7 @@ export function TreeCanvas({
         `${clusterStructureSignature(modelRef.current)}#${structureEpoch}#${positionSignature(live)}`,
       );
       onNodeDragStop({ [node.id]: { x: node.position.x, y: node.position.y } });
+      draggingNodeIdRef.current = null;
     },
     [onNodeDragStop, structureEpoch],
   );
@@ -377,12 +425,15 @@ export function TreeCanvas({
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         onNodesChange={handleNodesChange}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={handleMoveEnd}
         nodesDraggable
         nodesConnectable={false}
         edgesReconnectable={false}
         elementsSelectable
+        multiSelectionKeyCode={null}
+        selectionKeyCode={null}
         deleteKeyCode={null}
         panOnDrag
         zoomOnScroll

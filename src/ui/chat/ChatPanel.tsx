@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   BoundConversationIdentity,
   ContextInspectorView,
@@ -32,6 +33,7 @@ export function ChatPanel({
   position,
   pinned,
   boundNodeClosed,
+  motionState = "open",
   onClose,
   onFollow,
   onPin,
@@ -55,6 +57,7 @@ export function ChatPanel({
   position?: ChatPosition;
   pinned: boolean;
   boundNodeClosed: boolean;
+  motionState?: "open" | "closed";
   onClose: () => void;
   onFollow: () => void;
   onPin: () => void;
@@ -71,6 +74,7 @@ export function ChatPanel({
   onIgnore: (proposal: LearningProposal) => void;
 }) {
   const floating = placement === "floating";
+  const [contextOpen, setContextOpen] = useState(false);
   return (
     <aside
       className={`chat-panel chat-panel-${placement}`}
@@ -78,6 +82,7 @@ export function ChatPanel({
       data-placement={placement}
       data-identity-kind={identity.kind}
       data-node-id={identity.kind === "node" ? identity.nodeId : undefined}
+      data-state={motionState}
       style={
         floating
           ? {
@@ -125,12 +130,14 @@ export function ChatPanel({
         viewingNodeId={viewingNodeId}
         placement={placement}
         pinned={pinned}
+        contextOpen={contextOpen}
         onClose={onClose}
         onFollow={onFollow}
         onPin={onPin}
         onPlacement={onPlacement}
+        onToggleContext={() => setContextOpen((value) => !value)}
       />
-      <ContextInspector locale={locale} view={inspectorView} />
+      <ContextInspector locale={locale} view={inspectorView} open={contextOpen} />
       <MessageList
         locale={locale}
         messages={conversation.messages}

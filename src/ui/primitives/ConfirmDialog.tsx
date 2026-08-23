@@ -11,6 +11,7 @@ export function ConfirmDialog({
   testId = "delete-confirm-dialog",
   cancelTestId = "delete-confirm-cancel",
   confirmTestId = "delete-confirm-submit",
+  open = true,
 }: {
   title: string;
   body: ReactNode;
@@ -21,15 +22,22 @@ export function ConfirmDialog({
   testId?: string;
   cancelTestId?: string;
   confirmTestId?: string;
+  open?: boolean;
 }) {
   return (
-    <div className="confirm-dialog-backdrop" role="presentation" onClick={onCancel}>
+    <div
+      className="confirm-dialog-backdrop"
+      role="presentation"
+      data-state={open ? "open" : "closed"}
+      onClick={onCancel}
+    >
       <div
         className="confirm-dialog"
         role="alertdialog"
         aria-modal="true"
         aria-labelledby={`${testId}-title`}
         data-testid={testId}
+        data-state={open ? "open" : "closed"}
         onClick={(event) => event.stopPropagation()}
       >
         <h2 className="confirm-dialog-title" id={`${testId}-title`}>
