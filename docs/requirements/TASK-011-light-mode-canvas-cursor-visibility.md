@@ -117,10 +117,16 @@ Verify at minimum:
 - browser zoom / normal DPI behavior;
 - existing React Flow interaction classes and overrides.
 
-## 8. Planning Gate
+## 8. Planning Gate / Acceptance Handoff
 
-Canonical Plan is committed at `docs/plans/TASK-011-plan.md` and approved after the second PR #36 Plan Review.
+Canonical Plan: `docs/plans/TASK-011-plan.md` (`status: acceptance_review`).
 
-`plan_approved=true`. Implementation is authorized on this same branch / PR only.
+`plan_approved=true`. Implementation complete on PR #36. Awaiting ChatGPT acceptance review (`acceptance_approved`).
 
-Approved implementation direction: XYFlow already supplies native `grab`/`grabbing`, but those native cursors are insufficiently visible against the high-luminance light canvas. Implement a light-mode-only high-contrast custom cursor for `.react-flow__pane.draggable` / `.dragging`, keep native `grab`/`grabbing` fallback, use 32×32 assets with documented hotspot, verify at 100% and one non-100% browser zoom, and leave dark mode plus node/action/text/resize cursor semantics unchanged.
+Shipped: light-mode-only dual-tone 32×32 SVG cursors on `.react-flow__pane.draggable` / `.dragging` (hotspot grab `14 3`, grabbing `14 8`) with native `grab`/`grabbing` fallback. Dark mode and node/action/text/resize cursors unchanged.
+
+Verification evidence:
+- Unit contract: `tests/ui/task-011-canvas-cursor.test.ts`
+- Playwright: `e2e/specs/task-011-canvas-cursor.spec.ts` (light `url`+fallback, dark native grab, 125% zoom)
+- Screenshots / JSON: `docs/milestones/task-011-light-mode-canvas-cursor/`
+- `npm test` / `typecheck` / `build` green
