@@ -73,7 +73,6 @@ import { Button } from "./primitives/Button.js";
 import { EmptyState } from "./primitives/EmptyState.js";
 import { Menu } from "./primitives/Menu.js";
 import { CoreQuestionForm } from "./projects/CoreQuestionForm.js";
-import { BootstrapSummary } from "./projects/BootstrapSummary.js";
 import { permanentlyDeleteArchivedProject } from "./projects/permanent-delete.js";
 import { applyThemeStyleVars, systemPrefersDark } from "./theme/apply-theme.js";
 import { THEME_RECIPES } from "./theme/theme-recipe.js";
@@ -360,6 +359,13 @@ export function App({
   const handleNodeDragStop = useCallback(
     (positions: Record<string, NodePosition>) => {
       commit(applyNodeDragStop(workspaceRef.current, positions), false);
+    },
+    [commit],
+  );
+
+  const handleApplyLayout = useCallback(
+    (positions: Record<string, NodePosition>) => {
+      commit(updateSelectedLayout(workspaceRef.current, { nodePositions: positions }), false);
     },
     [commit],
   );
@@ -697,14 +703,6 @@ export function App({
                   </EmptyState>
                 ) : (
                   <>
-                    {current.bootstrap ? (
-                      <BootstrapSummary
-                        locale={locale}
-                        record={current.bootstrap}
-                        snapshot={current.snapshot}
-                        onFocusNode={handleFocusNode}
-                      />
-                    ) : null}
                     {tree ? (
                       <TreeCanvas
                         key={workspace.selectedProjectId ?? "none"}
@@ -722,6 +720,7 @@ export function App({
                         onCompleteNode={handleCompleteNode}
                         onOpenInspectorForNode={handleOpenInspectorForNode}
                         onNodeDragStop={handleNodeDragStop}
+                        onApplyLayout={handleApplyLayout}
                         onViewportChange={handleViewportChange}
                       />
                     ) : null}

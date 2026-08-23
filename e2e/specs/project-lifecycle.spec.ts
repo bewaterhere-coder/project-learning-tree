@@ -10,13 +10,15 @@ test("creates, reloads, archives, and restores a project", async ({ page }) => {
     "data-selected",
     "true",
   );
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.locator("[data-node-id]").first()).toBeVisible();
   await expect(page.getByTestId("project-title")).toHaveText(projectName);
 
   await page.reload();
   await page.getByTestId("shell").waitFor();
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.locator("[data-node-id]").first()).toBeVisible();
   await expect(page.getByTestId(`project-item-${projectId}`)).toHaveAttribute(
     "data-selected",
@@ -38,7 +40,8 @@ test("creates, reloads, archives, and restores a project", async ({ page }) => {
     "data-selected",
     "true",
   );
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
 });
 
 test("cancels and confirms permanent delete of an archived project", async ({ page }) => {

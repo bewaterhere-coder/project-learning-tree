@@ -35,14 +35,20 @@ test("creating a GitHub project opens onto Project Root + Questions", async ({
   await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);
 
   await expect(page.getByTestId("project-title")).toHaveText("vite");
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
-  await expect(page.getByTestId("bootstrap-recommended")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
+  // BootstrapSummary is no longer on the canvas; recommended entry is the
+  // learning-node affordance marked data-recommended="true".
+  await expect(page.getByTestId("bootstrap-summary")).toHaveCount(0);
+  await expect(page.getByTestId("bootstrap-recommended")).toHaveCount(0);
 
-  const recommended = page.locator("[data-recommended='true']");
+  const recommended = page.locator(
+    "[data-node-id][data-recommended='true']:not([data-project-root='true'])",
+  );
   await expect(recommended.first()).toBeVisible();
   expect(await recommended.count()).toBeLessThanOrEqual(2);
 
-  await page.getByTestId("bootstrap-recommended").locator("button").first().click();
+  await recommended.first().click();
   const focused = page.locator("[data-focus='true'][data-node-id]");
   await expect(focused).toBeVisible();
   const nodeId = await focused.getAttribute("data-node-id");
@@ -74,7 +80,8 @@ test("URL-only create defaults the project name from the GitHub URL", async ({
     .getByTestId("project-source-input")
     .fill("https://github.com/Fission-AI/OpenSpec");
   await page.getByTestId("project-create-submit").click();
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.locator('[data-project-root="true"]')).toHaveCount(1);
   await expect(page.getByTestId("project-list")).toContainText("OpenSpec");
   await expect(page.locator("[data-node-id]").first()).toBeVisible();

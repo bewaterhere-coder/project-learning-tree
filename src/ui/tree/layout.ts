@@ -11,8 +11,12 @@ export interface NodePosition {
   y: number;
 }
 
+/** Directional tree layout presets (main axis first). */
+export type LayoutDirection = "tb" | "bt" | "lr" | "rl";
+
 export function computeLayout(
   model: TreeViewModel,
+  direction: LayoutDirection = "tb",
 ): Record<NodeId, NodePosition> {
   const children = new Map<NodeId, NodeId[]>();
   for (const node of model.nodes) {
@@ -26,39 +30,62 @@ export function computeLayout(
     children.set(edge.parentId, list);
   }
 
-  const subtreeWidth = (id: NodeId): number => {
+  const vertical = direction === "tb" || direction === "bt";
+  const mainSize = vertical ? NODE_HEIGHT : NODE_WIDTH;
+  const crossSize = vertical ? NODE_WIDTH : NODE_HEIGHT;
+  const mainGap = vertical ? VERTICAL_GAP : HORIZONTAL_GAP;
+  const crossGap = vertical ? HORIZONTAL_GAP : VERTICAL_GAP;
+
+  const subtreeCross = (id: NodeId): number => {
     const kids = children.get(id) ?? [];
     if (kids.length === 0) {
-      return NODE_WIDTH;
+      return crossSize;
     }
-    const kidsWidth = kids.reduce(
-      (sum, childId) => sum + subtreeWidth(childId),
+    const kidsCross = kids.reduce(
+      (sum, childId) => sum + subtreeCross(childId),
       0,
     );
-    return Math.max(NODE_WIDTH, kidsWidth + HORIZONTAL_GAP * (kids.length - 1));
+    return Math.max(crossSize, kidsCross + crossGap * (kids.length - 1));
   };
 
   const positions: Record<NodeId, NodePosition> = {};
 
-  const place = (id: NodeId, left: number, top: number): void => {
-    const width = subtreeWidth(id);
-    positions[id] = {
-      x: left + (width - NODE_WIDTH) / 2,
-      y: top,
-    };
-    let childLeft = left;
+  const place = (id: NodeId, crossStart: number, mainStart: number): void => {
+    const extent = subtreeCross(id);
+    const crossPos = crossStart + (extent - crossSize) / 2;
+    positions[id] = vertical
+      ? { x: crossPos, y: mainStart }
+      : { x: mainStart, y: crossPos };
+    let childCross = crossStart;
     for (const childId of children.get(id) ?? []) {
-      const childWidth = subtreeWidth(childId);
-      place(childId, childLeft, top + NODE_HEIGHT + VERTICAL_GAP);
-      childLeft += childWidth + HORIZONTAL_GAP;
+      const childExtent = subtreeCross(childId);
+      place(childId, childCross, mainStart + mainSize + mainGap);
+      childCross += childExtent + crossGap;
     }
   };
 
-  let rootLeft = 0;
+  let rootCross = 0;
   for (const rootId of model.rootNodeIds) {
-    const width = subtreeWidth(rootId);
-    place(rootId, rootLeft, 0);
-    rootLeft += width + ROOT_GAP;
+    const extent = subtreeCross(rootId);
+    place(rootId, rootCross, 0);
+    rootCross += extent + ROOT_GAP;
+  }
+
+  if (direction === "bt" || direction === "rl") {
+    let maxMain = 0;
+    for (const position of Object.values(positions)) {
+      const main = vertical ? position.y : position.x;
+      if (main > maxMain) {
+        maxMain = main;
+      }
+    }
+    for (const position of Object.values(positions)) {
+      if (vertical) {
+        position.y = maxMain - position.y;
+      } else {
+        position.x = maxMain - position.x;
+      }
+    }
   }
 
   return positions;

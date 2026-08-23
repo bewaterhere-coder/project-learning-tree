@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import type { LearningFlowNode } from "./to-react-flow.js";
 import { Button } from "../primitives/Button.js";
 import { Menu } from "../primitives/Menu.js";
@@ -6,8 +6,14 @@ import { t, useLocale } from "../i18n/index.js";
 
 export function LearningNode({
   data,
+  onMouseEnter,
+  onMouseLeave,
+  handles,
 }: {
   data: LearningFlowNode["data"];
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
+  handles?: ReactNode;
 }) {
   const locale = useLocale();
   const { lifecycle } = data;
@@ -39,7 +45,10 @@ export function LearningNode({
         data-lifecycle={lifecycle}
         data-focus={data.isCurrentFocus ? "true" : "false"}
         data-testid={`project-root-${data.id}`}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
       >
+        {handles}
         <p className="node-question" data-testid={`project-root-name-${data.id}`}>
           {data.question}
         </p>
@@ -74,7 +83,10 @@ export function LearningNode({
         lifecycle !== "closed" && data.canComplete === true ? "true" : "false"
       }
       data-child-count={String(data.childCount)}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
     >
+      {handles}
       {data.isOnActiveStack ? <div className="stack-rail" aria-hidden="true" /> : null}
       <p className="node-question">{data.question}</p>
       <p className="node-meta" data-testid={`node-goal-${data.id}`}>

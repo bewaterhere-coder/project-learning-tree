@@ -10,7 +10,8 @@ test("switching to zh-CN keeps node child authoring usable", async ({ page }) =>
   await expect(page.locator("html")).toHaveAttribute("lang", "zh-CN");
   await expect(page.getByTestId("sidebar-title")).toHaveText("项目");
   await page.keyboard.press("Escape");
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
 
   const node = page.locator("[data-node-id]:not([data-project-root='true'])").first();
   await expect(node).toBeVisible();

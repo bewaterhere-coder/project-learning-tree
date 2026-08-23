@@ -27,6 +27,11 @@ import {
   LearningNodeToolbarActions,
 } from "./LearningNode.js";
 import { LearningNodeHandles } from "./node-handles.js";
+import { LayoutMenu } from "./LayoutMenu.js";
+import {
+  computeLayout,
+  type LayoutDirection,
+} from "./layout.js";
 import {
   routeEdgesForNodes,
   toReactFlow,
@@ -47,14 +52,15 @@ function FlowLearningNode({ data, selected }: NodeProps<LearningFlowNode>) {
     !data.isProjectRoot && (selected || data.isCurrentFocus || hovered),
   );
 
+
   return (
-    <div
-      className="learning-node-shell"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <LearningNodeHandles />
-      <LearningNode data={data} />
+    <>
+      <LearningNode
+        data={data}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        handles={<LearningNodeHandles />}
+      />
       {data.isProjectRoot ? null : (
         <NodeToolbar
           isVisible={showToolbar}
@@ -85,7 +91,7 @@ function FlowLearningNode({ data, selected }: NodeProps<LearningFlowNode>) {
           />
         </NodeToolbar>
       )}
-    </div>
+    </>
   );
 }
 
@@ -193,6 +199,19 @@ function normalizeSingleSelection(
   }));
 }
 
+
+function savedPositionsSignature(
+  positions: Record<NodeId, NodePosition>,
+): string {
+  return Object.keys(positions)
+    .sort()
+    .map((id) => {
+      const position = positions[id]!;
+      return `${id}:${position.x.toFixed(2)},${position.y.toFixed(2)}`;
+    })
+    .join("|");
+}
+
 export function TreeCanvas({
   model,
   savedPositions,
@@ -207,6 +226,7 @@ export function TreeCanvas({
   onOpenInspectorForNode,
   onNodeDragStop,
   onViewportChange,
+  onApplyLayout,
 }: {
   model: TreeViewModel;
   savedPositions: Record<NodeId, NodePosition>;
@@ -221,6 +241,7 @@ export function TreeCanvas({
   onOpenInspectorForNode: (nodeId: NodeId) => void;
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
+  onApplyLayout: (positions: Record<NodeId, NodePosition>) => void;
 }) {
   const callbacks: Callbacks = {
     locale,
@@ -244,16 +265,30 @@ export function TreeCanvas({
   const modelRef = useRef(model);
   modelRef.current = model;
   const draggingNodeIdRef = useRef<string | null>(null);
+  const savedPositionsKey = savedPositionsSignature(savedPositions);
+  const savedPositionsKeyRef = useRef(savedPositionsKey);
+
 
   if (derived.nodes !== derivedNodes) {
     setDerivedNodes(derived.nodes);
+    const savedChanged = savedPositionsKeyRef.current !== savedPositionsKey;
+    savedPositionsKeyRef.current = savedPositionsKey;
     setNodes((current) => {
       const enriched = enrichNodes(derived.nodes, callbacksRef.current);
       const sameIds =
         current.length === enriched.length &&
         current.every((node, index) => node.id === enriched[index]?.id);
-      if (sameIds) {
+      if (sameIds && !savedChanged) {
         return mergeDerivedNodes(current, enriched);
+      }
+      if (sameIds && savedChanged) {
+        setClusterNodes(
+          toClusterFlowNodes(modelRef.current, positionsFromNodes(enriched)),
+        );
+        setClusterSyncKey(
+          `${clusterStructureSignature(modelRef.current)}#${structureEpoch}#${positionSignature(enriched)}`,
+        );
+        return enriched;
       }
       setStructureEpoch((value) => value + 1);
       return enriched;
@@ -395,8 +430,19 @@ export function TreeCanvas({
     [onViewportChange, persistViewport],
   );
 
+  const handleApplyLayoutDirection = useCallback(
+    (direction: LayoutDirection) => {
+      onApplyLayout(computeLayout(model, direction));
+    },
+    [model, onApplyLayout],
+  );
+
   return (
     <div className="tree-canvas-host">
+      <LayoutMenu
+        disabled={model.nodes.length === 0}
+        onSelect={handleApplyLayoutDirection}
+      />
       <svg className="edge-marker-defs" aria-hidden="true">
         <defs>
           <marker
