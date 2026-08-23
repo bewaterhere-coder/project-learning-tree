@@ -19,6 +19,12 @@ export const MAX_INSPECTOR_WIDTH = 420;
 export const DEFAULT_CHAT_WIDTH = 360;
 export const MIN_CHAT_WIDTH = 280;
 export const MAX_CHAT_WIDTH = 480;
+/** Absolute preference ceiling so floating widths above docked max survive reload. */
+export const MAX_STORED_CHAT_WIDTH = 960;
+export const DEFAULT_CHAT_HEIGHT = 480;
+export const MIN_CHAT_HEIGHT = 240;
+export const MAX_CHAT_HEIGHT = 720;
+export const MAX_STORED_CHAT_HEIGHT = 960;
 export const DEFAULT_SIDEBAR_WIDTH = 260;
 export const MIN_SIDEBAR_WIDTH = 200;
 export const MAX_SIDEBAR_WIDTH = 360;
@@ -88,6 +94,7 @@ export function defaultChatLayout(): Pick<
   | "chatOpen"
   | "chatPlacement"
   | "chatWidth"
+  | "chatHeight"
   | "chatPosition"
   | "chatPositionOrigin"
   | "chatBinding"
@@ -96,6 +103,7 @@ export function defaultChatLayout(): Pick<
     chatOpen: false,
     chatPlacement: "docked",
     chatWidth: DEFAULT_CHAT_WIDTH,
+    chatHeight: DEFAULT_CHAT_HEIGHT,
     chatPositionOrigin: "auto",
     chatBinding: { mode: "follow-focus" },
   };
@@ -114,6 +122,48 @@ export function clampChatWidth(width: number, paneWidth?: number): number {
       ? Math.max(MIN_CHAT_WIDTH, paneWidth * 0.5)
       : MAX_CHAT_WIDTH;
   return Math.min(Math.max(width, MIN_CHAT_WIDTH), Math.min(MAX_CHAT_WIDTH, paneCap));
+}
+
+export function clampFloatingChatWidth(
+  width: number,
+  viewportWidth?: number,
+): number {
+  if (!Number.isFinite(width)) {
+    return DEFAULT_CHAT_WIDTH;
+  }
+  const max =
+    viewportWidth !== undefined && Number.isFinite(viewportWidth)
+      ? Math.max(MIN_CHAT_WIDTH, viewportWidth - 24)
+      : MAX_STORED_CHAT_WIDTH;
+  return Math.min(Math.max(width, MIN_CHAT_WIDTH), Math.min(MAX_STORED_CHAT_WIDTH, max));
+}
+
+export function clampStoredChatWidth(width: number): number {
+  if (!Number.isFinite(width)) {
+    return DEFAULT_CHAT_WIDTH;
+  }
+  return Math.min(Math.max(width, MIN_CHAT_WIDTH), MAX_STORED_CHAT_WIDTH);
+}
+
+export function clampChatHeight(
+  height: number,
+  viewportHeight?: number,
+): number {
+  if (!Number.isFinite(height)) {
+    return DEFAULT_CHAT_HEIGHT;
+  }
+  const max =
+    viewportHeight !== undefined && Number.isFinite(viewportHeight)
+      ? Math.max(MIN_CHAT_HEIGHT, viewportHeight - 24)
+      : MAX_CHAT_HEIGHT;
+  return Math.min(Math.max(height, MIN_CHAT_HEIGHT), Math.min(MAX_CHAT_HEIGHT, max));
+}
+
+export function clampStoredChatHeight(height: number): number {
+  if (!Number.isFinite(height)) {
+    return DEFAULT_CHAT_HEIGHT;
+  }
+  return Math.min(Math.max(height, MIN_CHAT_HEIGHT), MAX_STORED_CHAT_HEIGHT);
 }
 
 export function initialFloatingChatPosition(

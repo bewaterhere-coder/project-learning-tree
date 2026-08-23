@@ -39,6 +39,7 @@ const PREFERENCE_ONLY_KEYS = [
   "chatOpen",
   "chatPlacement",
   "chatWidth",
+  "chatHeight",
   "chatPosition",
   "chatBinding",
 ] as const;

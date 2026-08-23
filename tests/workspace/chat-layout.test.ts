@@ -18,6 +18,7 @@ import {
   serializeWorkspacePreferences,
   createMemoryPreferenceStorage,
   updateSelectedLayout,
+  WORKSPACE_PREFERENCES_KEY,
 } from "../../src/workspace/index.js";
 
 describe("workspace chat chrome", () => {
@@ -141,5 +142,23 @@ describe("workspace chat chrome", () => {
     const withInspector = setInspectorOpen(withChat, true);
     expect(selectedProject(withInspector)?.layout.inspectorOpen).toBe(true);
     expect(selectedProject(withInspector)?.layout.chatOpen).toBe(false);
+  });
+
+  it("persists chatHeight in preferences without touching semantic state", () => {
+    const { workspace } = createDemoWorkspaceFixture();
+    const resized = updateSelectedLayout(workspace, {
+      chatWidth: 420,
+      chatHeight: 560,
+    });
+    const prefs = JSON.stringify(serializeWorkspacePreferences(resized));
+    expect(prefs).toContain('"chatHeight":560');
+    expect(prefs).toContain('"chatWidth":420');
+    expect(JSON.stringify(serializeSemanticWorkspace(resized))).not.toContain("chatHeight");
+
+    const storage = createMemoryPreferenceStorage();
+    storage.setItem(WORKSPACE_PREFERENCES_KEY, prefs);
+    const hydrated = hydrateWorkspacePreferences(workspace, storage);
+    expect(selectedProject(hydrated)?.layout.chatHeight).toBe(560);
+    expect(selectedProject(hydrated)?.layout.chatWidth).toBe(420);
   });
 });

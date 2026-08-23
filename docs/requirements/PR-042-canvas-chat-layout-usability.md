@@ -4,13 +4,13 @@ task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
 
 development:
-  stage: implementation
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/PR-042-canvas-chat-layout-usability.md
@@ -174,3 +174,17 @@ Plan approved for implementation with the following two clarifications, which ov
 2. **AC7 is a visual outcome, not a CSS-cleanup proxy.** The current `knowledge-cluster-title` is a plausible source of the apparent external title and may be removed as planned, but implementation must verify the rendered result. Dead `.learning-node-shell` cleanup alone does not satisfy AC7. After the change, the visible Learning Question must have one primary node container with its title inside and no redundant title/card layer outside it.
 
 All other decisions D1–D17 are approved.
+
+## Cursor Implementation Gate
+
+Cursor completed implementation on this same branch / PR #42:
+
+1. exclusive overflow action labels for placement (`浮动` / `停靠`) and context (`显示上下文` / `隐藏上下文`);
+2. floating panel width+height resize handles with viewport clamps; docked divider retained; `chatHeight` preference persistence; scrollable message body;
+3. AC7 visual cleanup — removed external knowledge-cluster titles and dead shell CSS; question remains inside the single `.learning-node` container;
+4. canvas `显示全部` / Show all control calling XYFlow `fitView` on learning nodes only (viewport-only);
+5. drop collision correction using measured/rendered node geometry with nominal fallback, moving only the dragged node;
+6. unit/UI coverage including `resolve-drag-collision`, cluster regions, chat height preferences, and `tests/ui/pr-042-canvas-chat-layout.test.tsx`;
+7. advanced this Requirement to `stage: acceptance` / `next_expected_actor: chatgpt`.
+
+Awaiting ChatGPT acceptance review (`acceptance_approved=true`).

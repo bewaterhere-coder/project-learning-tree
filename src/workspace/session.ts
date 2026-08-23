@@ -11,9 +11,10 @@ import {
 import { defaultPorts, updateProjectMetadata } from "../domain/index.js";
 import {
   clampArchivedPaneHeight,
-  clampChatWidth,
   clampInspectorWidth,
   clampSidebarWidth,
+  clampStoredChatHeight,
+  clampStoredChatWidth,
   defaultProjectLayout,
   defaultShell,
   initialFloatingChatPosition,
@@ -375,7 +376,10 @@ export function updateSelectedLayout(
         layout.inspectorWidth = clampInspectorWidth(patch.inspectorWidth);
       }
       if (patch.chatWidth !== undefined) {
-        layout.chatWidth = clampChatWidth(patch.chatWidth);
+        layout.chatWidth = clampStoredChatWidth(patch.chatWidth);
+      }
+      if (patch.chatHeight !== undefined) {
+        layout.chatHeight = clampStoredChatHeight(patch.chatHeight);
       }
       return { ...project, layout: normalizeLayoutBinding(project.snapshot, layout) };
     }),

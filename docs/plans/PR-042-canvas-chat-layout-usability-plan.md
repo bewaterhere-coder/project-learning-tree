@@ -1,7 +1,7 @@
 ---
 task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
-status: plan_review
+status: acceptance_review
 requirement: ../requirements/PR-042-canvas-chat-layout-usability.md
 pr: 42
 branch: task/canvas-chat-layout-usability
@@ -11,7 +11,7 @@ branch: task/canvas-chat-layout-usability
 
 This is the canonical implementation plan for PR-042. It records Planning Gate code evidence and the smallest change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — awaiting ChatGPT plan review (`plan_approved=true`).
+**Gate:** `acceptance_review` — implementation complete on PR #42; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 **Hard constraints:**
 
