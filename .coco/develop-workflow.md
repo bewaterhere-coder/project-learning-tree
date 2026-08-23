@@ -84,6 +84,29 @@ Action:
 3. Write Requirement into Task PR
 4. Set next_expected_actor = Cursor
 
+## Cursor PR Boundary
+
+Task PR must exist before Cursor starts work.
+
+Cursor does not create development PR.
+
+Cursor works inside the existing Task PR lifecycle.
+
+Cursor responsibilities:
+
+- Analyze requirement
+- Create implementation plan
+- Implement approved plan
+- Add tests
+- Update existing Task PR
+
+Not Cursor responsibilities:
+
+- Create Task
+- Create Requirement Artifact
+- Create PR
+- Decide workflow transition
+
 ## Task PR Boundary
 
 ```
@@ -102,6 +125,24 @@ Rules:
 - Implementation changes happen only inside Task branch/PR.
 - Review records belong to Task PR.
 - main only receives changes after Acceptance Approved.
+
+## Artifact Output Boundary
+
+Formal project artifacts must be generated as managed Artifacts.
+
+Applicable artifacts:
+
+- Requirement Artifact
+- Cursor Development Requirement
+- Plan Review
+- Implementation Review
+- Acceptance Report
+
+Rules:
+
+- Do not use raw chat Markdown as the canonical project document.
+- Artifact content is the source document for project workflow.
+- Project files and PR content should reference the Artifact lifecycle.
 
 ## Stage Actions
 
@@ -224,7 +265,7 @@ Cursor:
 - Plan creation
 - Implementation
 - Tests
-- PR updates
+- Existing PR updates
 
 GitHub:
 - Task PR persistence
