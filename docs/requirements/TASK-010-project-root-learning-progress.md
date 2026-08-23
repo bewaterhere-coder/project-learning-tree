@@ -5,13 +5,13 @@ task_id: TASK-010
 title: Project Root Learning Progress & Canvas Interaction Stability
 
 development:
-  stage: acceptance_review
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
-    completion_verified: false
-  next_expected_actor: chatgpt
+    acceptance_approved: true
+    completion_verified: true
+  next_expected_actor: none
 
 artifacts:
   requirement: docs/requirements/TASK-010-project-root-learning-progress.md
@@ -288,53 +288,53 @@ The Plan should prefer the smallest coherent domain change that establishes expl
 
 ### A. New project topology
 
-- [ ] Creating a new project produces exactly one Project Root Node.
-- [ ] Initial generated learning questions are represented as Question Nodes.
-- [ ] Every initial Question Node is connected to the Project Root.
-- [ ] New-project initialization does not produce multiple disconnected root-level question nodes.
-- [ ] Reloading the project preserves the same topology without duplicate roots or edges.
+- [x] Creating a new project produces exactly one Project Root Node.
+- [x] Initial generated learning questions are represented as Question Nodes.
+- [x] Every initial Question Node is connected to the Project Root.
+- [x] New-project initialization does not produce multiple disconnected root-level question nodes.
+- [x] Reloading the project preserves the same topology without duplicate roots or edges.
 
 ### B. Project Root behavior
 
-- [ ] Project Root displays project identity/name.
-- [ ] Project Root displays derived learning progress.
-- [ ] Project Root has no chat affordance.
-- [ ] Opening/selecting Project Root does not create or bind a Question chat.
-- [ ] Question-only controls do not appear on Project Root.
+- [x] Project Root displays project identity/name.
+- [x] Project Root displays derived learning progress.
+- [x] Project Root has no chat affordance.
+- [x] Opening/selecting Project Root does not create or bind a Question chat.
+- [x] Question-only controls do not appear on Project Root.
 
 ### C. Question behavior
 
-- [ ] Question Nodes retain their current supported chat interaction.
-- [ ] Question Nodes can remain parents of child questions.
-- [ ] Existing question detail/progress semantics are not accidentally replaced by project-level semantics.
+- [x] Question Nodes retain their current supported chat interaction.
+- [x] Question Nodes can remain parents of child questions.
+- [x] Existing question detail/progress semantics are not accidentally replaced by project-level semantics.
 
 ### D. Progress
 
-- [ ] Project progress is calculated from authoritative Question state.
-- [ ] Completing/reopening a Question updates Project Root progress correctly.
-- [ ] Adding/removing valid Question Nodes updates the denominator according to the documented rule.
-- [ ] No duplicate mutable project-progress state is introduced without explicit justification.
+- [x] Project progress is calculated from authoritative Question state.
+- [x] Completing/reopening a Question updates Project Root progress correctly.
+- [x] Adding/removing valid Question Nodes updates the denominator according to the documented rule.
+- [x] No duplicate mutable project-progress state is introduced without explicit justification.
 
 ### E. Existing-project compatibility
 
-- [ ] Existing projects without a Project Root are normalized/migrated idempotently.
-- [ ] Existing question content is preserved.
-- [ ] Repeated load/migration cannot create duplicate Project Root Nodes.
+- [x] Existing projects without a Project Root are normalized/migrated idempotently.
+- [x] Existing question content is preserved.
+- [x] Repeated load/migration cannot create duplicate Project Root Nodes.
 
 ### F. Interaction stability
 
-- [ ] Clicking a node does not cause canvas/background flashing.
-- [ ] Selecting/focusing a node does not cause canvas/background flashing.
-- [ ] Drag start, drag movement, and drag end do not cause canvas/background flashing.
-- [ ] The fix preserves node selection and dragging behavior.
-- [ ] Root cause is documented in the Plan and covered by an appropriate regression test where feasible.
+- [x] Clicking a node does not cause canvas/background flashing.
+- [x] Selecting/focusing a node does not cause canvas/background flashing.
+- [x] Drag start, drag movement, and drag end do not cause canvas/background flashing.
+- [x] The fix preserves node selection and dragging behavior.
+- [x] Root cause is documented in the Plan and covered by an appropriate regression test where feasible.
 
 ### G. Verification
 
-- [ ] Relevant unit/domain tests pass.
-- [ ] Relevant component/integration tests pass.
-- [ ] Playwright/E2E coverage verifies new-project topology and Project Root behavior where the existing test architecture supports it.
-- [ ] A headed/manual acceptance path is documented for visually confirming the background-flash fix.
+- [x] Relevant unit/domain tests pass.
+- [x] Relevant component/integration tests pass.
+- [x] Playwright/E2E coverage verifies new-project topology and Project Root behavior where the existing test architecture supports it.
+- [x] A headed/manual acceptance path is documented for visually confirming the background-flash fix.
 
 ## 13. Out of Scope
 
@@ -350,17 +350,25 @@ TASK-010 does not authorize:
 
 ## 14. Development Gate
 
-Current gate: **acceptance_review**.
+Current gate: **done**.
 
-Canonical YAML (this file) and Plan status agree:
+Canonical YAML and acceptance state agree:
 
-- `stage: acceptance_review`
+- `stage: done`
 - `requirement_ready: true`
 - `plan_approved: true`
-- `acceptance_approved: false`
-- `completion_verified: false`
-- `next_expected_actor: chatgpt`
+- `acceptance_approved: true`
+- `completion_verified: true`
+- `next_expected_actor: none`
 
-Implementation on PR #32 / branch `task/TASK-010-project-root-learning-progress` is **complete**. Planning and Plan Review are finished.
+Implementation was completed on PR #32 and merged into `main` as merge commit `968d6b346f00f453e9350f9de3ad1e273c0a6d6c`.
 
-This task is waiting for ChatGPT to run **`验收 TASK-010`** (Acceptance Review). Do **not** treat this document as still awaiting Plan Review or as blocking production implementation.
+Acceptance evidence includes:
+
+- domain guards keeping Project Root outside Question activation/completion/convergence/conversation semantics;
+- rooted project initialization and idempotent flat → rooted migration coverage;
+- derived project progress excluding Project Root from the denominator;
+- persistent Canvas flash verification showing zero cluster add/remove mutations on selection and zero cluster remounts during drag;
+- PR #32 merge receipt on GitHub.
+
+TASK-010 is complete.
