@@ -1,5 +1,7 @@
 export type {
   ChatReply,
+  ChatSuggestion,
+  ChatSuggestionType,
   CriterionProposal,
   EvidenceProposal,
   LearningProposal,

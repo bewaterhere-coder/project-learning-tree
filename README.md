@@ -56,6 +56,8 @@ npm run typecheck
 npm run dev
 ```
 
+For DeepSeek Node Chat, see [`docs/configuration/deepseek-node-chat.md`](docs/configuration/deepseek-node-chat.md).
+
 `npm run dev` is for operating the product yourself (Vite dev server). It is not the acceptance-test runner.
 
 Browser acceptance (Chromium, production preview):

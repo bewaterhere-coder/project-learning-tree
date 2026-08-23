@@ -24,6 +24,7 @@ import { ContextInspector } from "./ContextInspector.js";
 import { MessageComposer } from "./MessageComposer.js";
 import { MessageList } from "./MessageList.js";
 import { ProposalList } from "./ProposalCard.js";
+import { SuggestionList } from "./SuggestionList.js";
 
 type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
@@ -214,6 +215,7 @@ export function ChatPanel({
           onAdopt={onAdopt}
           onIgnore={onIgnore}
         />
+        <SuggestionList locale={locale} suggestions={conversation.suggestions} />
       </div>
       {boundNodeClosed ? (
         <div className="chat-closed-notice" data-testid="chat-closed-notice">

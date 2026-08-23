@@ -84,6 +84,15 @@ export {
   type LearningContextTarget,
 } from "./selectors/learning-context.js";
 export {
+  selectNodeChatContext,
+  selectNodeChatHistory,
+  type NodeChatContext,
+  type NodeChatHistoryMessage,
+  type NodeChatNodeContext,
+  type NodeChatParentContext,
+  type NodeChatProjectContext,
+} from "./selectors/node-chat-context.js";
+export {
   selectTreeViewModel,
   type TreeEdgeView,
   type TreeNodeView,

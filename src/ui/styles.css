@@ -1524,6 +1524,45 @@ html[data-theme="light"] .react-flow__pane.dragging {
   color: var(--color-accent);
 }
 
+.chat-suggestions {
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border-subtle);
+}
+
+.chat-suggestions-title {
+  margin: 0 0 var(--space-2);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.chat-suggestions-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.chat-suggestion {
+  display: grid;
+  gap: 2px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.chat-suggestion-type {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.chat-suggestion-content {
+  color: var(--color-text-secondary);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

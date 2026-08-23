@@ -26,6 +26,15 @@ export function createStubProvider(
   };
 }
 
+function withSuggestions(
+  reply: Omit<ChatReply, "suggestions"> & { suggestions?: ChatReply["suggestions"] },
+): ChatReply {
+  return {
+    suggestions: [],
+    ...reply,
+  };
+}
+
 function defaultStubReply(
   context: LearningContext,
   input: string,
@@ -38,21 +47,21 @@ function defaultStubReply(
   const zh = locale === "zh-CN";
 
   if (context.identity.kind === "project") {
-    return {
+    return withSuggestions({
       answer: zh
         ? `从整体看 ${context.project.name}。${projectStatusLine(context, zh)}`
         : `Looking at ${context.project.name} as a whole. ${projectStatusLine(context, zh)}`,
       proposals: [],
-    };
+    });
   }
 
   if (nodeId === undefined) {
-    return {
+    return withSuggestions({
       answer: zh
         ? `我可以围绕 ${context.project.name} 继续讨论。`
         : `I can discuss ${context.project.name}.`,
       proposals: [],
-    };
+    });
   }
 
   if (looksLikeSummaryAssist(lowered)) {
@@ -61,16 +70,16 @@ function defaultStubReply(
       (zh
         ? `在当前深度下，${question} 可以这样理解：${context.node?.goal ?? question}。`
         : `At this depth, ${question} is understood as: ${context.node?.goal ?? question}.`);
-    return {
+    return withSuggestions({
       answer: zh
         ? "这是一份学习心得草稿，不是对话摘要。"
         : "Here is a learning summary draft for this question. It is not a chat transcript.",
       proposals: [summaryProposal(nodeId, summary)],
-    };
+    });
   }
 
   if (looksLikeEvidenceAssist(lowered)) {
-    return {
+    return withSuggestions({
       answer: zh
         ? "这看起来值得保留为学习依据。"
         : "This looks like something worth keeping as learning evidence.",
@@ -87,11 +96,11 @@ function defaultStubReply(
           status: "pending",
         },
       ],
-    };
+    });
   }
 
   if (looksLikeCriterionAssist(lowered)) {
-    return {
+    return withSuggestions({
       answer: zh
         ? "一条能让这个问题算完成的达成条件："
         : "A completion requirement that would make this question done:",
@@ -108,11 +117,11 @@ function defaultStubReply(
           status: "pending",
         },
       ],
-    };
+    });
   }
 
   const proposedQuestion = deriveFollowUp(question, input, zh);
-  return {
+  return withSuggestions({
     answer: zh
       ? `围绕「${question}」继续。${context.node?.goal ? `目标：${context.node.goal}。` : ""}我可以基于当前问题的学习上下文继续展开。`
       : `Working from “${question}”. ${context.node?.goal ? `Goal: ${context.node.goal}. ` : ""}I can keep going from this node’s current learning context.`,
@@ -130,7 +139,7 @@ function defaultStubReply(
         status: "pending",
       },
     ],
-  };
+  });
 }
 
 function projectStatusLine(context: LearningContext, zh: boolean): string {

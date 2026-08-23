@@ -126,7 +126,7 @@ describe("M3A contextual chat UI", () => {
   it("routes an in-flight reply to the original node after focus changes", async () => {
     const user = userEvent.setup();
     const { workspace, projectA } = createDemoWorkspaceFixture();
-    let release: ((value: { answer: string; proposals: [] }) => void) | undefined;
+    let release: ((value: { answer: string; proposals: []; suggestions: [] }) => void) | undefined;
     const provider: ChatProvider = {
       complete: () =>
         new Promise((resolve) => {
@@ -138,7 +138,7 @@ describe("M3A contextual chat UI", () => {
     await user.click(screen.getByTestId("chat-send"));
     await user.click(screen.getByTestId(`node-${projectA.ids.q1}`));
     expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-node-id", projectA.ids.q1);
-    release?.({ answer: "secret-for-q2", proposals: [] });
+    release?.({ answer: "secret-for-q2", proposals: [], suggestions: [] });
     await waitFor(() => {
       expect(screen.queryByText("secret-for-q2")).not.toBeInTheDocument();
     });
