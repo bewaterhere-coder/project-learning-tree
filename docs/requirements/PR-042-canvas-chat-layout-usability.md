@@ -4,13 +4,13 @@ task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
 
 development:
-  stage: fixing
+  stage: acceptance
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/PR-042-canvas-chat-layout-usability.md
@@ -191,3 +191,14 @@ Required fix on this same task/PR:
 2. Preserve resize semantics from west/north edges while clamping (the opposite edge should remain stable where possible).
 3. Add regression coverage for west and north resize at viewport bounds, plus at least one corner case.
 4. After the fix and required checks, return to `stage: acceptance` / `next_expected_actor: chatgpt`.
+
+## Cursor Fix Gate
+
+Cursor addressed the acceptance blocking finding on this same branch / PR #42:
+
+1. extracted `resolveFloatingChatResize()` to clamp the full floating rectangle (`x/y/width/height`) inside the usable viewport margin for every edge/corner;
+2. west/north (and NW) resize keep the opposite edge stable while growing into the margin instead of allowing `x < 0` / `y < 0`;
+3. added regression coverage in `tests/workspace/floating-chat-resize.test.ts` for west, north, NW corner, and SE overflow;
+4. advanced this Requirement back to `stage: acceptance` / `next_expected_actor: chatgpt`.
+
+Awaiting ChatGPT acceptance review (`acceptance_approved=true`).

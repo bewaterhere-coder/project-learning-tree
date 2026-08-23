@@ -166,6 +166,103 @@ export function clampStoredChatHeight(height: number): number {
   return Math.min(Math.max(height, MIN_CHAT_HEIGHT), MAX_STORED_CHAT_HEIGHT);
 }
 
+/** Usable inset from each viewport edge for floating chat geometry. */
+export const FLOATING_CHAT_VIEWPORT_MARGIN = 12;
+
+export interface FloatingChatRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Resolve a floating chat resize gesture into a rectangle that stays fully
+ * inside the usable viewport. West/north (and matching corners) keep the
+ * opposite edge stable while growing/shrinking into the margin.
+ */
+export function resolveFloatingChatResize(input: {
+  handle: string;
+  originX: number;
+  originY: number;
+  startWidth: number;
+  startHeight: number;
+  dx: number;
+  dy: number;
+  viewportWidth: number;
+  viewportHeight: number;
+  margin?: number;
+}): FloatingChatRect {
+  const margin = input.margin ?? FLOATING_CHAT_VIEWPORT_MARGIN;
+  const viewportW = Math.max(margin * 2 + MIN_CHAT_WIDTH, input.viewportWidth);
+  const viewportH = Math.max(margin * 2 + MIN_CHAT_HEIGHT, input.viewportHeight);
+  const maxWidth = Math.min(MAX_STORED_CHAT_WIDTH, viewportW - margin * 2);
+  const maxHeight = Math.min(MAX_CHAT_HEIGHT, viewportH - margin * 2);
+
+  const anchorEast = input.handle.includes("w");
+  const anchorSouth = input.handle.includes("n");
+  const growEast = input.handle.includes("e");
+  const growSouth = input.handle.includes("s");
+
+  const stableRight = input.originX + input.startWidth;
+  const stableBottom = input.originY + input.startHeight;
+
+  let width = input.startWidth;
+  let height = input.startHeight;
+  let x = input.originX;
+  let y = input.originY;
+
+  if (growEast) {
+    width = input.startWidth + input.dx;
+  }
+  if (anchorEast) {
+    width = input.startWidth - input.dx;
+  }
+  if (growSouth) {
+    height = input.startHeight + input.dy;
+  }
+  if (anchorSouth) {
+    height = input.startHeight - input.dy;
+  }
+
+  width = Math.min(Math.max(width, MIN_CHAT_WIDTH), maxWidth);
+  height = Math.min(Math.max(height, MIN_CHAT_HEIGHT), maxHeight);
+
+  if (anchorEast) {
+    const maxAnchoredWidth = Math.max(MIN_CHAT_WIDTH, stableRight - margin);
+    width = Math.min(width, maxAnchoredWidth, maxWidth);
+    x = stableRight - width;
+  } else if (growEast) {
+    x = input.originX;
+    width = Math.min(width, Math.max(MIN_CHAT_WIDTH, viewportW - margin - x));
+  } else {
+    x = input.originX;
+  }
+
+  if (anchorSouth) {
+    const maxAnchoredHeight = Math.max(MIN_CHAT_HEIGHT, stableBottom - margin);
+    height = Math.min(height, maxAnchoredHeight, maxHeight);
+    y = stableBottom - height;
+  } else if (growSouth) {
+    y = input.originY;
+    height = Math.min(height, Math.max(MIN_CHAT_HEIGHT, viewportH - margin - y));
+  } else {
+    y = input.originY;
+  }
+
+  // Final hard bounds so every edge/corner stays fully visible.
+  x = Math.min(Math.max(x, margin), Math.max(margin, viewportW - margin - width));
+  y = Math.min(Math.max(y, margin), Math.max(margin, viewportH - margin - height));
+  if (x + width > viewportW - margin) {
+    width = Math.max(MIN_CHAT_WIDTH, viewportW - margin - x);
+  }
+  if (y + height > viewportH - margin) {
+    height = Math.max(MIN_CHAT_HEIGHT, viewportH - margin - y);
+  }
+
+  return { x, y, width, height };
+}
+
 export function initialFloatingChatPosition(
   nodePosition: NodePosition | undefined,
   viewport: Viewport,

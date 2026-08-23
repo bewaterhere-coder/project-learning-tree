@@ -13,10 +13,9 @@ import type {
   WorkspaceLocale,
 } from "../../workspace/index.js";
 import {
-  clampChatHeight,
   clampChatWidth,
-  clampFloatingChatWidth,
   DEFAULT_CHAT_HEIGHT,
+  resolveFloatingChatResize,
 } from "../../workspace/index.js";
 import { PaneDivider } from "../chrome/Pane.js";
 import { t } from "../i18n/index.js";
@@ -102,41 +101,20 @@ export function ChatPanel({
     const viewportH = window.innerHeight;
 
     const move = (moveEvent: PointerEvent) => {
-      const dx = moveEvent.clientX - startX;
-      const dy = moveEvent.clientY - startY;
-      let nextWidth = startWidth;
-      let nextHeight = startHeight;
-      let nextX = originX;
-      let nextY = originY;
-
-      if (handle.includes("e")) {
-        nextWidth = startWidth + dx;
-      }
-      if (handle.includes("w")) {
-        nextWidth = startWidth - dx;
-        nextX = originX + dx;
-      }
-      if (handle.includes("s")) {
-        nextHeight = startHeight + dy;
-      }
-      if (handle.includes("n")) {
-        nextHeight = startHeight - dy;
-        nextY = originY + dy;
-      }
-
-      nextWidth = clampFloatingChatWidth(nextWidth, viewportW);
-      nextHeight = clampChatHeight(nextHeight, viewportH);
-
-      if (handle.includes("w")) {
-        nextX = originX + (startWidth - nextWidth);
-      }
-      if (handle.includes("n")) {
-        nextY = originY + (startHeight - nextHeight);
-      }
-
-      onResize({ width: nextWidth, height: nextHeight });
-      if (nextX !== originX || nextY !== originY) {
-        onMove({ x: nextX, y: nextY });
+      const next = resolveFloatingChatResize({
+        handle,
+        originX,
+        originY,
+        startWidth,
+        startHeight,
+        dx: moveEvent.clientX - startX,
+        dy: moveEvent.clientY - startY,
+        viewportWidth: viewportW,
+        viewportHeight: viewportH,
+      });
+      onResize({ width: next.width, height: next.height });
+      if (next.x !== originX || next.y !== originY) {
+        onMove({ x: next.x, y: next.y });
       }
     };
 
