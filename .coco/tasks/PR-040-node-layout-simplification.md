@@ -5,7 +5,7 @@ task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
 
 development:
-  stage: implementation
+  stage: fixing
   gates:
     requirement_ready: true
     plan_approved: true
@@ -198,3 +198,9 @@ ChatGPT G2 Plan Review approved the Plan on PR #40.
 Binding confirmation:
 - D1/D2 accepted as written: remove `BootstrapSummary` / project-information presentation from the canvas; retain the Project Root learning node.
 - Canonical Task Gate synchronized to `plan_approved: true`, `stage: implementation`, `next_expected_actor: cursor` before product implementation.
+
+## Acceptance Review — Changes Required
+
+Acceptance blocked on stale E2E: `e2e/specs/project-bootstrap.spec.ts` still asserted `bootstrap-recommended` after `BootstrapSummary` was unmounted from the canvas.
+
+Canonical Task moved to `stage: fixing` / `acceptance_approved: false` / `next_expected_actor: cursor`.
