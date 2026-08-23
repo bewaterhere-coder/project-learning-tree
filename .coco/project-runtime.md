@@ -109,6 +109,26 @@ Rules:
 - Current task stage determines allowed actions.
 - Review and Acceptance are separate gates.
 
+## Runtime Contract Health
+
+Runtime loading status must be visible in project state.
+
+```yaml
+runtime_contract:
+  version: 1.1
+  revision: e51681c16556935a841ef0bb97735706dfecf447
+  source: GitHub
+  branch: main
+  health: loaded
+```
+
+Rules:
+
+- Version identifies Contract semantic version.
+- Revision identifies the exact Git commit.
+- Runtime state should report whether the loaded Contract matches the latest revision.
+- Stale Contract state requires refresh before workflow execution.
+
 ## State
 
 Project state should track:
