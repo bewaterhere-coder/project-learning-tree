@@ -4,13 +4,13 @@ task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
 
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/PR-042-canvas-chat-layout-usability.md
@@ -146,13 +146,13 @@ Collision resolution is a safety constraint, not a tree-layout command.
 
 ## Workflow Policy
 
-Cursor must now perform the `planning` stage only:
+This task is now authorized for implementation on the existing branch / PR only.
 
-1. Read this canonical requirement and inspect the relevant current code.
-2. Write/update `docs/plans/PR-042-canvas-chat-layout-usability-plan.md`.
-3. Update this Task Markdown to `stage: plan_review` only after the plan is durably committed/pushed and readable on this same branch/PR.
-4. Do **not** implement production code, tests, or UI changes before `plan_approved=true` is granted by the reviewer.
-5. Do not create another task, branch, or PR for this requirement.
+1. Read this canonical requirement and the approved plan before implementation.
+2. Implement on `task/canvas-chat-layout-usability` / PR #42 only.
+3. Do not create another task, branch, or PR for this requirement.
+4. Preserve the approved architecture and regression boundaries.
+5. When implementation evidence and required checks are complete, move the task to `acceptance` / `next_expected_actor: chatgpt` and stop.
 
 ## Cursor Planning Gate
 
@@ -166,4 +166,11 @@ Cursor completed Plan mode on this branch:
 6. wrote `docs/plans/PR-042-canvas-chat-layout-usability-plan.md` with binding decisions D1–D17, slices, tests, and material risks;
 7. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
 
-Do **not** implement product code until Plan review records `plan_approved=true`.
+## Plan Review — Approved with binding amendments
+
+Plan approved for implementation with the following two clarifications, which override any conflicting shorthand in the Plan:
+
+1. **Collision geometry must match real rendered nodes.** D13 must not assume `NODE_WIDTH × NODE_HEIGHT` if Learning Nodes can have variable measured dimensions. Prefer current XYFlow measured/rendered width and height for the dragged node and peers. Fixed constants are acceptable only if implementation verifies that all relevant Learning Nodes are actually fixed to those dimensions. The acceptance invariant is visual non-overlap, not mathematical non-overlap against stale nominal boxes.
+2. **AC7 is a visual outcome, not a CSS-cleanup proxy.** The current `knowledge-cluster-title` is a plausible source of the apparent external title and may be removed as planned, but implementation must verify the rendered result. Dead `.learning-node-shell` cleanup alone does not satisfy AC7. After the change, the visible Learning Question must have one primary node container with its title inside and no redundant title/card layer outside it.
+
+All other decisions D1–D17 are approved.
