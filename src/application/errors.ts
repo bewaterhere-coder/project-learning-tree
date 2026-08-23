@@ -184,6 +184,8 @@ export function presentDomainError(
         key: "error.ProjectRootChildrenOpen",
         params: { count: error.openChildIds.length },
       };
+    case "NotALearningQuestion":
+      return { key: "error.NotALearningQuestion", params: {} };
     case "NotADirectChild":
       return { key: "error.NotADirectChild", params: {} };
   }

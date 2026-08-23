@@ -37,10 +37,10 @@ describe("multi-project workspace", () => {
     }
 
     expect(a.snapshot.pass.activeStack).toEqual([projectA.ids.q1]);
-    expect(a.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(a.snapshot.pass.projectRootNodeId).toBeDefined();
     expect(a.snapshot.pass.currentFocusNodeId).toBe(projectA.ids.q2);
     expect(b.snapshot.pass.activeStack).toEqual([projectB.ids.alpha]);
-    expect(b.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(b.snapshot.pass.projectRootNodeId).toBeDefined();
     expect(b.snapshot.pass.currentFocusNodeId).toBe(projectB.ids.alpha1);
   });
 

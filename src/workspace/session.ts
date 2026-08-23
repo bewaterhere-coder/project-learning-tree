@@ -438,6 +438,13 @@ export function openChatForNode(
   workspace: LearningWorkspace,
   nodeId: NodeId,
 ): LearningWorkspace {
+  const current = selectedProject(workspace);
+  if (
+    current &&
+    current.snapshot.pass.projectRootNodeId === nodeId
+  ) {
+    return workspace;
+  }
   const focused = applySelectedCommand(workspace, {
     type: "focusNode",
     nodeId,

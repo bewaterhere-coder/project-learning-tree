@@ -41,4 +41,5 @@ export type DomainError =
       nodeId: NodeId;
       openChildIds: NodeId[];
     }
+  | { kind: "NotALearningQuestion"; nodeId: NodeId; attempted: string }
   | { kind: "NotADirectChild"; parentId: NodeId; childId: NodeId };

@@ -1,7 +1,7 @@
 ---
 task_id: TASK-010
 title: Project Root Learning Progress & Canvas Interaction Stability
-status: implementation
+status: acceptance_review
 requirement: ../requirements/TASK-010-project-root-learning-progress.md
 pr: 32
 branch: task/TASK-010-project-root-learning-progress
@@ -11,7 +11,7 @@ branch: task/TASK-010-project-root-learning-progress
 
 This is the canonical implementation plan for TASK-010. It records Planning Gate evidence (project-init / domain audit + canvas flash reproduction) and the smallest coherent change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `implementation` — Plan Review **APPROVED** on PR #32; `plan_approved: true`; implementing on this branch.
+**Gate:** `acceptance_review` — implementation complete on PR #32; awaiting ChatGPT Acceptance Review (`acceptance_approved` still false).
 
 **Hard constraints:**
 
@@ -514,4 +514,5 @@ Principle: **history lives in durable TASK-009 artifacts + Git; the active suite
 - [x] Plan revised: Project Root outside Question lifecycle / Active Stack / convergence
 - [x] Plan revised: superseded active tests must be updated (Finding 2 inventory)
 - [x] ChatGPT Plan re-review (`plan_approved: true`) — **APPROVED**
-- [ ] Implementation + acceptance review — **in progress**
+- [x] Implementation complete — awaiting Acceptance Review
+- [ ] Acceptance Review (`acceptance_approved: true`) — pending ChatGPT

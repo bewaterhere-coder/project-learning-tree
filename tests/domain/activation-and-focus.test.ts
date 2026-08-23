@@ -36,8 +36,9 @@ describe("activation and focus", () => {
     const snapshot = unwrap(activateNode(started, { nodeId: rootId }));
 
     expect(snapshot.nodes[rootId]?.lifecycle).toBe("active");
-    expect(snapshot.nodes[projectRootId]?.lifecycle).toBe("active");
+    expect(snapshot.nodes[projectRootId]?.lifecycle).toBe("open");
     expect(snapshot.pass.activeStack).toEqual([rootId]);
+    expect(snapshot.pass.activeStack).not.toContain(projectRootId);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
     assertActiveBijection(snapshot);
   });

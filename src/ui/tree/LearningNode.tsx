@@ -13,6 +13,7 @@ export function LearningNode({
   const { lifecycle } = data;
   const className = [
     "learning-node",
+    data.isProjectRoot ? "project-root" : "",
     `lifecycle-${lifecycle}`,
     data.isOnActiveStack ? "on-stack" : "",
     data.isCurrentFocus ? "focused" : "",
@@ -25,6 +26,39 @@ export function LearningNode({
   const blockedLabel = t(locale, "node.blocked", {
     count: data.unresolvedBlockerCount,
   });
+
+  if (data.isProjectRoot) {
+    const completed = data.projectProgressCompleted ?? 0;
+    const total = data.projectProgressTotal ?? 0;
+    const percent = data.projectProgressPercent ?? 0;
+    return (
+      <div
+        className={className}
+        data-node-id={data.id}
+        data-project-root="true"
+        data-lifecycle={lifecycle}
+        data-focus={data.isCurrentFocus ? "true" : "false"}
+        data-testid={`project-root-${data.id}`}
+      >
+        <p className="node-question" data-testid={`project-root-name-${data.id}`}>
+          {data.question}
+        </p>
+        <p
+          className="node-project-progress"
+          data-testid={`project-root-progress-${data.id}`}
+          data-completed={String(completed)}
+          data-total={String(total)}
+          data-percent={String(percent)}
+        >
+          {t(locale, "node.projectProgress", {
+            completed,
+            total,
+            percent,
+          })}
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -112,6 +146,9 @@ export function LearningNodeToolbarActions({
   const [moreOpen, setMoreOpen] = useState(false);
   const moreTriggerRef = useRef<HTMLButtonElement>(null);
   const { lifecycle } = data;
+  if (data.isProjectRoot) {
+    return null;
+  }
   const canAddChild =
     (data.canCreateChild ?? lifecycle !== "closed") && onAddChild;
   const showComplete = lifecycle !== "closed" && onComplete;
@@ -210,14 +247,13 @@ export function LearningNodeToolbarActions({
                 data-testid={`node-complete-${data.id}`}
                 disabled={!completeEnabled}
                 title={completeTitle}
-                aria-label={completeTitle}
                 onClick={(event) => {
                   event.stopPropagation();
                   if (!completeEnabled) {
                     return;
                   }
                   setMoreOpen(false);
-                  onComplete();
+                  onComplete?.();
                 }}
               >
                 {t(locale, "actions.complete")}

@@ -9,6 +9,7 @@ import {
   closeNode,
   completePass,
   createProject,
+  ensureProjectRoot,
   parkNode,
   resumeNode,
 } from "../../src/domain/index.js";
@@ -116,7 +117,7 @@ describe("general integrity", () => {
     const ready = closePrepared(active, rootId, ports);
     expect(ready.nodes[rootId]?.lifecycle).toBe("closed");
     expect(ready.pass.activeStack).toEqual([]);
-    expect(ready.pass.projectRootNodeId).toBeUndefined();
+    expect(ready.pass.projectRootNodeId).toBeDefined();
     const completed = unwrap(completePass(ready));
     expect(completed.pass.status).toBe("completed");
     expect(completed.pass.activeStack).toEqual([]);
@@ -125,6 +126,8 @@ describe("general integrity", () => {
   it("enforces the five core-question limit", () => {
     const ports = sequentialPorts();
     let snapshot = unwrap(createProject({ name: "Limit" }, ports));
+    snapshot = unwrap(ensureProjectRoot(snapshot, ports));
+    const rootId = snapshot.pass.projectRootNodeId!;
     for (let index = 0; index < 5; index += 1) {
       snapshot = unwrap(
         addCoreQuestion(
@@ -134,8 +137,9 @@ describe("general integrity", () => {
         ),
       );
     }
-    expect(snapshot.pass.rootNodeIds).toHaveLength(5);
-    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(snapshot.pass.rootNodeIds).toEqual([rootId]);
+    expect(snapshot.nodes[rootId]?.childIds).toHaveLength(5);
+    expect(snapshot.pass.projectRootNodeId).toBeDefined();
     expectError(
       addCoreQuestion(snapshot, { question: "Q6", goal: "G6" }, ports),
       "CoreQuestionLimitReached",
@@ -150,6 +154,6 @@ describe("general integrity", () => {
     snapshot = unwrap(activateNode(snapshot, { nodeId: q1 }));
     assertActiveBijection(snapshot);
     expect(snapshot.pass.activeStack).toEqual([q1]);
-    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(snapshot.pass.projectRootNodeId).toBeDefined();
   });
 });

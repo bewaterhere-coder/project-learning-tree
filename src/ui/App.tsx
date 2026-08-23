@@ -55,6 +55,8 @@ import {
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
 import type { ConversationStore } from "../conversation/index.js";
+
+const EMPTY_NODE_IDS: readonly string[] = [];
 import type { RepositoryEvidenceProvider } from "../application/index.js";
 import { createGitHubRepositoryEvidenceProvider } from "../infrastructure/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
@@ -192,21 +194,21 @@ export function App({
 
   const tree = useMemo(
     () => (current ? selectTreeViewModel(current.snapshot) : undefined),
-    [current],
+    [current?.snapshot],
   );
   const inspector = useMemo(
     () => (current ? selectInspectorViewModel(current.snapshot) : undefined),
-    [current],
+    [current?.snapshot],
   );
   const readiness = useMemo(() => {
     if (!current || inspector?.nodeId === undefined) {
       return undefined;
     }
     return selectCloseReadiness(current.snapshot, inspector.nodeId);
-  }, [inspector?.nodeId, current]);
+  }, [inspector?.nodeId, current?.snapshot]);
   const coreAuthoring = useMemo(
     () => (current ? selectCoreQuestionAuthoring(current.snapshot) : undefined),
-    [current],
+    [current?.snapshot],
   );
   const summaries = useMemo(
     () =>
@@ -706,7 +708,7 @@ export function App({
                         viewport={current.layout.viewport}
                         persistViewport={!viewportPersistLocked}
                         recommendedNodeIds={
-                          current.bootstrap?.recommendedFocusNodeIds ?? []
+                          current.bootstrap?.recommendedFocusNodeIds ?? EMPTY_NODE_IDS
                         }
                         locale={locale}
                         onFocusNode={handleFocusNode}

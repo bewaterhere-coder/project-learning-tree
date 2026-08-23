@@ -79,13 +79,16 @@ describe("frontier and parking", () => {
         ports,
       ),
     );
-    const newRoot = promoted.pass.rootNodeIds.find((id) => id !== projectRootId);
+    const newRoot = promoted.nodes[projectRootId]?.childIds.find(
+      (id) => id !== rootId,
+    );
     if (!newRoot) {
       throw new Error("missing promoted root");
     }
     expect(promoted.pass.frontier).toHaveLength(0);
     expect(promoted.nodes[newRoot]?.question).toBe("Later topic");
     expect(promoted.nodes[newRoot]?.lifecycle).toBe("open");
+    expect(promoted.nodes[newRoot]?.parentId).toBe(projectRootId);
     expect(promoted.pass.activeStack).toEqual([rootId]);
 
     expectError(

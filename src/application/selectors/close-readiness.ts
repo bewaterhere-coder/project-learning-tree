@@ -39,6 +39,9 @@ export function selectCloseReadiness(
   if (!node) {
     return { allowed: false, requirements: [] };
   }
+  if (snapshot.pass.projectRootNodeId === nodeId) {
+    return { allowed: false, requirements: [] };
+  }
 
   const result = evaluateConvergence(snapshot, { nodeId });
   const failures = result.ok ? result.evaluation.failures : [result.error];

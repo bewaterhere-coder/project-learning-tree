@@ -4,6 +4,7 @@ import {
   type NodeId,
   type ProjectId,
 } from "../../domain/index.js";
+import { selectProjectLearningProgress } from "./project-progress.js";
 
 export interface ProjectSummary {
   projectId: ProjectId;
@@ -17,14 +18,15 @@ export interface ProjectSummary {
 }
 
 export function selectProjectSummary(snapshot: DomainSnapshot): ProjectSummary {
-  const nodes = Object.values(snapshot.nodes);
-  const total = nodes.length;
-  const closed = nodes.filter((node) => node.lifecycle === "closed").length;
-  const completionLevel = total === 0 ? 0 : closed / total;
+  const progress = selectProjectLearningProgress(snapshot);
+  const completionLevel = progress.ratio;
 
   const blockerIds = new Set<NodeId>();
   let isBlocked = false;
-  for (const node of nodes) {
+  for (const node of Object.values(snapshot.nodes)) {
+    if (snapshot.pass.projectRootNodeId === node.id) {
+      continue;
+    }
     const unresolved = unresolvedBlockingChildIds(snapshot, node.id);
     if (unresolved.length > 0) {
       isBlocked = true;

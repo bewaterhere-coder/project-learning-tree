@@ -23,6 +23,7 @@ function baseNode(
     isCompleted: false,
     canCreateChild: true,
     canComplete: false,
+    isProjectRoot: false,
     ...overrides,
   };
 }

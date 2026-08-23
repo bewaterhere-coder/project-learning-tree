@@ -1,0 +1,16 @@
+{
+  "capturedAt": "2026-08-23T04:39:04.388Z",
+  "afterSelect": {
+    "clusterChildListMutations": 0,
+    "clusterAttributeMutations": 0,
+    "clusterNodesRemoved": 0,
+    "clusterNodesAdded": 0
+  },
+  "afterDrag": {
+    "clusterChildListMutations": 0,
+    "clusterAttributeMutations": 11,
+    "clusterNodesRemoved": 0,
+    "clusterNodesAdded": 0
+  },
+  "verdict": "pass"
+}
