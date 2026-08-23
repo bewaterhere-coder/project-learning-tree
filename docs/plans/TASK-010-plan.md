@@ -1,7 +1,7 @@
 ---
 task_id: TASK-010
 title: Project Root Learning Progress & Canvas Interaction Stability
-status: plan_review
+status: implementation
 requirement: ../requirements/TASK-010-project-root-learning-progress.md
 pr: 32
 branch: task/TASK-010-project-root-learning-progress
@@ -11,11 +11,11 @@ branch: task/TASK-010-project-root-learning-progress
 
 This is the canonical implementation plan for TASK-010. It records Planning Gate evidence (project-init / domain audit + canvas flash reproduction) and the smallest coherent change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — revised per PR #32 Plan Review (Changes Required); awaiting re-review (`plan_approved=true`).
+**Gate:** `implementation` — Plan Review **APPROVED** on PR #32; `plan_approved: true`; implementing on this branch.
 
 **Hard constraints:**
 
-- No production implementation until Plan approval.
+- Plan approved — production implementation authorized on PR #32 only.
 - Do **not** modify TASK-009 history, acceptance evidence, or Decision B wording in TASK-009 **durable docs** (`docs/requirements/TASK-009-*`, `docs/plans/TASK-009-plan.md`, milestone acceptance write-ups).
 - TASK-010 **forward-supersedes** the product rule that prohibited a visible Project Root on the Learning Tree graph.
 - Prefer reuse of Domain / Persistence / React Flow — no parallel project-init, progress, or canvas systems.
@@ -513,4 +513,5 @@ Principle: **history lives in durable TASK-009 artifacts + Git; the active suite
 - [x] TASK-009 no-project-root rule explicitly superseded **forward only**
 - [x] Plan revised: Project Root outside Question lifecycle / Active Stack / convergence
 - [x] Plan revised: superseded active tests must be updated (Finding 2 inventory)
-- [ ] ChatGPT Plan re-review (`plan_approved: true`) — **awaiting**
+- [x] ChatGPT Plan re-review (`plan_approved: true`) — **APPROVED**
+- [ ] Implementation + acceptance review — **in progress**

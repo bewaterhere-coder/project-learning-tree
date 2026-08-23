@@ -5,13 +5,13 @@ task_id: TASK-010
 title: Project Root Learning Progress & Canvas Interaction Stability
 
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/TASK-010-project-root-learning-progress.md
