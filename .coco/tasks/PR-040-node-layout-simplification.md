@@ -5,13 +5,13 @@ task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
 
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: .coco/tasks/PR-040-node-layout-simplification.md
@@ -178,3 +178,15 @@ Pay particular attention to:
 - **Regression:** node drag isolation, edge handles, persistence separation, theme behavior, and canvas flashing are explicit acceptance surfaces.
 
 No unresolved material product decision remains for this scope.
+
+## Cursor Planning Gate
+
+Cursor completed Plan mode on this branch:
+
+1. audited canvas project-info (`BootstrapSummary` in `.tree-pane` vs TASK-010 Project Root vs shell/sidebar metadata);
+2. audited node chrome double-layer (`.learning-node-shell` + `.learning-node`) and PR-038 drag/persistence boundaries;
+3. audited `computeLayout` (TB-only) and preference `nodePositions` write path;
+4. wrote `.coco/plans/PR-040-node-layout-simplification-plan.md` with binding decisions D1–D14, slices, tests, and material risks;
+5. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
+
+**Material risk called out for Plan Review:** D1 removes `BootstrapSummary` from the canvas only and **keeps** Project Root on the graph (TASK-010). If review requires hiding Project Root instead, that is an explicit requirement amendment.
