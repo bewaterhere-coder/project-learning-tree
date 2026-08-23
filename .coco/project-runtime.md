@@ -91,6 +91,24 @@ Validate acceptance criteria.
 
 Update project completion state after merge.
 
+## Develop Workflow Contract Binding
+
+The project uses the following workflow contracts:
+
+```
+.coco/develop-workflow.md
+.coco/task-state-model.md
+```
+
+When these contracts exist, they are the Source of Truth for development execution.
+
+Rules:
+
+- Do not replace project workflow with generic development workflow.
+- Do not skip workflow stages.
+- Current task stage determines allowed actions.
+- Review and Acceptance are separate gates.
+
 ## State
 
 Project state should track:
