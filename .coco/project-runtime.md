@@ -43,8 +43,31 @@ Conversation
 project:
   name: project-learning-tree
   repository: bewaterhere-coder/project-learning-tree
-  workflow: github-pr-development
 ```
+
+## Development Workflow Binding
+
+This project does not own a standalone development workflow.
+
+It inherits the Coco Development System contracts.
+
+```yaml
+workflow_binding:
+  source: bewaterhere-coder/Coco-AI-OS
+  core:
+    contract: contracts/development/workflow-core.md
+  task:
+    contract: contracts/development/task-contract.md
+  review:
+    contract: contracts/development/review-contract.md
+  acceptance:
+    contract: contracts/development/acceptance-contract.md
+  adapter:
+    development:
+      - cursor
+```
+
+Project-specific development rules belong to this project and should not redefine the global workflow core.
 
 ## Default Context
 
@@ -52,16 +75,7 @@ Inside this project:
 
 - All relevant discussions belong to this project by default.
 - Repository information should not be requested repeatedly.
-- Project workflow rules apply to all development conversations.
-
-## Development Workflow
-
-Code changes follow the bound workflow contracts.
-
-```
-.coco/develop-workflow.md
-.coco/task-state-model.md
-```
+- Bound workflow contracts apply to development conversations.
 
 ## Runtime Contract Health
 
