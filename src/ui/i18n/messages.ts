@@ -252,6 +252,11 @@ const enUS = {
     "The current question is not in a learning state, so a blocking sub-question cannot be added.",
   "close.askAiSummary": "Help me write the learning summary",
   "chat.closedNotice": "This sub-question is complete.",
+  "layout.menu": "Layout",
+  "layout.topToBottom": "↓ Top to bottom",
+  "layout.bottomToTop": "↑ Bottom to top",
+  "layout.leftToRight": "→ Left to right",
+  "layout.rightToLeft": "← Right to left",
 } as const;
 
 export type MessageKey = keyof typeof enUS;
@@ -491,6 +496,11 @@ const zhCN: Record<MessageKey, string> = {
   "proposal.parentNotActive": "当前父问题不是学习中状态",
   "close.askAiSummary": "AI 帮我整理",
   "chat.closedNotice": "这个子问题已完成。",
+  "layout.menu": "布局",
+  "layout.topToBottom": "↓ 从上到下",
+  "layout.bottomToTop": "↑ 从下到上",
+  "layout.leftToRight": "→ 从左到右",
+  "layout.rightToLeft": "← 从右到左",
 };
 
 export const messages = {

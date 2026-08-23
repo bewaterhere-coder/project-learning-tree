@@ -95,7 +95,8 @@ export async function createProject(
   }
   await page.getByTestId("project-source-input").fill(source);
   await page.getByTestId("project-create-submit").click();
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.locator("[data-node-id]").first()).toBeVisible();
   return derivedName;
 }

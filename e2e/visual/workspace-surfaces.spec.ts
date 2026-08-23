@@ -17,7 +17,8 @@ test.describe("visual surfaces", () => {
   }) => {
     await openApp(page);
     await createProject(page, "Visual Shell");
-    await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+    await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
     await expect(page.locator('[data-project-root="true"]')).toHaveCount(1);
     await expect(
       page.locator("[data-node-id]:not([data-project-root='true'])").first(),

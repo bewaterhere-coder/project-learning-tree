@@ -65,14 +65,15 @@ describe("production workspace UI", () => {
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
-    expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
+    expect(await screen.findByTestId("tree-canvas")).toBeInTheDocument();
+    expect(document.querySelector("[data-project-root=\"true\"]")).not.toBeNull();
     expect(screen.getByTestId("project-list")).toHaveTextContent("agents");
     expect(screen.getByTestId("tree-nodes").querySelectorAll("[data-node-id]").length).toBeGreaterThan(
       0,
     );
-    const recommended = screen.getByTestId("bootstrap-recommended").querySelector("button");
-    expect(recommended).not.toBeNull();
-    await user.click(recommended!);
+    const recommendedNode = document.querySelector('[data-recommended="true"]');
+    expect(recommendedNode).not.toBeNull();
+    await user.click(recommendedNode!);
     await user.click(screen.getByTestId("inspector-open"));
     expect(screen.getByTestId("node-inspector")).toBeInTheDocument();
     expect(screen.getByTestId("inspector-dod-heading")).toHaveTextContent(
@@ -211,7 +212,8 @@ describe("persistence write channels", () => {
     await user.click(screen.getByTestId("project-create-open"));
     await user.type(screen.getByTestId("project-source-input"), "openai/agents");
     await user.click(screen.getByTestId("project-create-submit"));
-    expect(await screen.findByTestId("bootstrap-summary")).toBeInTheDocument();
+    expect(await screen.findByTestId("tree-canvas")).toBeInTheDocument();
+    expect(document.querySelector("[data-project-root=\"true\"]")).not.toBeNull();
     expect(storage.writes.includes(WORKSPACE_SEMANTIC_KEY)).toBe(true);
   });
 

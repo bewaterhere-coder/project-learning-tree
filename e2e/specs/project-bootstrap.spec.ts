@@ -35,7 +35,8 @@ test("creating a GitHub project opens onto Project Root + Questions", async ({
   await expect(page.locator("[data-on-stack='true']")).toHaveCount(0);
 
   await expect(page.getByTestId("project-title")).toHaveText("vite");
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.getByTestId("bootstrap-recommended")).toBeVisible();
 
   const recommended = page.locator("[data-recommended='true']");
@@ -74,7 +75,8 @@ test("URL-only create defaults the project name from the GitHub URL", async ({
     .getByTestId("project-source-input")
     .fill("https://github.com/Fission-AI/OpenSpec");
   await page.getByTestId("project-create-submit").click();
-  await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
+  await expect(page.getByTestId("tree-canvas")).toBeVisible();
+  await expect(page.locator("[data-project-root=\"true\"]").first()).toBeVisible();
   await expect(page.locator('[data-project-root="true"]')).toHaveCount(1);
   await expect(page.getByTestId("project-list")).toContainText("OpenSpec");
   await expect(page.locator("[data-node-id]").first()).toBeVisible();
