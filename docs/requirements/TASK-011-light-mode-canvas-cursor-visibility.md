@@ -119,8 +119,8 @@ Verify at minimum:
 
 ## 8. Planning Gate
 
-Canonical Plan is committed at `docs/plans/TASK-011-plan.md` (`status: plan_review`).
+Canonical Plan is committed at `docs/plans/TASK-011-plan.md` (`status: plan_review`, revised after PR #36 Plan Review).
 
 Do not implement production code until the Plan is reviewed and `plan_approved=true`.
 
-Planning evidence (summary): XYFlow already applies `grab`/`grabbing` on `.react-flow__pane.draggable` / `.dragging`; app CSS does not override pane cursors; light `--color-bg-canvas` surfaces wash out native grab contrast. Proposed fix is light-scoped CSS reinforcement, with custom SVG cursors only as a documented fallback.
+Planning evidence (summary): XYFlow already applies `grab`/`grabbing` on `.react-flow__pane.draggable` / `.dragging`; app CSS does not override pane cursors; light `--color-bg-canvas` surfaces wash out native grab contrast. Re-declaring the same native keywords cannot fix contrast. Proposed fix is a light-mode-only high-contrast custom cursor on those pane states (native `grab`/`grabbing` fallback), with explicit 32×32 / hotspot / zoom verification constraints. Dark mode and non-pane cursor semantics stay unchanged.
