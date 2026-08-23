@@ -1,6 +1,24 @@
-import { useState, type KeyboardEvent } from "react";
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 import type { WorkspaceLocale } from "../../workspace/index.js";
 import { t } from "../i18n/index.js";
+
+/** Matches `.chat-composer-input` max-height; grow up to this cap. */
+export const CHAT_COMPOSER_MAX_HEIGHT_PX = 160;
+const CHAT_COMPOSER_MIN_HEIGHT_PX = 44;
+
+export function syncComposerHeight(el: HTMLTextAreaElement): void {
+  el.style.height = "auto";
+  const next = Math.min(
+    Math.max(el.scrollHeight, CHAT_COMPOSER_MIN_HEIGHT_PX),
+    CHAT_COMPOSER_MAX_HEIGHT_PX,
+  );
+  el.style.height = `${next}px`;
+}
 
 export function MessageComposer({
   locale,
@@ -14,6 +32,14 @@ export function MessageComposer({
   onSend: (value: string) => void;
 }) {
   const [value, setValue] = useState("");
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useLayoutEffect(() => {
+    const el = textareaRef.current;
+    if (el) {
+      syncComposerHeight(el);
+    }
+  }, [value]);
 
   const submit = () => {
     const next = value.trim();
@@ -41,13 +67,17 @@ export function MessageComposer({
       }}
     >
       <textarea
+        ref={textareaRef}
         data-testid="chat-input"
         className="chat-composer-input"
         rows={1}
         value={value}
         disabled={disabled}
         placeholder={t(locale, placeholderKey)}
-        onChange={(event) => setValue(event.target.value)}
+        onChange={(event) => {
+          setValue(event.target.value);
+          syncComposerHeight(event.target);
+        }}
         onKeyDown={onKeyDown}
       />
       <button

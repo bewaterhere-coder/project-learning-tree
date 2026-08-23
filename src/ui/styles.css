@@ -1340,7 +1340,9 @@ textarea {
   flex: 1;
   min-height: 44px;
   max-height: 160px;
+  field-sizing: content;
   resize: none;
+  overflow-y: auto;
   padding: 10px 12px;
   border: 1px solid var(--color-border-default);
   border-radius: 12px;
@@ -1348,6 +1350,7 @@ textarea {
   color: var(--color-text-primary);
   font: inherit;
   line-height: 1.4;
+  box-sizing: border-box;
 }
 
 .chat-composer-input:focus {

@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: fixing
+  stage: acceptance_review
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -221,3 +221,12 @@ Acceptance is not approved yet. Two requirement-level gaps were found in the imp
 2. **Composer does not actually auto-grow.** `MessageComposer.tsx` changed to `textarea rows={1}`, while CSS only sets `min-height`, `max-height`, and `resize: none`. There is no content-height/autosize behavior (`field-sizing` or equivalent JS), so multi-line input stays at one visual height and scrolls instead of growing up to the intended cap. Implement actual auto-grow to the existing sensible maximum and add a focused regression where practical.
 
 Keep the task on the existing PR #38 branch. After fixes, rerun the existing verification suite and return to acceptance review.
+
+## Fix Complete — Acceptance Findings
+
+1. **Drag identity:** `TreeCanvas` now records the gesture target via `onNodeDragStart` and prefers that id (then `dragging: true` changes, then the first position id) when filtering multi-position batches — never current-focus/selected. Regression: drag non-focus `q1` while a batch also moves focused `q2`; only `q1` moves/persists.
+2. **Composer auto-grow:** `syncComposerHeight` + `useLayoutEffect` grow the textarea up to 160px; CSS adds `field-sizing: content` as progressive enhancement. Regressions cover helper cap/growth and Shift+Enter growth in Chat.
+
+Verification: `npm run typecheck`, `npm test`, `npm run build`.
+
+Awaiting ChatGPT acceptance review (`acceptance_approved=true`).

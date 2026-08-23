@@ -9,7 +9,7 @@ import {
   type OnNodeDrag,
   type OnNodesChange,
 } from "@xyflow/react";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
 import type { NodePosition, Viewport, WorkspaceLocale } from "../../workspace/index.js";
 import {
@@ -128,6 +128,7 @@ export function TreeCanvas({
   );
   const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);
+  const draggingNodeIdRef = useRef<string | null>(null);
   if (derived.nodes !== derivedNodes) {
     setDerivedNodes(derived.nodes);
     setNodes(enrichNodes(derived.nodes));
@@ -170,20 +171,19 @@ export function TreeCanvas({
         return;
       }
       setNodes((current) => {
-        const positionIds = [
-          ...new Set(
-            layoutChanges
-              .filter((change) => change.type === "position" && "id" in change)
-              .map((change) => String((change as { id: string }).id)),
-          ),
-        ];
-        // PR-038 D1: only one learning node may translate in a gesture.
+        const positionChanges = layoutChanges.filter(
+          (change) => change.type === "position" && "id" in change,
+        ) as Array<{ id: string; type: "position"; dragging?: boolean }>;
+        const positionIds = [...new Set(positionChanges.map((change) => change.id))];
+        // PR-038: only one learning node may translate; gesture target wins —
+        // never prefer current-focus over the node actually being dragged.
         let applied = layoutChanges;
         if (positionIds.length > 1) {
+          const draggingMarked = positionChanges.find(
+            (change) => change.dragging === true,
+          )?.id;
           const keepId =
-            current.find((node) => node.data.isCurrentFocus)?.id ??
-            current.find((node) => node.selected)?.id ??
-            positionIds[0];
+            draggingNodeIdRef.current ?? draggingMarked ?? positionIds[0];
           applied = layoutChanges.filter(
             (change) =>
               change.type !== "position" ||
@@ -199,23 +199,34 @@ export function TreeCanvas({
         if (selectedIds.length <= 1) {
           return next;
         }
-        const keepId =
-          next.find((node) => node.data.isCurrentFocus)?.id ?? selectedIds[0];
+        const keepSelected =
+          draggingNodeIdRef.current ??
+          next.find((node) => node.data.isCurrentFocus)?.id ??
+          selectedIds[0];
         return next.map((node) => ({
           ...node,
-          selected: node.id === keepId,
+          selected: node.id === keepSelected,
         }));
       });
     },
     [enrichNodes],
   );
 
+  const handleNodeDragStart: OnNodeDrag = useCallback((_event, node) => {
+    if (isClusterNodeId(node.id)) {
+      return;
+    }
+    draggingNodeIdRef.current = node.id;
+  }, []);
+
   const handleNodeDragStop: OnNodeDrag = useCallback(
     (_event, node) => {
       if (isClusterNodeId(node.id)) {
+        draggingNodeIdRef.current = null;
         return;
       }
       onNodeDragStop({ [node.id]: { x: node.position.x, y: node.position.y } });
+      draggingNodeIdRef.current = null;
     },
     [onNodeDragStop],
   );
@@ -264,6 +275,7 @@ export function TreeCanvas({
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}
         onNodesChange={handleNodesChange}
+        onNodeDragStart={handleNodeDragStart}
         onNodeDragStop={handleNodeDragStop}
         onMoveEnd={handleMoveEnd}
         nodesDraggable

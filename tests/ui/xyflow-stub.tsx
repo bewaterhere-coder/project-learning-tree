@@ -32,6 +32,7 @@ export function ReactFlow({
   nodes,
   onNodeClick,
   onNodesChange,
+  onNodeDragStart,
   onNodeDragStop,
   onMoveEnd,
   nodesDraggable,
@@ -52,6 +53,10 @@ export function ReactFlow({
       selected?: boolean;
       dragging?: boolean;
     }>,
+  ) => void;
+  onNodeDragStart?: (
+    event: MouseEvent<HTMLButtonElement>,
+    node: StubNode,
   ) => void;
   onNodeDragStop?: (
     event: MouseEvent<HTMLButtonElement>,
@@ -151,8 +156,14 @@ export function ReactFlow({
                 x: (node.position?.x ?? 0) + 100,
                 y: (node.position?.y ?? 0) + 40,
               };
+              onNodeDragStart?.(event, node);
               onNodesChange?.([
-                { id: node.id, type: "position", position, dragging: false },
+                {
+                  id: node.id,
+                  type: "position",
+                  position,
+                  dragging: true,
+                },
               ]);
               onNodeDragStop?.(event, { ...node, position });
             }}
@@ -181,10 +192,16 @@ export function ReactFlow({
                 x: (peer.position?.x ?? 0) + 100,
                 y: (peer.position?.y ?? 0) + 40,
               };
+              onNodeDragStart?.(event, node);
               onNodesChange?.([
                 { id: node.id, type: "select", selected: true },
                 { id: peer.id, type: "select", selected: true },
-                { id: node.id, type: "position", position, dragging: false },
+                {
+                  id: node.id,
+                  type: "position",
+                  position,
+                  dragging: true,
+                },
                 {
                   id: peer.id,
                   type: "position",
