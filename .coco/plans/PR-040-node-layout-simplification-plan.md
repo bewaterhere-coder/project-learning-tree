@@ -1,7 +1,7 @@
 ---
 task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
-status: plan_review
+status: implementation
 requirement: ../tasks/PR-040-node-layout-simplification.md
 pr: 40
 branch: task/node-layout-simplification
@@ -11,7 +11,7 @@ branch: task/node-layout-simplification
 
 This is the canonical implementation plan for PR-040. It records Planning Gate code evidence and the smallest change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — awaiting ChatGPT Plan Review (`plan_approved: true` on the Requirement).
+**Gate:** `implementation` — G2 Plan Review approved; implementing on PR #40.
 
 **Hard constraints:**
 

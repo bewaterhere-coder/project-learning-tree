@@ -5,13 +5,13 @@ task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
 
 development:
-  stage: plan_review
+  stage: implementation
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: .coco/tasks/PR-040-node-layout-simplification.md
@@ -190,3 +190,11 @@ Cursor completed Plan mode on this branch:
 5. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
 
 **Material risk called out for Plan Review:** D1 removes `BootstrapSummary` from the canvas only and **keeps** Project Root on the graph (TASK-010). If review requires hiding Project Root instead, that is an explicit requirement amendment.
+
+## G2 Plan Review — Approved
+
+ChatGPT G2 Plan Review approved the Plan on PR #40.
+
+Binding confirmation:
+- D1/D2 accepted as written: remove `BootstrapSummary` / project-information presentation from the canvas; retain the Project Root learning node.
+- Canonical Task Gate synchronized to `plan_approved: true`, `stage: implementation`, `next_expected_actor: cursor` before product implementation.
