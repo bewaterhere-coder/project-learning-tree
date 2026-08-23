@@ -1,7 +1,7 @@
 ---
 task_id: TASK-011
 title: Light Mode Canvas Cursor Visibility
-status: plan_review
+status: implementing
 requirement: ../requirements/TASK-011-light-mode-canvas-cursor-visibility.md
 pr: 36
 branch: task/TASK-011-light-mode-canvas-cursor-visibility
@@ -15,7 +15,7 @@ supersedes:
 
 This is the canonical implementation plan for TASK-011. It records Planning Gate evidence from the canvas / React Flow / theme / CSS cursor audit and the smallest change set that should satisfy the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — revised per PR #36 Plan Review (changes required); awaiting re-review (`plan_approved=true`).
+**Gate:** `implementing` — `plan_approved=true`; production implementation in progress on PR #36.
 
 **Hard constraints:**
 
@@ -272,7 +272,7 @@ Automated:
 
 ## Gate handoff
 
-1. This file is the canonical Plan artifact: `docs/plans/TASK-011-plan.md` (**revised** for PR #36 Plan Review).
-2. Requirement remains `stage: plan_review`, `next_expected_actor: chatgpt`, `plan_approved: false`.
-3. **Do not implement** until ChatGPT sets `plan_approved: true` and advances stage to `implementing` / `next_expected_actor: cursor`.
-4. After approval, implement on **this same branch / PR #36 only**.
+1. This file is the canonical Plan artifact: `docs/plans/TASK-011-plan.md`.
+2. Requirement is `stage: implementing`, `plan_approved: true`, `next_expected_actor: cursor`.
+3. Implementation ships light-only pane custom cursors on this same branch / PR #36.
+4. After automated + headed verification, advance to acceptance review (`next_expected_actor: chatgpt`).
