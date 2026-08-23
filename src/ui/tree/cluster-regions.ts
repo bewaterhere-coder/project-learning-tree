@@ -81,7 +81,9 @@ export function computeClusterRegions(
       maxX = Math.max(maxX, position.x + nodeWidth);
       maxY = Math.max(maxY, position.y + nodeHeight);
     }
-    if (counted === 0) {
+    // Single-node "clusters" read as an outer card frame around the learning
+    // node. Keep underlays only when they group a real multi-node subtree.
+    if (counted <= 1) {
       return;
     }
     regions.push({

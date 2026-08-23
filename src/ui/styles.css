@@ -903,9 +903,10 @@ textarea {
 }
 
 .learning-node.focused {
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-learning-selected) 35%, transparent);
-  outline: 1.5px solid var(--color-learning-selected);
-  outline-offset: 1px;
+  /* Single surface: strengthen the node border — never stack outline + shadow. */
+  border-color: var(--color-learning-selected);
+  box-shadow: none;
+  outline: none;
 }
 
 .learning-node.project-root {
@@ -1090,9 +1091,21 @@ html[data-theme="light"] .react-flow__pane.dragging {
   cursor: url("./assets/cursors/canvas-grabbing.svg") 14 8, grabbing;
 }
 
+/* RF host is measurement/drag only — never a second card/frame around .learning-node. */
 .react-flow__node,
-.react-flow__node.selected {
+.react-flow__node.selected,
+.react-flow__node.dragging,
+.react-flow__node:focus,
+.react-flow__node:focus-visible,
+.react-flow__node-learningNode,
+.react-flow__node-learningNode.selected,
+.react-flow__node-learningNode.dragging {
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: transparent;
   box-shadow: none;
+  outline: none;
 }
 
 .react-flow__handle {
