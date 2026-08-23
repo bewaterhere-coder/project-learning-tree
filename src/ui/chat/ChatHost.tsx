@@ -34,7 +34,10 @@ import {
   type ProjectWorkspace,
 } from "../../workspace/index.js";
 import { t } from "../i18n/index.js";
+import { useExitHold } from "../hooks/useExitHold.js";
 import { ChatPanel } from "./ChatPanel.js";
+
+const CHAT_EXIT_MS = import.meta.env.MODE === "test" ? 0 : 220;
 
 export function ChatHost({
   locale,
@@ -273,8 +276,10 @@ export function ChatHost({
   const boundClosed =
     boundNode !== undefined && ["closed"].includes(boundNode.lifecycle);
   const width = chatDragWidth ?? current.layout.chatWidth;
+  const chatOpen = current.layout.chatOpen === true;
+  const showChat = useExitHold(chatOpen, CHAT_EXIT_MS);
 
-  if (!current.layout.chatOpen) {
+  if (!showChat) {
     return null;
   }
 
@@ -292,6 +297,7 @@ export function ChatHost({
       position={current.layout.chatPosition}
       pinned={current.layout.chatBinding.mode === "pinned"}
       boundNodeClosed={boundClosed}
+      motionState={chatOpen ? "open" : "closed"}
       onClose={() => onWorkspace(closeChat(workspace), false)}
       onFollow={() => onWorkspace(followCurrentNode(workspace), false)}
       onPin={() => {

@@ -7,9 +7,11 @@ import {
   type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
+import { useExitHold } from "../hooks/useExitHold.js";
 
 const MENU_GAP = 4;
 const VIEWPORT_PAD = 8;
+const MENU_EXIT_MS = import.meta.env.MODE === "test" ? 0 : 160;
 
 export function Menu({
   open,
@@ -29,6 +31,7 @@ export function Menu({
   anchorId?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const mounted = useExitHold(open, MENU_EXIT_MS);
   const [coords, setCoords] = useState({
     top: 0,
     left: 0,
@@ -92,7 +95,7 @@ export function Menu({
     };
   }, [anchorRef, open, onClose]);
 
-  if (!open) {
+  if (!mounted) {
     return null;
   }
 
@@ -104,6 +107,7 @@ export function Menu({
       data-testid={testId}
       data-anchor-id={anchorId}
       data-placement={coords.placement}
+      data-state={open ? "open" : "closed"}
       style={{ top: coords.top, left: coords.left }}
     >
       {children}

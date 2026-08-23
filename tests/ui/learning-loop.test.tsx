@@ -99,6 +99,7 @@ describe("M3B learning loop", () => {
     await user.click(screen.getByTestId("proposal-accept-blocking"));
     await waitFor(() => {
       expect(screen.getAllByText("Why DAG addressing?").length).toBeGreaterThan(0);
+      expect(screen.getByTestId("proposal-added")).toHaveTextContent(/Added|已添加/);
     });
   });
 
@@ -161,7 +162,11 @@ describe("M3B learning loop", () => {
     expect(screen.queryByTestId("inspector-evidence")).toBeNull();
     await user.click(screen.getByTestId("proposal-adopt"));
     await waitFor(() => {
-      expect(screen.queryByTestId("proposal-card-evidence")).not.toBeInTheDocument();
+      expect(screen.getByTestId("proposal-added")).toBeInTheDocument();
+      expect(screen.getByTestId("proposal-card-evidence")).toHaveAttribute(
+        "data-status",
+        "accepted",
+      );
     });
   });
 

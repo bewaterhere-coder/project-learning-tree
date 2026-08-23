@@ -96,6 +96,7 @@ describe("M3A contextual chat UI", () => {
     renderChat(openChat(workspace), { storage });
     const panel = screen.getByTestId("chat-panel");
     expect(panel).toHaveAttribute("data-placement", "docked");
+    await user.click(screen.getByTestId("chat-more"));
     await user.click(screen.getByTestId("chat-placement-floating"));
     expect(screen.getByTestId("chat-panel")).toHaveAttribute("data-placement", "floating");
     expect(storage.getItem(WORKSPACE_SEMANTIC_KEY)).toBeNull();
@@ -151,11 +152,25 @@ describe("M3A contextual chat UI", () => {
     const user = userEvent.setup();
     const { workspace } = createDemoWorkspaceFixture();
     renderChat(openChat(workspace));
+    await user.click(screen.getByTestId("chat-more"));
     await user.click(screen.getByTestId("chat-context-toggle"));
     const body = screen.getByTestId("chat-context-body");
     expect(body).toHaveTextContent(/Current question|当前问题/);
     expect(body).not.toHaveTextContent("system prompt");
     expect(body).not.toHaveTextContent("You are");
+  });
+
+  it("keeps mode controls in overflow rather than prominent labeled chrome", async () => {
+    const user = userEvent.setup();
+    const { workspace } = createDemoWorkspaceFixture();
+    renderChat(openChat(workspace));
+    expect(screen.queryByTestId("chat-placement-floating")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chat-context-toggle")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chat-close")).toHaveAttribute("aria-label", expect.stringMatching(/Close|关闭/));
+    await user.click(screen.getByTestId("chat-more"));
+    expect(screen.getByTestId("chat-placement-floating")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-placement-docked")).toBeInTheDocument();
+    expect(screen.getByTestId("chat-context-toggle")).toBeInTheDocument();
   });
 
   it("opens chat from the node action without opening the inspector", async () => {

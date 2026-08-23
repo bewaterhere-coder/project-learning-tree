@@ -44,6 +44,8 @@
   --space-5: 24px;
   --motion-fast: 140ms;
   --motion-normal: 200ms;
+  --motion-slow: 280ms;
+  --motion-ease: cubic-bezier(0.2, 0, 0, 1);
   color: var(--color-text-primary);
   background: var(--color-bg-surface);
 }
@@ -174,7 +176,7 @@ textarea {
   overflow: hidden;
   border-right: 1px solid color-mix(in srgb, var(--color-border-default) 55%, transparent);
   background: color-mix(in srgb, var(--color-bg-surface) 92%, var(--color-bg-canvas));
-  transition: width var(--motion-fast) ease;
+  transition: width var(--motion-fast) var(--motion-ease);
 }
 
 .project-sidebar[data-dragging="true"] {
@@ -344,8 +346,8 @@ textarea {
   text-align: left;
   cursor: pointer;
   transition:
-    background var(--motion-fast) ease,
-    border-color var(--motion-fast) ease;
+    background var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease);
 }
 
 .project-item:hover {
@@ -451,6 +453,11 @@ textarea {
   border-left: 1px solid color-mix(in srgb, var(--color-border-default) 60%, transparent);
   background: color-mix(in srgb, var(--color-bg-elevated) 94%, var(--color-bg-canvas));
   box-shadow: none;
+  animation: motion-panel-in var(--motion-normal) var(--motion-ease);
+}
+
+.contextual-workspace[data-state="closed"] {
+  animation: motion-panel-out var(--motion-fast) var(--motion-ease) forwards;
 }
 
 .inspector-open {
@@ -673,6 +680,7 @@ textarea {
   background: var(--color-accent-subtle);
   color: var(--color-danger);
   border-bottom: 1px solid var(--color-border-default);
+  animation: motion-toast-in var(--motion-normal) var(--motion-ease);
 }
 
 .ui-button,
@@ -690,9 +698,9 @@ textarea {
   padding: 6px 10px;
   cursor: pointer;
   transition:
-    background var(--motion-fast) ease,
-    border-color var(--motion-fast) ease,
-    color var(--motion-fast) ease;
+    background var(--motion-fast) var(--motion-ease),
+    border-color var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
 }
 
 .ui-button-primary,
@@ -738,6 +746,11 @@ textarea {
   place-items: center;
   padding: var(--space-4);
   background: var(--color-backdrop);
+  animation: motion-fade-in var(--motion-normal) var(--motion-ease);
+}
+
+.confirm-dialog-backdrop[data-state="closed"] {
+  animation: motion-fade-out var(--motion-fast) var(--motion-ease) forwards;
 }
 
 .confirm-dialog {
@@ -747,6 +760,11 @@ textarea {
   border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   box-shadow: var(--shadow-overlay);
+  animation: motion-dialog-in var(--motion-normal) var(--motion-ease);
+}
+
+.confirm-dialog[data-state="closed"] {
+  animation: motion-dialog-out var(--motion-fast) var(--motion-ease) forwards;
 }
 
 .confirm-dialog-title {
@@ -790,6 +808,15 @@ textarea {
   border-radius: var(--radius-md);
   background: var(--color-bg-elevated);
   box-shadow: var(--shadow-node);
+  animation: motion-menu-in-below var(--motion-fast) var(--motion-ease);
+}
+
+.ui-menu[data-placement="above"] {
+  animation-name: motion-menu-in-above;
+}
+
+.ui-menu[data-state="closed"] {
+  animation: motion-fade-out var(--motion-fast) var(--motion-ease) forwards;
 }
 
 .ui-menu button {
@@ -845,9 +872,9 @@ textarea {
   background: var(--color-bg-node);
   box-shadow: none;
   transition:
-    border-color var(--motion-fast) ease,
-    background var(--motion-fast) ease,
-    box-shadow var(--motion-fast) ease;
+    border-color var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease),
+    box-shadow var(--motion-fast) var(--motion-ease);
 }
 
 .learning-node:hover:not(.focused) {
@@ -1167,6 +1194,11 @@ textarea {
   border: 1px solid color-mix(in srgb, var(--color-border-default) 70%, transparent);
   background: color-mix(in srgb, var(--color-bg-elevated) 96%, var(--color-bg-canvas));
   box-shadow: var(--shadow-overlay);
+  animation: motion-panel-in var(--motion-normal) var(--motion-ease);
+}
+
+.chat-panel[data-state="closed"] {
+  animation: motion-panel-out var(--motion-fast) var(--motion-ease) forwards;
 }
 
 .chat-panel-docked {
@@ -1184,7 +1216,7 @@ textarea {
 
 .chat-header,
 .chat-header-main,
-.chat-header-actions {
+.chat-header-trailing {
   display: flex;
   gap: var(--space-2);
 }
@@ -1201,9 +1233,73 @@ textarea {
   align-items: flex-start;
 }
 
-.chat-header h2,
-.chat-header p {
+.chat-header-titles {
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-title {
   margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--color-text-primary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chat-status-line,
+.chat-header p {
+  margin: var(--space-1) 0 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.chat-header-trailing {
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.chat-icon-button,
+.chat-close-button,
+.chat-send-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease);
+}
+
+.chat-icon-button:hover,
+.chat-close-button:hover,
+.chat-send-button:hover {
+  background: var(--color-accent-subtle);
+  color: var(--color-text-primary);
+}
+
+.chat-text-action {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.chat-text-action:hover {
+  color: var(--color-text-primary);
 }
 
 .chat-divergence {
@@ -1221,32 +1317,88 @@ textarea {
 
 .chat-message {
   margin-bottom: var(--space-2);
+  animation: motion-fade-in var(--motion-fast) var(--motion-ease);
+}
+
+.chat-message-user {
+  color: var(--color-text-primary);
+}
+
+.chat-message-assistant {
+  color: var(--color-text-secondary);
 }
 
 .chat-composer {
   display: flex;
+  align-items: flex-end;
   gap: var(--space-2);
   padding: var(--space-3);
   border-top: 1px solid var(--color-border-default);
 }
 
-.chat-composer input {
+.chat-composer-input {
   flex: 1;
+  min-height: 44px;
+  max-height: 160px;
+  resize: none;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-default);
+  border-radius: 12px;
+  background: var(--color-bg-surface);
+  color: var(--color-text-primary);
+  font: inherit;
+  line-height: 1.4;
+}
+
+.chat-composer-input:focus {
+  outline: 2px solid color-mix(in srgb, var(--color-accent) 45%, transparent);
+  outline-offset: 1px;
+}
+
+.chat-send-button {
+  margin-bottom: 8px;
 }
 
 .chat-context,
 .chat-error,
-.proposal-card,
 .chat-closed-notice,
 .chat-empty {
   padding: 0 var(--space-3) var(--space-3);
 }
 
-.proposal-card {
-  margin: var(--space-3);
-  padding: var(--space-3);
-  border: 1px solid var(--color-border-default);
-  border-radius: var(--radius-md);
+.chat-context-body {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.proposal-row {
+  margin: 0 0 var(--space-3);
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.proposal-guidance,
+.proposal-suggestion,
+.proposal-added {
+  margin: 0 0 var(--space-1);
+  font-size: 12px;
+  color: var(--color-text-muted, var(--color-text-secondary));
+}
+
+.proposal-body {
+  margin: 0 0 var(--space-2);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.proposal-goal-label {
+  display: grid;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+  font-size: 12px;
+  color: var(--color-text-secondary);
 }
 
 .proposal-error,
@@ -1257,5 +1409,143 @@ textarea {
 .proposal-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--space-2) var(--space-3);
+}
+
+.proposal-text-action {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.proposal-text-action-primary {
+  color: var(--color-text-primary);
+  font-weight: 500;
+}
+
+.proposal-text-action:hover {
+  color: var(--color-accent);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-dialog-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes motion-dialog-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}
+
+@keyframes motion-menu-in-below {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-menu-in-above {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes motion-panel-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-panel-out {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+}
+
+@keyframes motion-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -59,6 +59,7 @@ import type { RepositoryEvidenceProvider } from "../application/index.js";
 import { createGitHubRepositoryEvidenceProvider } from "../infrastructure/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
+import { useExitHold } from "./hooks/useExitHold.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
 import { ContextualWorkspace } from "./contextual/ContextualWorkspace.js";
 import { NodeDetails } from "./contextual/NodeDetails.js";
@@ -369,6 +370,10 @@ export function App({
   );
 
   const inspectorOpen = current?.layout.inspectorOpen === true;
+  const showInspector = useExitHold(
+    Boolean(current && inspectorOpen && inspector),
+    import.meta.env.MODE === "test" ? 0 : 220,
+  );
   const prevInspectorOpenRef = useRef(inspectorOpen);
   useEffect(() => {
     if (prevInspectorOpenRef.current === inspectorOpen) {
@@ -815,10 +820,11 @@ export function App({
               </>
             )}
           </main>
-          {current && inspectorOpen && inspector ? (
+          {current && showInspector && inspector ? (
             <ContextualWorkspace
               width={inspectorDragWidth ?? current.layout.inspectorWidth}
               locale={locale}
+              motionState={inspectorOpen ? "open" : "closed"}
               onResizeDrag={(delta) => {
                 lockViewportPersist();
                 const base =

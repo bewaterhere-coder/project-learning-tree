@@ -20,13 +20,15 @@ export function ProposalList({
   onAdopt: (proposal: LearningProposal, draft?: string) => void;
   onIgnore: (proposal: LearningProposal) => void;
 }) {
-  const pending = proposals.filter((proposal) => proposal.status === "pending");
-  if (pending.length === 0) {
+  const visible = proposals.filter(
+    (proposal) => proposal.status === "pending" || proposal.status === "accepted",
+  );
+  if (visible.length === 0) {
     return null;
   }
   return (
     <div className="proposal-list" data-testid="proposal-list">
-      {pending.map((proposal) => (
+      {visible.map((proposal) => (
         <ProposalCard
           key={proposal.id}
           locale={locale}
@@ -62,14 +64,16 @@ function ProposalCard({
   const [goal, setGoal] = useState(
     proposal.type === "question" ? proposal.goal : "",
   );
+  const accepted = proposal.status === "accepted";
 
   return (
     <article
-      className="proposal-card"
+      className="proposal-row"
       data-testid={`proposal-card-${proposal.type}`}
       data-proposal-id={proposal.id}
+      data-status={proposal.status}
     >
-      <h3>
+      <p className="proposal-guidance">
         {t(
           locale,
           proposal.type === "question"
@@ -80,11 +84,13 @@ function ProposalCard({
                 ? "proposal.criterionTitle"
                 : "proposal.summaryTitle",
         )}
-      </h3>
-      <p data-testid="proposal-body">{proposalBody(proposal)}</p>
-      {proposal.type === "question" ? (
+      </p>
+      <p className="proposal-body" data-testid="proposal-body">
+        {proposalBody(proposal)}
+      </p>
+      {proposal.type === "question" && !accepted ? (
         <>
-          <p data-testid="proposal-suggestion">
+          <p className="proposal-suggestion" data-testid="proposal-suggestion">
             {t(
               locale,
               proposal.suggestedDestination === "frontier"
@@ -92,7 +98,7 @@ function ProposalCard({
                 : "proposal.aiSuggestsBlocking",
             )}
           </p>
-          <label>
+          <label className="proposal-goal-label">
             {t(locale, "proposal.goal")}
             <input
               data-testid="proposal-goal"
@@ -102,7 +108,7 @@ function ProposalCard({
           </label>
         </>
       ) : null}
-      {editing ? (
+      {editing && !accepted ? (
         <textarea
           data-testid="proposal-edit"
           value={draft}
@@ -114,56 +120,67 @@ function ProposalCard({
           {t(locale, "proposal.rejected")} {proposal.error}
         </p>
       ) : null}
-      <div className="proposal-actions">
-        {proposal.type === "question" ? (
-          <>
-            <button
-              type="button"
-              data-testid="proposal-accept-blocking"
-              onClick={() => onQuestionAction(proposal, "blocking", goal)}
-            >
-              {t(locale, "proposal.acceptBlocking")}
-            </button>
-            <button
-              type="button"
-              data-testid="proposal-send-frontier"
-              onClick={() => onQuestionAction(proposal, "frontier", goal)}
-            >
-              {t(locale, "proposal.sendFrontier")}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              type="button"
-              data-testid="proposal-adopt"
-              onClick={() => onAdopt(proposal, editing ? draft : undefined)}
-            >
-              {t(locale, "proposal.adopt")}
-            </button>
-            <button
-              type="button"
-              data-testid="proposal-edit-adopt"
-              onClick={() => {
-                if (!editing) {
-                  setEditing(true);
-                  return;
-                }
-                onAdopt(proposal, draft);
-              }}
-            >
-              {t(locale, "proposal.editAdopt")}
-            </button>
-          </>
-        )}
-        <button
-          type="button"
-          data-testid="proposal-ignore"
-          onClick={() => onIgnore(proposal)}
-        >
-          {t(locale, "proposal.ignore")}
-        </button>
-      </div>
+      {accepted ? (
+        <p className="proposal-added" data-testid="proposal-added">
+          {t(locale, "proposal.added")}
+        </p>
+      ) : (
+        <div className="proposal-actions">
+          {proposal.type === "question" ? (
+            <>
+              <button
+                type="button"
+                className="proposal-text-action proposal-text-action-primary"
+                data-testid="proposal-accept-blocking"
+                onClick={() => onQuestionAction(proposal, "blocking", goal)}
+              >
+                {t(locale, "proposal.acceptBlocking")}
+              </button>
+              <button
+                type="button"
+                className="proposal-text-action"
+                data-testid="proposal-send-frontier"
+                onClick={() => onQuestionAction(proposal, "frontier", goal)}
+              >
+                {t(locale, "proposal.sendFrontier")}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="proposal-text-action proposal-text-action-primary"
+                data-testid="proposal-adopt"
+                onClick={() => onAdopt(proposal, editing ? draft : undefined)}
+              >
+                {t(locale, "proposal.adopt")}
+              </button>
+              <button
+                type="button"
+                className="proposal-text-action"
+                data-testid="proposal-edit-adopt"
+                onClick={() => {
+                  if (!editing) {
+                    setEditing(true);
+                    return;
+                  }
+                  onAdopt(proposal, draft);
+                }}
+              >
+                {t(locale, "proposal.editAdopt")}
+              </button>
+            </>
+          )}
+          <button
+            type="button"
+            className="proposal-text-action"
+            data-testid="proposal-ignore"
+            onClick={() => onIgnore(proposal)}
+          >
+            {t(locale, "proposal.ignore")}
+          </button>
+        </div>
+      )}
     </article>
   );
 }

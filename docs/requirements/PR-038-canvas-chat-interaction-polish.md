@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: implementation
+  stage: acceptance_review
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -201,3 +201,16 @@ Approval notes:
 - Proposal actions must remain text-level affordances rather than visually returning to button/card treatment.
 
 Implementation is authorized on the existing PR #38 branch only. After implementation, return evidence for acceptance review.
+
+## Implementation Complete
+
+Cursor implemented the approved Plan (D1–D13) on this branch:
+
+1. Independent drag — `multiSelectionKeyCode`/`selectionKeyCode` null; single-node position batch filter; PR-038 drag regressions.
+2. Motion — `--motion-slow` / `--motion-ease`, dialog/menu/panel enter-exit, `prefers-reduced-motion`.
+3. Node Chat — compact title, circular × close, overflow for float/dock/context, textarea composer.
+4. Proposals — muted text actions + inline `已添加` for accepted status.
+
+Verification: `npm run typecheck`, `npm test` (348), `npm run build`.
+
+Awaiting ChatGPT acceptance review (`acceptance_approved=true`).

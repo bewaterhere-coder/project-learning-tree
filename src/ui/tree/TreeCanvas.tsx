@@ -169,11 +169,43 @@ export function TreeCanvas({
       if (layoutChanges.length === 0) {
         return;
       }
-      setNodes((current) =>
-        enrichNodes(
-          applyNodeChanges(layoutChanges, current) as LearningFlowNode[],
-        ),
-      );
+      setNodes((current) => {
+        const positionIds = [
+          ...new Set(
+            layoutChanges
+              .filter((change) => change.type === "position" && "id" in change)
+              .map((change) => String((change as { id: string }).id)),
+          ),
+        ];
+        // PR-038 D1: only one learning node may translate in a gesture.
+        let applied = layoutChanges;
+        if (positionIds.length > 1) {
+          const keepId =
+            current.find((node) => node.data.isCurrentFocus)?.id ??
+            current.find((node) => node.selected)?.id ??
+            positionIds[0];
+          applied = layoutChanges.filter(
+            (change) =>
+              change.type !== "position" ||
+              ("id" in change && String(change.id) === keepId),
+          );
+        }
+        const next = enrichNodes(
+          applyNodeChanges(applied, current) as LearningFlowNode[],
+        );
+        const selectedIds = next
+          .filter((node) => node.selected)
+          .map((node) => node.id);
+        if (selectedIds.length <= 1) {
+          return next;
+        }
+        const keepId =
+          next.find((node) => node.data.isCurrentFocus)?.id ?? selectedIds[0];
+        return next.map((node) => ({
+          ...node,
+          selected: node.id === keepId,
+        }));
+      });
     },
     [enrichNodes],
   );
@@ -238,6 +270,8 @@ export function TreeCanvas({
         nodesConnectable={false}
         edgesReconnectable={false}
         elementsSelectable
+        multiSelectionKeyCode={null}
+        selectionKeyCode={null}
         deleteKeyCode={null}
         panOnDrag
         zoomOnScroll

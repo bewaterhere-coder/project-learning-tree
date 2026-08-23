@@ -1,7 +1,7 @@
 ---
 task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
-status: plan_review
+status: acceptance_review
 requirement: ../requirements/PR-038-canvas-chat-interaction-polish.md
 pr: 38
 branch: task/canvas-chat-interaction-polish
@@ -11,7 +11,7 @@ branch: task/canvas-chat-interaction-polish
 
 This is the canonical implementation plan for PR-038. It records Planning Gate code evidence and the smallest change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `plan_review` — awaiting ChatGPT plan review (`plan_approved=true`).
+**Gate:** `acceptance_review` — implementation complete on PR #38; awaiting ChatGPT acceptance review (`acceptance_approved=true`).
 
 **Hard constraints:**
 

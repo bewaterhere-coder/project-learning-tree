@@ -7,12 +7,14 @@ export function ContextualWorkspace({
   width,
   locale,
   children,
+  motionState = "open",
   onResizeDrag,
   onResizeRelease,
 }: {
   width: number;
   locale: WorkspaceLocale;
   children: ReactNode;
+  motionState?: "open" | "closed";
   onResizeDrag: (delta: number) => void;
   onResizeRelease: () => void;
 }) {
@@ -21,6 +23,7 @@ export function ContextualWorkspace({
       className="contextual-workspace"
       data-testid="inspector-pane"
       data-width={String(width)}
+      data-state={motionState}
       style={{ width }}
     >
       {children}

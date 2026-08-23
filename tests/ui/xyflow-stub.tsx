@@ -38,6 +38,8 @@ export function ReactFlow({
   nodesConnectable,
   edgesReconnectable,
   deleteKeyCode,
+  multiSelectionKeyCode,
+  selectionKeyCode,
   defaultViewport,
 }: {
   nodes: StubNode[];
@@ -45,9 +47,10 @@ export function ReactFlow({
   onNodesChange?: (
     changes: Array<{
       id: string;
-      type: "position";
-      position: { x: number; y: number };
-      dragging: boolean;
+      type: "position" | "select";
+      position?: { x: number; y: number };
+      selected?: boolean;
+      dragging?: boolean;
     }>,
   ) => void;
   onNodeDragStop?: (
@@ -59,6 +62,8 @@ export function ReactFlow({
   nodesConnectable?: boolean;
   edgesReconnectable?: boolean;
   deleteKeyCode?: string | null;
+  multiSelectionKeyCode?: string | null;
+  selectionKeyCode?: string | null;
   defaultViewport?: StubViewport;
 }) {
   const viewport = defaultViewport ?? { x: 0, y: 0, zoom: 1 };
@@ -69,6 +74,12 @@ export function ReactFlow({
       data-nodes-connectable={nodesConnectable ? "true" : "false"}
       data-edges-reconnectable={edgesReconnectable ? "true" : "false"}
       data-delete-key={deleteKeyCode === null ? "none" : String(deleteKeyCode ?? "")}
+      data-multi-selection={
+        multiSelectionKeyCode === null ? "none" : String(multiSelectionKeyCode ?? "default")
+      }
+      data-selection-key={
+        selectionKeyCode === null ? "none" : String(selectionKeyCode ?? "default")
+      }
       data-viewport-x={String(viewport.x)}
       data-viewport-y={String(viewport.y)}
       data-viewport-zoom={String(viewport.zoom)}
@@ -137,8 +148,8 @@ export function ReactFlow({
             data-testid={`node-drag-${node.id}`}
             onClick={(event) => {
               const position = {
-                x: (node.position?.x ?? 0) + 50,
-                y: (node.position?.y ?? 0) + 25,
+                x: (node.position?.x ?? 0) + 100,
+                y: (node.position?.y ?? 0) + 40,
               };
               onNodesChange?.([
                 { id: node.id, type: "position", position, dragging: false },
@@ -147,6 +158,44 @@ export function ReactFlow({
             }}
           >
             Drag
+          </button>
+          <button
+            type="button"
+            data-testid={`node-multi-select-drag-${node.id}`}
+            onClick={(event) => {
+              const others = nodes.filter(
+                (candidate) =>
+                  candidate.id !== node.id &&
+                  candidate.type !== "clusterRegion" &&
+                  !String(candidate.id).startsWith("cluster:"),
+              );
+              const peer = others[0];
+              if (!peer) {
+                return;
+              }
+              const position = {
+                x: (node.position?.x ?? 0) + 100,
+                y: (node.position?.y ?? 0) + 40,
+              };
+              const peerPosition = {
+                x: (peer.position?.x ?? 0) + 100,
+                y: (peer.position?.y ?? 0) + 40,
+              };
+              onNodesChange?.([
+                { id: node.id, type: "select", selected: true },
+                { id: peer.id, type: "select", selected: true },
+                { id: node.id, type: "position", position, dragging: false },
+                {
+                  id: peer.id,
+                  type: "position",
+                  position: peerPosition,
+                  dragging: false,
+                },
+              ]);
+              onNodeDragStop?.(event, { ...node, position });
+            }}
+          >
+            Multi-drag
           </button>
         </div>
       ))}
@@ -177,17 +226,24 @@ export function applyNodeChanges(
     id: string;
     type: string;
     position?: { x: number; y: number };
+    selected?: boolean;
   }>,
   nodes: StubNode[],
 ): StubNode[] {
   return nodes.map((node) => {
-    const change = changes.find(
-      (entry) => entry.id === node.id && entry.type === "position",
-    );
-    if (change?.position === undefined) {
-      return node;
+    let next = node;
+    for (const change of changes) {
+      if (change.id !== node.id) {
+        continue;
+      }
+      if (change.type === "position" && change.position !== undefined) {
+        next = { ...next, position: change.position };
+      }
+      if (change.type === "select" && change.selected !== undefined) {
+        next = { ...next, selected: change.selected };
+      }
     }
-    return { ...node, position: change.position };
+    return next;
   });
 }
 
