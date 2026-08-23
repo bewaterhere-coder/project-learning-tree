@@ -7,6 +7,24 @@ Define the default runtime behavior for this ChatGPT Project.
 All conversations inside this ChatGPT Project inherit this project context automatically.
 No repeated project binding command is required.
 
+## Project Bootstrap
+
+Bootstrap contract:
+
+```
+.coco/bootstrap.md
+```
+
+When entering this project, bootstrap restores project context before workflow execution.
+
+Important:
+
+```
+Load Runtime
+      ≠
+Execute Workflow
+```
+
 ## Project Scope
 
 Project context priority:
@@ -38,76 +56,12 @@ Inside this project:
 
 ## Development Workflow
 
-Code changes follow:
-
-```
-Requirement
-    ↓
-TASK
-    ↓
-PR
-    ↓
-Cursor Implementation
-    ↓
-Review
-    ↓
-Acceptance
-    ↓
-Merge
-```
-
-## Cursor Workflow
-
-Development requests must include:
-
-- TASK ID
-- Repository
-- Branch
-- PR context
-- Implementation requirements
-
-Rules:
-
-- One requirement uses one PR.
-- Do not reuse unrelated PRs.
-- Do not modify main directly.
-- Complete implementation before review.
-
-## Command Resolution
-
-Project commands should use this workflow.
-
-Examples:
-
-`review TASK-x`
-
-Review the implementation against requirements.
-
-`验收 TASK-x`
-
-Validate acceptance criteria.
-
-`merge PR-x`
-
-Update project completion state after merge.
-
-## Develop Workflow Contract Binding
-
-The project uses the following workflow contracts:
+Code changes follow the bound workflow contracts.
 
 ```
 .coco/develop-workflow.md
 .coco/task-state-model.md
 ```
-
-When these contracts exist, they are the Source of Truth for development execution.
-
-Rules:
-
-- Do not replace project workflow with generic development workflow.
-- Do not skip workflow stages.
-- Current task stage determines allowed actions.
-- Review and Acceptance are separate gates.
 
 ## Runtime Contract Health
 
