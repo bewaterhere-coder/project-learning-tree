@@ -9,6 +9,7 @@ import {
   type Node,
   type OnNodeDrag,
   type OnNodesChange,
+  type ReactFlowInstance,
 } from "@xyflow/react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import type { NodeId, TreeViewModel } from "../../application/index.js";
@@ -32,6 +33,10 @@ import {
   computeLayout,
   type LayoutDirection,
 } from "./layout.js";
+import {
+  resolveDragCollision,
+  resolveNodeBoxSize,
+} from "./resolve-drag-collision.js";
 import {
   routeEdgesForNodes,
   toReactFlow,
@@ -404,17 +409,90 @@ export function TreeCanvas({
         return;
       }
       const live = nodesRef.current;
+      const peers = live
+        .filter((candidate) => !isClusterNodeId(candidate.id))
+        .map((candidate) => {
+          const size = resolveNodeBoxSize(candidate);
+          return {
+            id: candidate.id,
+            x: candidate.position.x,
+            y: candidate.position.y,
+            width: size.width,
+            height: size.height,
+          };
+        });
+      const draggedSize = resolveNodeBoxSize(node);
+      const resolved = resolveDragCollision(
+        {
+          id: node.id,
+          x: node.position.x,
+          y: node.position.y,
+          width: draggedSize.width,
+          height: draggedSize.height,
+        },
+        peers,
+      );
+      const nextPosition = { x: resolved.x, y: resolved.y };
+      if (resolved.corrected) {
+        setNodes((current) =>
+          current.map((candidate) =>
+            candidate.id === node.id
+              ? {
+                  ...candidate,
+                  position: nextPosition,
+                  className: "learning-node-settling",
+                }
+              : candidate,
+          ),
+        );
+        window.setTimeout(() => {
+          setNodes((current) =>
+            current.map((candidate) =>
+              candidate.id === node.id
+                ? { ...candidate, className: undefined }
+                : candidate,
+            ),
+          );
+        }, 200);
+      }
+      const positionsLive = resolved.corrected
+        ? live.map((candidate) =>
+            candidate.id === node.id
+              ? { ...candidate, position: nextPosition }
+              : candidate,
+          )
+        : live;
       setClusterNodes(
-        toClusterFlowNodes(modelRef.current, positionsFromNodes(live)),
+        toClusterFlowNodes(modelRef.current, positionsFromNodes(positionsLive)),
       );
       setClusterSyncKey(
-        `${clusterStructureSignature(modelRef.current)}#${structureEpoch}#${positionSignature(live)}`,
+        `${clusterStructureSignature(modelRef.current)}#${structureEpoch}#${positionSignature(positionsLive)}`,
       );
-      onNodeDragStop({ [node.id]: { x: node.position.x, y: node.position.y } });
+      onNodeDragStop({ [node.id]: nextPosition });
       draggingNodeIdRef.current = null;
     },
     [onNodeDragStop, structureEpoch],
   );
+
+  const reactFlowRef = useRef<ReactFlowInstance | null>(null);
+
+  const handleFitAll = useCallback(() => {
+    const instance = reactFlowRef.current;
+    if (!instance) {
+      return;
+    }
+    const learning = nodesRef.current.filter(
+      (candidate) => !isClusterNodeId(candidate.id),
+    );
+    if (learning.length === 0) {
+      return;
+    }
+    void instance.fitView({
+      nodes: learning,
+      padding: 0.18,
+      duration: 200,
+    });
+  }, []);
 
   const handleMoveEnd: OnMove = useCallback(
     (event, nextViewport) => {
@@ -442,6 +520,7 @@ export function TreeCanvas({
       <LayoutMenu
         disabled={model.nodes.length === 0}
         onSelect={handleApplyLayoutDirection}
+        onFitAll={handleFitAll}
       />
       <svg className="edge-marker-defs" aria-hidden="true">
         <defs>
@@ -469,6 +548,9 @@ export function TreeCanvas({
         nodes={flowNodes as Node[]}
         edges={edges}
         nodeTypes={nodeTypes}
+        onInit={(instance) => {
+          reactFlowRef.current = instance;
+        }}
         onNodeClick={handleNodeClick}
         onNodesChange={handleNodesChange}
         onNodeDragStart={handleNodeDragStart}

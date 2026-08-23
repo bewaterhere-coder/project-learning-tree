@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import type { TreeViewModel } from "../../src/application/index.js";
 import {
   CLUSTER_PADDING,
-  CLUSTER_TITLE_RESERVE,
   computeClusterRegions,
   clusterNodeId,
   isClusterNodeId,
@@ -81,7 +80,7 @@ function modelFixture(): TreeViewModel {
 }
 
 describe("cluster regions", () => {
-  it("derives presentation-only underlays from top-level question subtrees", () => {
+  it("derives presentation-only underlays from top-level question subtrees without external titles", () => {
     const regions = computeClusterRegions(modelFixture(), {
       "root-a": { x: 0, y: 0 },
       "child-a": { x: 40, y: NODE_HEIGHT + 72 },
@@ -90,13 +89,13 @@ describe("cluster regions", () => {
 
     expect(regions).toHaveLength(2);
     expect(regions[0]?.id).toBe(clusterNodeId("root-a"));
-    expect(regions[0]?.title).toBe("How does auth work?");
+    expect(regions[0]).not.toHaveProperty("title");
     expect(regions[0]?.toneIndex).toBe(0);
     expect(regions[0]?.x).toBe(0 - CLUSTER_PADDING);
-    expect(regions[0]?.y).toBe(0 - CLUSTER_PADDING - CLUSTER_TITLE_RESERVE);
+    expect(regions[0]?.y).toBe(0 - CLUSTER_PADDING);
     expect(regions[0]?.width).toBe(40 + NODE_WIDTH + CLUSTER_PADDING * 2);
     expect(regions[0]?.height).toBe(
-      NODE_HEIGHT + 72 + NODE_HEIGHT + CLUSTER_PADDING * 2 + CLUSTER_TITLE_RESERVE,
+      NODE_HEIGHT + 72 + NODE_HEIGHT + CLUSTER_PADDING * 2,
     );
     expect(regions[1]?.rootId).toBe("root-b");
     expect(regions[1]?.toneIndex).toBe(1);

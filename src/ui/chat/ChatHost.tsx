@@ -32,6 +32,7 @@ import {
   type LearningWorkspace,
   type PreferenceStorage,
   type ProjectWorkspace,
+  DEFAULT_CHAT_HEIGHT,
 } from "../../workspace/index.js";
 import { t } from "../i18n/index.js";
 import { useExitHold } from "../hooks/useExitHold.js";
@@ -69,7 +70,9 @@ export function ChatHost({
   const registryRef = useRef(registry);
   registryRef.current = registry;
   const [chatDragWidth, setChatDragWidth] = useState<number>();
+  const [chatDragHeight, setChatDragHeight] = useState<number>();
   const chatDragRef = useRef<number | null>(null);
+  const chatHeightDragRef = useRef<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -276,6 +279,8 @@ export function ChatHost({
   const boundClosed =
     boundNode !== undefined && ["closed"].includes(boundNode.lifecycle);
   const width = chatDragWidth ?? current.layout.chatWidth;
+  const height =
+    chatDragHeight ?? current.layout.chatHeight ?? DEFAULT_CHAT_HEIGHT;
   const chatOpen = current.layout.chatOpen === true;
   const showChat = useExitHold(chatOpen, CHAT_EXIT_MS);
 
@@ -294,6 +299,7 @@ export function ChatHost({
       viewingNodeId={current.snapshot.pass.currentFocusNodeId}
       placement={current.layout.chatPlacement}
       width={width}
+      height={height}
       position={current.layout.chatPosition}
       pinned={current.layout.chatBinding.mode === "pinned"}
       boundNodeClosed={boundClosed}
@@ -309,13 +315,18 @@ export function ChatHost({
         onWorkspace(setChatPlacement(workspace, placement), false)
       }
       onMove={(position) => onWorkspace(moveFloatingChat(workspace, position), false)}
-      onResize={(nextWidth) => {
-        chatDragRef.current = nextWidth;
-        setChatDragWidth(nextWidth);
-        onWorkspace(
-          updateSelectedLayout(workspace, { chatWidth: nextWidth }),
-          false,
-        );
+      onResize={(size) => {
+        chatDragRef.current = size.width;
+        setChatDragWidth(size.width);
+        const patch: { chatWidth: number; chatHeight?: number } = {
+          chatWidth: size.width,
+        };
+        if (size.height !== undefined) {
+          chatHeightDragRef.current = size.height;
+          setChatDragHeight(size.height);
+          patch.chatHeight = size.height;
+        }
+        onWorkspace(updateSelectedLayout(workspace, patch), false);
       }}
       onSend={(input) => {
         void handleSend(input);

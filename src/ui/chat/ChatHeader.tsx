@@ -109,30 +109,31 @@ export function ChatHeader({
             anchorRef={moreRef}
             testId="chat-overflow-menu"
           >
-            <button
-              type="button"
-              role="menuitem"
-              data-testid="chat-placement-floating"
-              data-active={placement === "floating" ? "true" : "false"}
-              onClick={() => {
-                onPlacement("floating");
-                setMenuOpen(false);
-              }}
-            >
-              {t(locale, "chat.placementFloating")}
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              data-testid="chat-placement-docked"
-              data-active={placement === "docked" ? "true" : "false"}
-              onClick={() => {
-                onPlacement("docked");
-                setMenuOpen(false);
-              }}
-            >
-              {t(locale, "chat.placementDocked")}
-            </button>
+            {placement === "floating" ? (
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="chat-placement-docked"
+                onClick={() => {
+                  onPlacement("docked");
+                  setMenuOpen(false);
+                }}
+              >
+                {t(locale, "chat.placementDocked")}
+              </button>
+            ) : (
+              <button
+                type="button"
+                role="menuitem"
+                data-testid="chat-placement-floating"
+                onClick={() => {
+                  onPlacement("floating");
+                  setMenuOpen(false);
+                }}
+              >
+                {t(locale, "chat.placementFloating")}
+              </button>
+            )}
             <button
               type="button"
               role="menuitem"
@@ -143,7 +144,10 @@ export function ChatHeader({
                 setMenuOpen(false);
               }}
             >
-              {t(locale, "chat.context")}
+              {t(
+                locale,
+                contextOpen ? "chat.contextHide" : "chat.contextShow",
+              )}
             </button>
           </Menu>
           <button

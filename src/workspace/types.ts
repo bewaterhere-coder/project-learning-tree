@@ -62,6 +62,7 @@ export interface ProjectWorkspaceLayout {
   chatOpen: boolean;
   chatPlacement: ChatPlacement;
   chatWidth: number;
+  chatHeight?: number;
   chatPosition?: ChatPosition;
   chatPositionOrigin: ChatPositionOrigin;
   chatBinding: ChatBinding;

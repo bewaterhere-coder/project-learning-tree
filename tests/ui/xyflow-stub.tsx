@@ -1,4 +1,5 @@
 import type { MouseEvent, ReactNode } from "react";
+import { useEffect } from "react";
 import type { TreeNodeView } from "../../src/application/index.js";
 import {
   LearningNode,
@@ -18,8 +19,12 @@ interface StubNode {
     onAddChildForNode?: (nodeId: string) => void;
     onCompleteNode?: (nodeId: string) => void;
     onOpenInspectorForNode?: (nodeId: string) => void;
-    region?: { rootId: string; title: string };
+    region?: { rootId: string; title?: string };
   };
+  width?: number;
+  height?: number;
+  measured?: { width?: number; height?: number };
+  style?: { width?: number | string; height?: number | string };
 }
 
 interface StubViewport {
@@ -30,6 +35,7 @@ interface StubViewport {
 
 export function ReactFlow({
   nodes,
+  onInit,
   onNodeClick,
   onNodesChange,
   onNodeDragStart,
@@ -44,6 +50,13 @@ export function ReactFlow({
   defaultViewport,
 }: {
   nodes: StubNode[];
+  onInit?: (instance: {
+    fitView: (options?: {
+      nodes?: StubNode[];
+      padding?: number;
+      duration?: number;
+    }) => Promise<boolean>;
+  }) => void;
   onNodeClick?: (event: MouseEvent<HTMLButtonElement>, node: StubNode) => void;
   onNodesChange?: (
     changes: Array<{
@@ -72,6 +85,25 @@ export function ReactFlow({
   defaultViewport?: StubViewport;
 }) {
   const viewport = defaultViewport ?? { x: 0, y: 0, zoom: 1 };
+  useEffect(() => {
+    onInit?.({
+      fitView: async (options) => {
+        const count =
+          options?.nodes?.length ??
+          nodes.filter(
+            (node) =>
+              node.type !== "clusterRegion" &&
+              !String(node.id).startsWith("cluster:"),
+          ).length;
+        const host = document.querySelector("[data-testid='tree-nodes']");
+        if (host instanceof HTMLElement) {
+          host.dataset.fitAllCount = String(count);
+          host.dataset.fitAllPadding = String(options?.padding ?? "");
+        }
+        return true;
+      },
+    });
+  }, [nodes, onInit]);
   return (
     <div
       data-testid="tree-nodes"
@@ -165,10 +197,54 @@ export function ReactFlow({
                   dragging: true,
                 },
               ]);
-              onNodeDragStop?.(event, { ...node, position });
+              onNodeDragStop?.(event, {
+                ...node,
+                position,
+                style: { width: 260, height: 148 },
+                measured: { width: 260, height: 148 },
+              });
             }}
           >
             Drag
+          </button>
+          <button
+            type="button"
+            data-testid={`node-drag-overlap-${node.id}`}
+            onClick={(event) => {
+              const others = nodes.filter(
+                (candidate) =>
+                  candidate.id !== node.id &&
+                  candidate.type !== "clusterRegion" &&
+                  !String(candidate.id).startsWith("cluster:"),
+              );
+              const peer = others[0];
+              if (!peer) {
+                return;
+              }
+              const position = {
+                x: peer.position?.x ?? 0,
+                y: peer.position?.y ?? 0,
+              };
+              onNodeDragStart?.(event, node);
+              onNodesChange?.([
+                {
+                  id: node.id,
+                  type: "position",
+                  position,
+                  dragging: true,
+                },
+              ]);
+              onNodeDragStop?.(event, {
+                ...node,
+                position,
+                style: { width: 260, height: 148 },
+                measured: { width: 260, height: 148 },
+                width: 260,
+                height: 148,
+              });
+            }}
+          >
+            Overlap drag
           </button>
           <button
             type="button"

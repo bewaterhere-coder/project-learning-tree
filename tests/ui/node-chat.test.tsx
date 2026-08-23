@@ -160,7 +160,7 @@ describe("M3A contextual chat UI", () => {
     expect(body).not.toHaveTextContent("You are");
   });
 
-  it("keeps mode controls in overflow rather than prominent labeled chrome", async () => {
+  it("keeps mode controls in overflow with exclusive action labels", async () => {
     const user = userEvent.setup();
     const { workspace } = createDemoWorkspaceFixture();
     renderChat(openChat(workspace));
@@ -168,9 +168,17 @@ describe("M3A contextual chat UI", () => {
     expect(screen.queryByTestId("chat-context-toggle")).not.toBeInTheDocument();
     expect(screen.getByTestId("chat-close")).toHaveAttribute("aria-label", expect.stringMatching(/Close|关闭/));
     await user.click(screen.getByTestId("chat-more"));
+    // Docked panel exposes only the Float action.
     expect(screen.getByTestId("chat-placement-floating")).toBeInTheDocument();
+    expect(screen.queryByTestId("chat-placement-docked")).not.toBeInTheDocument();
+    expect(screen.getByTestId("chat-context-toggle")).toHaveTextContent(
+      /Show context|显示上下文/,
+    );
+    await user.click(screen.getByTestId("chat-placement-floating"));
+    await user.click(screen.getByTestId("chat-more"));
+    // Floating panel exposes only the Dock action.
     expect(screen.getByTestId("chat-placement-docked")).toBeInTheDocument();
-    expect(screen.getByTestId("chat-context-toggle")).toBeInTheDocument();
+    expect(screen.queryByTestId("chat-placement-floating")).not.toBeInTheDocument();
   });
 
   it("opens chat from the node action without opening the inspector", async () => {

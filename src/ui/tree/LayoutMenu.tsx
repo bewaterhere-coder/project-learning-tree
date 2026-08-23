@@ -15,9 +15,11 @@ const DIRECTION_KEYS = {
 export function LayoutMenu({
   disabled,
   onSelect,
+  onFitAll,
 }: {
   disabled: boolean;
   onSelect: (direction: LayoutDirection) => void;
+  onFitAll: () => void;
 }) {
   const locale = useLocale();
   const [open, setOpen] = useState(false);
@@ -25,6 +27,21 @@ export function LayoutMenu({
 
   return (
     <div className="canvas-layout-panel nodrag nopan" data-testid="canvas-layout-panel">
+      <button
+        type="button"
+        className="ui-button ui-button-secondary canvas-layout-trigger"
+        data-testid="canvas-fit-all"
+        disabled={disabled}
+        title={t(locale, "canvas.fitAll")}
+        onClick={() => {
+          if (disabled) {
+            return;
+          }
+          onFitAll();
+        }}
+      >
+        {t(locale, "canvas.fitAll")}
+      </button>
       <button
         ref={triggerRef}
         type="button"

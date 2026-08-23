@@ -7,8 +7,6 @@ export function ClusterRegionView({ region }: { region: ClusterRegion }) {
       data-testid={`knowledge-cluster-${region.rootId}`}
       data-cluster-root={region.rootId}
       aria-hidden="true"
-    >
-      <p className="knowledge-cluster-title">{region.title}</p>
-    </div>
+    />
   );
 }

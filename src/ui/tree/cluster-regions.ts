@@ -2,13 +2,11 @@ import type { NodeId, TreeViewModel } from "../../application/index.js";
 import { NODE_HEIGHT, NODE_WIDTH, type NodePosition } from "./layout.js";
 
 export const CLUSTER_PADDING = 28;
-export const CLUSTER_TITLE_RESERVE = 22;
 export const CLUSTER_TONE_COUNT = 5;
 
 export interface ClusterRegion {
   id: string;
   rootId: NodeId;
-  title: string;
   x: number;
   y: number;
   width: number;
@@ -86,15 +84,13 @@ export function computeClusterRegions(
     if (counted === 0) {
       return;
     }
-    const root = model.nodes.find((node) => node.id === rootId);
     regions.push({
       id: clusterNodeId(rootId),
       rootId,
-      title: root?.question ?? rootId,
       x: minX - CLUSTER_PADDING,
-      y: minY - CLUSTER_PADDING - CLUSTER_TITLE_RESERVE,
+      y: minY - CLUSTER_PADDING,
       width: maxX - minX + CLUSTER_PADDING * 2,
-      height: maxY - minY + CLUSTER_PADDING * 2 + CLUSTER_TITLE_RESERVE,
+      height: maxY - minY + CLUSTER_PADDING * 2,
       toneIndex: index % CLUSTER_TONE_COUNT,
     });
   });

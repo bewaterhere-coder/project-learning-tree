@@ -1,8 +1,9 @@
 import {
   clampArchivedPaneHeight,
-  clampChatWidth,
   clampInspectorWidth,
   clampSidebarWidth,
+  clampStoredChatHeight,
+  clampStoredChatWidth,
   DEFAULT_ARCHIVED_PANE_HEIGHT,
   DEFAULT_COLOR_SCHEME,
   defaultChatLayout,
@@ -301,8 +302,12 @@ function parseChatLayout(value: Record<string, unknown>): ReturnType<typeof defa
   const chatPlacement = parseChatPlacement(value.chatPlacement) ?? defaults.chatPlacement;
   const chatWidth =
     typeof value.chatWidth === "number"
-      ? clampChatWidth(value.chatWidth)
+      ? clampStoredChatWidth(value.chatWidth)
       : defaults.chatWidth;
+  const chatHeight =
+    typeof value.chatHeight === "number"
+      ? clampStoredChatHeight(value.chatHeight)
+      : defaults.chatHeight;
   const chatPosition = parseChatPosition(value.chatPosition);
   const chatPositionOrigin = parseChatOrigin(value.chatPositionOrigin) ?? defaults.chatPositionOrigin;
   const chatBinding = parseChatBinding(value.chatBinding) ?? defaults.chatBinding;
@@ -310,6 +315,7 @@ function parseChatLayout(value: Record<string, unknown>): ReturnType<typeof defa
     chatOpen,
     chatPlacement,
     chatWidth,
+    chatHeight,
     chatPosition,
     chatPositionOrigin,
     chatBinding,
@@ -424,6 +430,7 @@ function cloneLayout(layout: ProjectWorkspaceLayout): ProjectWorkspaceLayout {
     chatOpen: layout.chatOpen,
     chatPlacement: layout.chatPlacement,
     chatWidth: layout.chatWidth,
+    chatHeight: layout.chatHeight,
     chatPosition:
       layout.chatPosition === undefined
         ? undefined

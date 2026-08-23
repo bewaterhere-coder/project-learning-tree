@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type PointerEvent as ReactPointerEvent } from "react";
 import type {
   BoundConversationIdentity,
   ContextInspectorView,
@@ -12,6 +12,11 @@ import type {
   ChatPosition,
   WorkspaceLocale,
 } from "../../workspace/index.js";
+import {
+  clampChatWidth,
+  DEFAULT_CHAT_HEIGHT,
+  resolveFloatingChatResize,
+} from "../../workspace/index.js";
 import { PaneDivider } from "../chrome/Pane.js";
 import { t } from "../i18n/index.js";
 import { ChatHeader } from "./ChatHeader.js";
@@ -19,6 +24,8 @@ import { ContextInspector } from "./ContextInspector.js";
 import { MessageComposer } from "./MessageComposer.js";
 import { MessageList } from "./MessageList.js";
 import { ProposalList } from "./ProposalCard.js";
+
+type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
 
 export function ChatPanel({
   locale,
@@ -30,6 +37,7 @@ export function ChatPanel({
   viewingNodeId,
   placement,
   width,
+  height = DEFAULT_CHAT_HEIGHT,
   position,
   pinned,
   boundNodeClosed,
@@ -54,6 +62,7 @@ export function ChatPanel({
   viewingNodeId?: string;
   placement: ChatPlacement;
   width: number;
+  height?: number;
   position?: ChatPosition;
   pinned: boolean;
   boundNodeClosed: boolean;
@@ -63,7 +72,7 @@ export function ChatPanel({
   onPin: () => void;
   onPlacement: (placement: ChatPlacement) => void;
   onMove: (position: ChatPosition) => void;
-  onResize: (width: number) => void;
+  onResize: (size: { width: number; height?: number }) => void;
   onSend: (input: string) => void;
   onQuestionAction: (
     proposal: Extract<LearningProposal, { type: "question" }>,
@@ -75,6 +84,48 @@ export function ChatPanel({
 }) {
   const floating = placement === "floating";
   const [contextOpen, setContextOpen] = useState(false);
+
+  const startFloatingResize = (
+    handle: ResizeHandle,
+    event: ReactPointerEvent<HTMLDivElement>,
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const originX = position?.x ?? 24;
+    const originY = position?.y ?? 24;
+    const startWidth = width;
+    const startHeight = height;
+    const viewportW = window.innerWidth;
+    const viewportH = window.innerHeight;
+
+    const move = (moveEvent: PointerEvent) => {
+      const next = resolveFloatingChatResize({
+        handle,
+        originX,
+        originY,
+        startWidth,
+        startHeight,
+        dx: moveEvent.clientX - startX,
+        dy: moveEvent.clientY - startY,
+        viewportWidth: viewportW,
+        viewportHeight: viewportH,
+      });
+      onResize({ width: next.width, height: next.height });
+      if (next.x !== originX || next.y !== originY) {
+        onMove({ x: next.x, y: next.y });
+      }
+    };
+
+    const up = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+  };
+
   return (
     <aside
       className={`chat-panel chat-panel-${placement}`}
@@ -89,6 +140,7 @@ export function ChatPanel({
               left: position?.x ?? 24,
               top: position?.y ?? 24,
               width,
+              height,
             }
           : { width }
       }
@@ -96,6 +148,9 @@ export function ChatPanel({
         floating
           ? (event) => {
               const target = event.target as HTMLElement;
+              if (target.closest("[data-chat-resize-handle]")) {
+                return;
+              }
               if (!target.closest("[data-testid='chat-header']")) {
                 return;
               }
@@ -138,26 +193,28 @@ export function ChatPanel({
         onToggleContext={() => setContextOpen((value) => !value)}
       />
       <ContextInspector locale={locale} view={inspectorView} open={contextOpen} />
-      <MessageList
-        locale={locale}
-        messages={conversation.messages}
-        emptyKey={identity.kind === "project" ? "chat.emptyProject" : "chat.empty"}
-      />
-      {conversation.status === "thinking" ? (
-        <p data-testid="chat-thinking">{t(locale, "chat.thinking")}</p>
-      ) : null}
-      {conversation.status === "error" && conversation.error ? (
-        <p className="chat-error" role="alert" data-testid="chat-error">
-          {conversation.error.message}
-        </p>
-      ) : null}
-      <ProposalList
-        locale={locale}
-        proposals={conversation.proposals}
-        onQuestionAction={onQuestionAction}
-        onAdopt={onAdopt}
-        onIgnore={onIgnore}
-      />
+      <div className="chat-scroll-body">
+        <MessageList
+          locale={locale}
+          messages={conversation.messages}
+          emptyKey={identity.kind === "project" ? "chat.emptyProject" : "chat.empty"}
+        />
+        {conversation.status === "thinking" ? (
+          <p data-testid="chat-thinking">{t(locale, "chat.thinking")}</p>
+        ) : null}
+        {conversation.status === "error" && conversation.error ? (
+          <p className="chat-error" role="alert" data-testid="chat-error">
+            {conversation.error.message}
+          </p>
+        ) : null}
+        <ProposalList
+          locale={locale}
+          proposals={conversation.proposals}
+          onQuestionAction={onQuestionAction}
+          onAdopt={onAdopt}
+          onIgnore={onIgnore}
+        />
+      </div>
       {boundNodeClosed ? (
         <div className="chat-closed-notice" data-testid="chat-closed-notice">
           <p>{t(locale, "chat.closedNotice")}</p>
@@ -179,10 +236,31 @@ export function ChatPanel({
           orientation="vertical"
           testId="chat-resize"
           label={t(locale, "chat.resize")}
-          onDrag={(delta) => onResize(Math.max(0, width + delta))}
+          onDrag={(delta) =>
+            onResize({ width: clampChatWidth(width + delta) })
+          }
           onRelease={() => undefined}
         />
-      ) : null}
+      ) : (
+        (["n", "s", "e", "w", "ne", "nw", "se", "sw"] as const).map((handle) => (
+          <div
+            key={handle}
+            className={`chat-resize-handle chat-resize-${handle} nodrag nopan`}
+            data-chat-resize-handle={handle}
+            data-testid={`chat-resize-${handle}`}
+            role="separator"
+            aria-orientation={
+              handle === "n" || handle === "s"
+                ? "horizontal"
+                : handle === "e" || handle === "w"
+                  ? "vertical"
+                  : undefined
+            }
+            aria-label={t(locale, "chat.resize")}
+            onPointerDown={(event) => startFloatingResize(handle, event)}
+          />
+        ))
+      )}
     </aside>
   );
 }
