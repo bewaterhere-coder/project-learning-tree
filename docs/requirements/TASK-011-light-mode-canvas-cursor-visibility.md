@@ -9,13 +9,13 @@ related_to:
 relation: same-canvas-ui
 
 development:
-  stage: acceptance_review
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
-    completion_verified: false
-  next_expected_actor: chatgpt
+    acceptance_approved: true
+    completion_verified: true
+  next_expected_actor: null
 
 artifacts:
   requirement: docs/requirements/TASK-011-light-mode-canvas-cursor-visibility.md
@@ -25,6 +25,8 @@ transport:
   type: github-pr
   repository: bewaterhere-coder/project-learning-tree
   branch: task/TASK-011-light-mode-canvas-cursor-visibility
+  pr: 36
+  merge_commit: db4191a069b0884cf5053519e9acd10e8216e5b9
 ```
 
 ## 1. Problem
@@ -117,16 +119,22 @@ Verify at minimum:
 - browser zoom / normal DPI behavior;
 - existing React Flow interaction classes and overrides.
 
-## 8. Planning Gate / Acceptance Handoff
+## 8. Final Acceptance
 
-Canonical Plan: `docs/plans/TASK-011-plan.md` (`status: acceptance_review`).
+Acceptance result: **PASS**.
 
-`plan_approved=true`. Implementation complete on PR #36. Awaiting ChatGPT acceptance review (`acceptance_approved`).
+Implemented and merged in PR #36.
 
-Shipped: light-mode-only dual-tone 32×32 SVG cursors on `.react-flow__pane.draggable` / `.dragging` (hotspot grab `14 3`, grabbing `14 8`) with native `grab`/`grabbing` fallback. Dark mode and node/action/text/resize cursors unchanged.
+Shipped:
+- light-mode-only dual-tone 32×32 SVG cursors on `.react-flow__pane.draggable` / `.dragging`;
+- hotspot grab `14 3`, grabbing `14 8`;
+- native `grab` / `grabbing` fallback preserved;
+- dark mode and node/action/text/resize cursors unchanged.
 
 Verification evidence:
 - Unit contract: `tests/ui/task-011-canvas-cursor.test.ts`
-- Playwright: `e2e/specs/task-011-canvas-cursor.spec.ts` (light `url`+fallback, dark native grab, 125% zoom)
+- Playwright: `e2e/specs/task-011-canvas-cursor.spec.ts`
 - Screenshots / JSON: `docs/milestones/task-011-light-mode-canvas-cursor/`
-- `npm test` / `typecheck` / `build` green
+- `npm test` / `typecheck` / `build` reported green
+- acceptance reviewed against PR head `4cefc7b29bab26faa07e912c0ea766fda6b02e6e`
+- squash merge commit: `db4191a069b0884cf5053519e9acd10e8216e5b9`
