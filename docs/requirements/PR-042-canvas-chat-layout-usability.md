@@ -4,13 +4,13 @@ task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
 
 development:
-  stage: acceptance
+  stage: fixing
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/PR-042-canvas-chat-layout-usability.md
@@ -146,25 +146,13 @@ Collision resolution is a safety constraint, not a tree-layout command.
 
 ## Workflow Policy
 
-This task is now authorized for implementation on the existing branch / PR only.
+This task is authorized for implementation/fixing on the existing branch / PR only.
 
-1. Read this canonical requirement and the approved plan before implementation.
-2. Implement on `task/canvas-chat-layout-usability` / PR #42 only.
+1. Read this canonical requirement and the approved plan before implementation/fixing.
+2. Work on `task/canvas-chat-layout-usability` / PR #42 only.
 3. Do not create another task, branch, or PR for this requirement.
 4. Preserve the approved architecture and regression boundaries.
-5. When implementation evidence and required checks are complete, move the task to `acceptance` / `next_expected_actor: chatgpt` and stop.
-
-## Cursor Planning Gate
-
-Cursor completed Plan mode on this branch:
-
-1. audited chat overflow placement/context labels (`ChatHeader` / `messages.ts`) — dual state nouns, not exclusive actions;
-2. audited floating/docked resize (`ChatPanel` / `chatWidth` only; no `chatHeight`; floating has no resize handles);
-3. audited node chrome after PR-040 — single `.learning-node` card; residual dead `.learning-node-shell` CSS and external `knowledge-cluster-title`;
-4. audited canvas chrome — `LayoutMenu` auto-layout only; no `fitView` / “显示全部”;
-5. audited drag-stop persistence vs auto-layout separation — single-id preference write; no drop collision pass;
-6. wrote `docs/plans/PR-042-canvas-chat-layout-usability-plan.md` with binding decisions D1–D17, slices, tests, and material risks;
-7. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
+5. When implementation/fix evidence and required checks are complete, move the task to `acceptance` / `next_expected_actor: chatgpt` and stop.
 
 ## Plan Review — Approved with binding amendments
 
@@ -187,4 +175,19 @@ Cursor completed implementation on this same branch / PR #42:
 6. unit/UI coverage including `resolve-drag-collision`, cluster regions, chat height preferences, and `tests/ui/pr-042-canvas-chat-layout.test.tsx`;
 7. advanced this Requirement to `stage: acceptance` / `next_expected_actor: chatgpt`.
 
-Awaiting ChatGPT acceptance review (`acceptance_approved=true`).
+## Acceptance Review — Changes Requested
+
+Acceptance is not approved yet.
+
+Blocking finding:
+
+- Floating resize currently clamps width/height against the overall viewport but does not clamp the resulting `x/y` rectangle when resizing from the west or north edge/corner. A panel near the left/top edge can therefore grow west/north until `x < 0` or `y < 0`, leaving part of the panel and potentially its header/controls outside the usable viewport.
+- Example from the current implementation: origin `x=24`, `width=360`; west-resize to `width=860` recomputes `x = 24 + (360 - 860) = -476`.
+- This violates Requirement §2: the panel must not resize beyond the usable application viewport.
+
+Required fix on this same task/PR:
+
+1. Clamp the complete floating panel rectangle for every resize direction/corner: left/top must remain within the viewport margin and right/bottom must not exceed the viewport margin.
+2. Preserve resize semantics from west/north edges while clamping (the opposite edge should remain stable where possible).
+3. Add regression coverage for west and north resize at viewport bounds, plus at least one corner case.
+4. After the fix and required checks, return to `stage: acceptance` / `next_expected_actor: chatgpt`.
