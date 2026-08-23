@@ -4,13 +4,17 @@ task_id: PR-042-canvas-chat-layout-usability
 title: Canvas & AI Panel Interaction Usability
 
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
+
+artifacts:
+  requirement: docs/requirements/PR-042-canvas-chat-layout-usability.md
+  plan: docs/plans/PR-042-canvas-chat-layout-usability-plan.md
 
 transport:
   type: github-pr
@@ -149,3 +153,17 @@ Cursor must now perform the `planning` stage only:
 3. Update this Task Markdown to `stage: plan_review` only after the plan is durably committed/pushed and readable on this same branch/PR.
 4. Do **not** implement production code, tests, or UI changes before `plan_approved=true` is granted by the reviewer.
 5. Do not create another task, branch, or PR for this requirement.
+
+## Cursor Planning Gate
+
+Cursor completed Plan mode on this branch:
+
+1. audited chat overflow placement/context labels (`ChatHeader` / `messages.ts`) — dual state nouns, not exclusive actions;
+2. audited floating/docked resize (`ChatPanel` / `chatWidth` only; no `chatHeight`; floating has no resize handles);
+3. audited node chrome after PR-040 — single `.learning-node` card; residual dead `.learning-node-shell` CSS and external `knowledge-cluster-title`;
+4. audited canvas chrome — `LayoutMenu` auto-layout only; no `fitView` / “显示全部”;
+5. audited drag-stop persistence vs auto-layout separation — single-id preference write; no drop collision pass;
+6. wrote `docs/plans/PR-042-canvas-chat-layout-usability-plan.md` with binding decisions D1–D17, slices, tests, and material risks;
+7. advanced this Requirement to `stage: plan_review` / `next_expected_actor: chatgpt`.
+
+Do **not** implement product code until Plan review records `plan_approved=true`.
