@@ -1,7 +1,7 @@
 ---
 task_id: TASK-011
 title: Light Mode Canvas Cursor Visibility
-status: acceptance_review
+status: done
 requirement: ../requirements/TASK-011-light-mode-canvas-cursor-visibility.md
 pr: 36
 branch: task/TASK-011-light-mode-canvas-cursor-visibility
@@ -13,9 +13,9 @@ supersedes:
 
 # TASK-011 Plan — Light Mode Canvas Cursor Visibility
 
-This is the canonical implementation plan for TASK-011. It records Planning Gate evidence from the canvas / React Flow / theme / CSS cursor audit and the smallest change set that should satisfy the acceptance criteria **after** ChatGPT plan approval.
+This is the canonical implementation plan for TASK-011. It records Planning Gate evidence from the canvas / React Flow / theme / CSS cursor audit and the shipped change set.
 
-**Gate:** `acceptance_review` — implementation complete on PR #36; awaiting ChatGPT acceptance (`acceptance_approved=true`).
+**Gate:** `done` — accepted and merged via PR #36 (`db4191a`).
 
 **Hard constraints:**
 
@@ -275,7 +275,7 @@ Artifacts: `docs/milestones/task-011-light-mode-canvas-cursor/` (+ `/opt/cursor/
 ## Gate handoff
 
 1. This file is the canonical Plan artifact: `docs/plans/TASK-011-plan.md`.
-2. Requirement is `stage: acceptance_review`, `plan_approved: true`, `next_expected_actor: chatgpt`.
-3. Implementation shipped light-only pane custom cursors on this same branch / PR #36.
+2. Requirement is `stage: done`, `acceptance_approved: true`, `completion_verified: true`, `next_expected_actor: null`.
+3. Implementation shipped and merged on PR #36 (`db4191a`).
 4. Automated + headed verification evidence under `docs/milestones/task-011-light-mode-canvas-cursor/`.
-5. Awaiting ChatGPT acceptance review (`acceptance_approved`).
+5. No further Cursor action required for TASK-011.
