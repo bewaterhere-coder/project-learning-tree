@@ -37,6 +37,53 @@ Read-back Verify
 Done
 ```
 
+## Workflow Trigger Boundary
+
+Loading this workflow restores project context only.
+
+Loading workflow does not automatically advance task state.
+
+```
+Workflow Loaded
+    ≠
+Workflow Executed
+```
+
+Requirement discussion must remain in discussion stage until an explicit development trigger is provided.
+
+## Requirement Discussion Boundary
+
+Allowed:
+
+- Discuss requirement
+- Clarify scope
+- Compare solutions
+- Refine acceptance criteria
+
+Not allowed:
+
+- Create Task automatically
+- Create PR automatically
+- Send to Cursor automatically
+- Enter implementation workflow
+
+## Development Trigger
+
+Only explicit user intent starts the development workflow.
+
+Example:
+
+```
+发送需求给 Cursor
+```
+
+Action:
+
+1. Create TASK Artifact
+2. Create corresponding Task PR
+3. Write Requirement into Task PR
+4. Set next_expected_actor = Cursor
+
 ## Task PR Boundary
 
 ```
@@ -63,9 +110,9 @@ Rules:
 ChatGPT actions:
 
 - Confirm requirement
-- Create TASK Artifact
-- Create Task PR
-- Generate Cursor development prompt
+- Create TASK Artifact after explicit trigger
+- Create Task PR after explicit trigger
+- Write requirement into Task PR
 
 Gate:
 
@@ -168,8 +215,8 @@ merge_verified = true
 
 ChatGPT:
 - Requirement clarification
-- Task creation
-- Cursor prompt generation
+- Task creation after explicit trigger
+- Cursor prompt generation after Task creation
 - Plan review
 - Acceptance review
 
@@ -192,3 +239,4 @@ GitHub:
 - Review is not Acceptance.
 - Acceptance is not Merge.
 - Existing workflow contract has priority over generic workflows.
+- Workflow loading never automatically advances workflow state.
