@@ -350,12 +350,17 @@ TASK-010 does not authorize:
 
 ## 14. Development Gate
 
-Current gate: **Plan Ready → plan_review**.
+Current gate: **acceptance_review**.
 
-Planning artifacts are complete on this branch/PR:
+Canonical YAML (this file) and Plan status agree:
 
-- `docs/plans/TASK-010-plan.md` records project-init / domain analysis, Project Root vs Question boundaries, progress derivation, migration strategy, flash root-cause evidence, expected files, and test strategy.
+- `stage: acceptance_review`
+- `requirement_ready: true`
+- `plan_approved: true`
+- `acceptance_approved: false`
+- `completion_verified: false`
+- `next_expected_actor: chatgpt`
 
-Cursor has completed the Planning Gate and is **not** authorized to implement production code yet.
+Implementation on PR #32 / branch `task/TASK-010-project-root-learning-progress` is **complete**. Planning and Plan Review are finished.
 
-Implementation begins only after ChatGPT reviews and sets `plan_approved: true`.
+This task is waiting for ChatGPT to run **`验收 TASK-010`** (Acceptance Review). Do **not** treat this document as still awaiting Plan Review or as blocking production implementation.
