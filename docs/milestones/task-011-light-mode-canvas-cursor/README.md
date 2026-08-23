@@ -9,8 +9,9 @@
 
 ## Evidence files
 
-- `cursor-verification.json`
-- `dark-mode-cursor.json`
+- `cursor-verification.json` / `dark-mode-cursor.json`
 - `light-canvas-100.png`
+- `cursor-asset-contrast.png` — dual-tone assets on cream / snow / dark swatches
+- `light-empty-canvas.png` / `light-panning.png` / `light-zoom-125.png` / `dark-empty-canvas.png`
 
-OS-level cursor pixels are not snapshottable; acceptance relies on computed-style + headed run of the above specs.
+OS-level cursor pixels are not snapshottable; acceptance relies on computed-style contracts + headed evidence above.
