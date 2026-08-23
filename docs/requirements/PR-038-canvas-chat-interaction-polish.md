@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: acceptance_review
+  stage: accepted
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
+    acceptance_approved: true
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -229,4 +229,15 @@ Keep the task on the existing PR #38 branch. After fixes, rerun the existing ver
 
 Verification: `npm run typecheck`, `npm test`, `npm run build`.
 
-Awaiting ChatGPT acceptance review (`acceptance_approved=true`).
+## Acceptance Review — Approved
+
+Acceptance passes after the fixing round.
+
+Verified against the implementation diff and dedicated regressions:
+
+1. Drag gesture target is now authoritative via `onNodeDragStart`; the regression explicitly covers dragging non-focus `q1` while focused `q2` is present in the same position batch, and only the dragged node changes/persists.
+2. Composer now has real content-driven auto-grow via `syncComposerHeight` + `useLayoutEffect`, capped at 160px, with Shift+Enter and cap regressions.
+3. The previously reviewed chat hierarchy, compact close control, secondary overflow controls, motion tokens/reduced-motion behavior, and proposal text actions remain in scope and implemented.
+4. Cursor reports `npm run typecheck`, `npm test`, and `npm run build` passing. No PR-triggered GitHub Actions workflow is configured for the current head, so there is no independent CI receipt to add.
+
+`acceptance_approved=true`. Completion remains unverified because PR #38 is currently reported by GitHub as not mergeable against the latest `main`; integration conflict resolution/rebase is still required before merge.
