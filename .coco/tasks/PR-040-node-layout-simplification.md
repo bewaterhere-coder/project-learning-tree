@@ -5,20 +5,22 @@ task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
 
 development:
-  stage: accepted
+  stage: done
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: true
-    completion_verified: false
+    completion_verified: true
   next_expected_actor: none
   accepted_head: b8f45fe95bf77df93b96dbb5e4f285101e09fb7e
   finalization:
-    status: ready_for_merge
+    status: integrated
     canonical_state: verified
-    plan_execution_state: accepted
+    plan_execution_state: done
     acceptance_evidence: verified
     transport_preconditions: verified
+    integration_receipt: verified
+    merge_commit: 5f677ad518e22806eef937ae20b8b479fe07d2f9
 
 artifacts:
   requirement: .coco/tasks/PR-040-node-layout-simplification.md
@@ -235,8 +237,6 @@ G3 Acceptance approved by ChatGPT.
 | Finding | Stale `bootstrap-recommended` E2E assertion — resolved |
 | Evidence | Targeted Playwright suite **11 passed** on the accepted head |
 
-`completion_verified` remains `false` pending merge.
-
 ## Merge Finalization — Ready for Merge
 
 Canonical workflow metadata synchronized after G3 acceptance:
@@ -250,4 +250,22 @@ Canonical workflow metadata synchronized after G3 acceptance:
 | Transport | PR #40 / `task/node-layout-simplification` |
 | Finalization status | `ready_for_merge` |
 
-No further product-code work is required on this Task before merge.
+No further product-code work was required before merge.
+
+## Post-Merge Completion Reconciliation
+
+The accepted implementation was squash-merged through PR #40.
+
+```yaml
+reconciliation:
+  task_id: PR-040-node-layout-simplification
+  cause: workflow_state_mismatch
+  original_integration_ref: PR-40
+  merge_commit: 5f677ad518e22806eef937ae20b8b479fe07d2f9
+  implementation_replayed: false
+  repaired_artifacts:
+    - .coco/tasks/PR-040-node-layout-simplification.md
+    - .coco/plans/PR-040-node-layout-simplification-plan.md
+```
+
+The verified merge receipt closes the task: `stage: done`, `completion_verified: true`.
