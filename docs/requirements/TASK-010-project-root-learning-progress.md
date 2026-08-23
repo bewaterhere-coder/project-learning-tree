@@ -21,6 +21,7 @@ transport:
   type: github-pr
   repository: bewaterhere-coder/project-learning-tree
   branch: task/TASK-010-project-root-learning-progress
+  pr: 32
 ```
 
 ## 1. Background
