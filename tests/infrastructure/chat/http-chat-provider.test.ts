@@ -19,7 +19,7 @@ describe("http chat provider", () => {
         return new Response(
           JSON.stringify({
             answer: "Stay with the current node.",
-            suggestions: ["Re-read the parent question"],
+            suggestions: [{ type: "question", content: "Re-read the parent question" }],
           }),
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
@@ -34,7 +34,9 @@ describe("http chat provider", () => {
     });
 
     expect(reply.answer).toBe("Stay with the current node.");
-    expect(reply.suggestions).toEqual(["Re-read the parent question"]);
+    expect(reply.suggestions).toEqual([
+      { type: "question", content: "Re-read the parent question" },
+    ]);
     expect(reply.proposals).toEqual([]);
     const payload = JSON.parse(capturedBody) as {
       context: ReturnType<typeof toNodeChatContext>;

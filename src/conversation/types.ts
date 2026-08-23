@@ -1,4 +1,4 @@
-import type { LearningProposal } from "../ai/types.js";
+import type { ChatSuggestion, LearningProposal } from "../ai/types.js";
 import type { ConversationIdentity } from "./identity.js";
 
 export type ConversationRole = "user" | "assistant";
@@ -19,7 +19,7 @@ export interface NodeConversation {
   identity: ConversationIdentity;
   messages: ConversationMessage[];
   proposals: LearningProposal[];
-  suggestions: string[];
+  suggestions: ChatSuggestion[];
   status: ConversationStatus;
   error?: ConversationError;
   pendingRequestId?: string;

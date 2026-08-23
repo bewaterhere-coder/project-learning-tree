@@ -1,3 +1,4 @@
+import type { ChatSuggestion } from "../../ai/types.js";
 import type { WorkspaceLocale } from "../../workspace/index.js";
 import { t } from "../i18n/index.js";
 
@@ -6,7 +7,7 @@ export function SuggestionList({
   suggestions,
 }: {
   locale: WorkspaceLocale;
-  suggestions: string[];
+  suggestions: ChatSuggestion[];
 }) {
   if (suggestions.length === 0) {
     return null;
@@ -18,14 +19,25 @@ export function SuggestionList({
       <ul className="chat-suggestions-list">
         {suggestions.map((suggestion, index) => (
           <li
-            key={`${index}-${suggestion}`}
+            key={`${index}-${suggestion.type}-${suggestion.content}`}
             className="chat-suggestion"
             data-testid="chat-suggestion"
+            data-suggestion-type={suggestion.type}
           >
-            {suggestion}
+            <span className="chat-suggestion-type">
+              {t(locale, suggestionTypeLabelKey(suggestion.type))}
+            </span>
+            <span className="chat-suggestion-content">{suggestion.content}</span>
           </li>
         ))}
       </ul>
     </section>
   );
+}
+
+function suggestionTypeLabelKey(type: ChatSuggestion["type"]): "chat.suggestionQuestion" {
+  if (type === "question") {
+    return "chat.suggestionQuestion";
+  }
+  return "chat.suggestionQuestion";
 }

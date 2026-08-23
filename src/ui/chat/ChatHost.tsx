@@ -148,7 +148,7 @@ export function ChatHost({
             requestId,
             reply.answer,
             reply.proposals,
-            reply.suggestions ?? [],
+            reply.suggestions,
           ),
         );
       } catch {

@@ -1,12 +1,11 @@
+import { resolveDeepSeekRuntimeConfig } from "./config.js";
 import { parseNodeChatAiResponse } from "./parse-response.js";
 import { buildNodeChatMessages } from "./prompt.js";
-import {
-  DEFAULT_DEEPSEEK_BASE_URL,
-  DEFAULT_DEEPSEEK_MODEL,
-  type LlmProvider,
-  type LlmProviderConfig,
-  type NodeChatAiResponse,
-  type NodeChatRequest,
+import type {
+  LlmProvider,
+  LlmProviderConfig,
+  NodeChatAiResponse,
+  NodeChatRequest,
 } from "./types.js";
 
 export class DeepSeekProviderError extends Error {
@@ -20,8 +19,9 @@ export class DeepSeekProviderError extends Error {
 }
 
 export function createDeepSeekProvider(config: LlmProviderConfig): LlmProvider {
-  const baseUrl = config.baseUrl ?? DEFAULT_DEEPSEEK_BASE_URL;
-  const model = config.model ?? DEFAULT_DEEPSEEK_MODEL;
+  const runtime = resolveDeepSeekRuntimeConfig();
+  const baseUrl = config.baseUrl ?? runtime.baseUrl;
+  const model = config.model ?? runtime.model;
   const fetchImpl = config.fetchImpl ?? fetch;
 
   return {
@@ -93,3 +93,5 @@ export function resolveDeepSeekApiKey(env: NodeJS.ProcessEnv = process.env): str
   const apiKey = env.DEEPSEEK_API_KEY?.trim();
   return apiKey === "" ? undefined : apiKey;
 }
+
+export { resolveDeepSeekRuntimeConfig, DEEPSEEK_DEFAULTS } from "./config.js";

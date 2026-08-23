@@ -1545,7 +1545,21 @@ html[data-theme="light"] .react-flow__pane.dragging {
 }
 
 .chat-suggestion {
+  display: grid;
+  gap: 2px;
   font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.chat-suggestion-type {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+}
+
+.chat-suggestion-content {
   color: var(--color-text-secondary);
 }
 

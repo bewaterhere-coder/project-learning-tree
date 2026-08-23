@@ -1,14 +1,43 @@
-import type { ChatReply, LearningProposal } from "./types.js";
+import type { ChatReply, ChatSuggestion, LearningProposal } from "./types.js";
+
+const CHAT_SUGGESTION_JSON_EXAMPLE =
+  '{"answer":"string","suggestions":[{"type":"question","content":"string"}]}';
+
+export function chatSuggestionJsonExample(): string {
+  return CHAT_SUGGESTION_JSON_EXAMPLE;
+}
+
+export function parseChatSuggestion(value: unknown): ChatSuggestion | undefined {
+  if (!isRecord(value) || value.type !== "question" || typeof value.content !== "string") {
+    return undefined;
+  }
+  const content = value.content.trim();
+  if (content.length === 0) {
+    return undefined;
+  }
+  return { type: "question", content };
+}
+
+export function parseChatSuggestions(value: unknown): ChatSuggestion[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+  const suggestions: ChatSuggestion[] = [];
+  for (const entry of value) {
+    const suggestion = parseChatSuggestion(entry);
+    if (suggestion === undefined) {
+      return undefined;
+    }
+    suggestions.push(suggestion);
+  }
+  return suggestions;
+}
 
 export function parseChatReply(value: unknown): ChatReply | undefined {
   if (!isRecord(value) || typeof value.answer !== "string") {
     return undefined;
   }
-  const suggestions = Array.isArray(value.suggestions)
-    ? value.suggestions.filter(
-        (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
-      )
-    : undefined;
+  const suggestions = parseChatSuggestions(value.suggestions) ?? [];
   if (!Array.isArray(value.proposals)) {
     return undefined;
   }

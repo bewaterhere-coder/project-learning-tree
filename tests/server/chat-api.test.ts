@@ -43,7 +43,7 @@ describe("chat api server", () => {
                 message: {
                   content: JSON.stringify({
                     answer: "Try clarifying the parent question.",
-                    suggestions: ["Restate the goal"],
+                    suggestions: [{ type: "question", content: "Restate the goal" }],
                   }),
                 },
               },
@@ -65,7 +65,7 @@ describe("chat api server", () => {
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
       answer: "Try clarifying the parent question.",
-      suggestions: ["Restate the goal"],
+      suggestions: [{ type: "question", content: "Restate the goal" }],
     });
   });
 });

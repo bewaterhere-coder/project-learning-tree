@@ -1,4 +1,5 @@
 import type { ProjectId } from "../application/index.js";
+import { parseChatSuggestions } from "../ai/schema.js";
 import type { PreferenceStorage } from "../workspace/index.js";
 import { conversationKey, type ConversationIdentity } from "./identity.js";
 import { emptyConversation } from "./session.js";
@@ -129,11 +130,7 @@ function parseConversation(value: unknown): NodeConversation | undefined {
     identity,
     messages: value.messages.filter(isMessage),
     proposals: Array.isArray(value.proposals) ? (value.proposals as NodeConversation["proposals"]) : [],
-    suggestions: Array.isArray(value.suggestions)
-      ? value.suggestions.filter(
-          (entry): entry is string => typeof entry === "string" && entry.trim().length > 0,
-        )
-      : [],
+    suggestions: parseChatSuggestions(value.suggestions) ?? [],
     status:
       value.status === "thinking" || value.status === "error" ? value.status : "idle",
     error:

@@ -15,13 +15,16 @@ import {
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("node chat suggestions", () => {
-  it("renders structured suggestions from the provider", async () => {
+  it("renders structured question suggestions from the provider", async () => {
     const user = userEvent.setup();
     const { workspace } = createDemoWorkspaceFixture();
     const provider: ChatProvider = {
       complete: async () => ({
         answer: "Focus on the parent question first.",
-        suggestions: ["Compare with the project goal", "Write one sentence of progress"],
+        suggestions: [
+          { type: "question", content: "Compare with the project goal" },
+          { type: "question", content: "Write one sentence of progress" },
+        ],
         proposals: [],
       }),
     };
@@ -43,5 +46,9 @@ describe("node chat suggestions", () => {
     });
     expect(screen.getByTestId("chat-suggestions")).toBeInTheDocument();
     expect(screen.getByText("Compare with the project goal")).toBeInTheDocument();
+    expect(screen.getAllByTestId("chat-suggestion")[0]).toHaveAttribute(
+      "data-suggestion-type",
+      "question",
+    );
   });
 });

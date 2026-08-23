@@ -19,6 +19,8 @@ Business code depends on the `ChatProvider` and `LlmProvider` interfaces. It doe
 | Variable | Required | Description |
 | --- | --- | --- |
 | `DEEPSEEK_API_KEY` | Yes for live chat | DeepSeek API key. Never commit this value. |
+| `DEEPSEEK_MODEL` | No | DeepSeek model id. Defaults to `deepseek-reasoner`. |
+| `DEEPSEEK_BASE_URL` | No | DeepSeek API base URL. Defaults to `https://api.deepseek.com`. |
 | `VITE_CHAT_API_URL` | Yes for live chat in the browser | Browser-facing chat API URL. Use `/api/chat` with the Vite dev proxy. |
 | `CHAT_API_PORT` | No | Port for the chat API server. Defaults to `8787`. |
 | `CHAT_API_TARGET` | No | Vite proxy target for `/api/chat`. Defaults to `http://127.0.0.1:8787`. |
@@ -28,6 +30,26 @@ Copy `.env.example` to `.env` and fill in your API key:
 ```bash
 cp .env.example .env
 ```
+
+## Model configuration
+
+Default model and base URL live in one place:
+
+- `src/infrastructure/llm/config.ts`
+
+```typescript
+export const DEEPSEEK_DEFAULTS = {
+  BASE_URL: "https://api.deepseek.com",
+  MODEL: "deepseek-reasoner",
+} as const;
+```
+
+Runtime resolution uses `resolveDeepSeekRuntimeConfig()`:
+
+- `DEEPSEEK_MODEL` overrides the default model
+- `DEEPSEEK_BASE_URL` overrides the default API base URL
+
+This keeps model names out of provider, prompt, and UI code. Switching models later is an environment or config change, not a protocol change.
 
 ## Start locally
 
@@ -71,11 +93,22 @@ The chat API returns structured JSON:
 ```json
 {
   "answer": "…",
-  "suggestions": ["…"]
+  "suggestions": [
+    {
+      "type": "question",
+      "content": "…"
+    }
+  ]
 }
 ```
 
-The UI renders the answer in the message list and suggestions below the conversation.
+`ChatReply.suggestions` uses the same shape so a later milestone can evolve:
+
+```text
+AI Reply → Question Proposal → Learning Node Evolution
+```
+
+The UI renders the answer in the message list and typed suggestions below the conversation.
 
 ## Test
 
@@ -91,6 +124,6 @@ Manual smoke test:
 1. Start `npm run dev:chat` with a valid `DEEPSEEK_API_KEY`.
 2. Open a project and click a node chat action.
 3. Send a question such as “What should I focus on next?”
-4. Confirm the assistant answer and suggestion list appear.
+4. Confirm the assistant answer and question suggestions appear.
 
 Without an API key, the chat API returns `503` and the UI shows the existing provider error message.

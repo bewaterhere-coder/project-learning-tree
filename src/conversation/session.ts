@@ -1,4 +1,4 @@
-import type { LearningProposal } from "../ai/types.js";
+import type { ChatSuggestion, LearningProposal } from "../ai/types.js";
 import { conversationKey, type ConversationIdentity } from "./identity.js";
 import type {
   ConversationMessage,
@@ -80,7 +80,7 @@ export function applyAssistantReply(
   requestId: string,
   answer: string,
   proposals: LearningProposal[],
-  suggestions: string[] = [],
+  suggestions: ChatSuggestion[] = [],
   createdAt = nowIso(),
 ): NodeConversation | undefined {
   if (conversation.pendingRequestId !== requestId) {
@@ -141,7 +141,7 @@ export function routeReplyToIdentity(
   requestId: string,
   answer: string,
   proposals: LearningProposal[],
-  suggestions: string[] = [],
+  suggestions: ChatSuggestion[] = [],
 ): ConversationRegistry {
   const current = getConversation(registry, identity);
   const next = applyAssistantReply(current, requestId, answer, proposals, suggestions);

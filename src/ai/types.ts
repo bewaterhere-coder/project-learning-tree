@@ -3,6 +3,13 @@ import type { NodeId } from "../application/index.js";
 export type QuestionDestination = "blocking" | "frontier";
 export type ProposalStatus = "pending" | "accepted" | "ignored";
 
+export type ChatSuggestionType = "question";
+
+export interface ChatSuggestion {
+  type: ChatSuggestionType;
+  content: string;
+}
+
 export interface QuestionProposal {
   id: string;
   type: "question";
@@ -54,6 +61,6 @@ export type LearningProposal =
 
 export interface ChatReply {
   answer: string;
-  suggestions?: string[];
+  suggestions: ChatSuggestion[];
   proposals: LearningProposal[];
 }

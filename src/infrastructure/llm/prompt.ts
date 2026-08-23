@@ -1,4 +1,5 @@
 import type { GenerationLocale } from "../../framework/locale.js";
+import { chatSuggestionJsonExample } from "../../ai/schema.js";
 import type {
   NodeChatContext,
   NodeChatHistoryMessage,
@@ -29,8 +30,9 @@ function buildEnglishSystemPrompt(): string {
   return [
     "You are a learning assistant for Project Learning Tree.",
     "Reply only with valid JSON using this schema:",
-    '{"answer":"string","suggestions":["string"]}',
-    "Provide a helpful answer and up to three short follow-up suggestions.",
+    chatSuggestionJsonExample(),
+    "Provide a helpful answer and up to three question suggestions.",
+    "Each suggestion must use type \"question\" and a short content string.",
     "Do not propose creating nodes or mutating the learning tree.",
     "Do not wrap JSON in markdown fences.",
   ].join(" ");
@@ -40,8 +42,9 @@ function buildChineseSystemPrompt(): string {
   return [
     "你是 Project Learning Tree 的学习助手。",
     "请只返回合法 JSON，格式如下：",
-    '{"answer":"string","suggestions":["string"]}',
-    "给出有帮助的回答，并提供最多三条简短后续建议。",
+    chatSuggestionJsonExample(),
+    "给出有帮助的回答，并提供最多三条 question 类型建议。",
+    "每条建议必须使用 type \"question\" 和简短的 content。",
     "不要建议自动创建节点或修改学习树。",
     "不要用 markdown 代码块包裹 JSON。",
   ].join(" ");

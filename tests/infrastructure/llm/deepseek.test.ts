@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createDeepSeekProvider,
   DeepSeekProviderError,
+  DEEPSEEK_DEFAULTS,
 } from "../../../src/infrastructure/index.js";
 import { createDemoTreeFixture } from "../../../src/fixtures/demo-tree.js";
 import { selectNodeChatContext } from "../../../src/application/index.js";
@@ -26,7 +27,9 @@ describe("deepseek provider", () => {
                 message: {
                   content: JSON.stringify({
                     answer: "Keep working from the current question.",
-                    suggestions: ["Compare with the parent goal"],
+                    suggestions: [
+                      { type: "question", content: "Compare with the parent goal" },
+                    ],
                   }),
                 },
               },
@@ -45,9 +48,10 @@ describe("deepseek provider", () => {
 
     expect(reply).toEqual({
       answer: "Keep working from the current question.",
-      suggestions: ["Compare with the parent goal"],
+      suggestions: [{ type: "question", content: "Compare with the parent goal" }],
     });
     expect(capturedBody).toContain('"response_format":{"type":"json_object"}');
+    expect(capturedBody).toContain(`"model":"${DEEPSEEK_DEFAULTS.MODEL}"`);
     expect(capturedBody).toContain("Parent node:");
     expect(capturedBody).not.toContain("unresolvedBlockingChildren");
   });

@@ -16,9 +16,13 @@ import {
 
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
-function providerWith(reply: Awaited<ReturnType<ChatProvider["complete"]>>): ChatProvider {
+function providerWith(
+  reply: Omit<Awaited<ReturnType<ChatProvider["complete"]>>, "suggestions"> & {
+    suggestions?: Awaited<ReturnType<ChatProvider["complete"]>>["suggestions"];
+  },
+): ChatProvider {
   return {
-    complete: async () => reply,
+    complete: async () => ({ suggestions: [], ...reply }),
   };
 }
 

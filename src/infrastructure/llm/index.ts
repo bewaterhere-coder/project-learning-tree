@@ -2,12 +2,12 @@ export {
   createDeepSeekProvider,
   DeepSeekProviderError,
   resolveDeepSeekApiKey,
+  resolveDeepSeekRuntimeConfig,
+  DEEPSEEK_DEFAULTS,
 } from "./deepseek.js";
 export { parseNodeChatAiResponse } from "./parse-response.js";
 export { buildNodeChatMessages, extractNodeChatHistory } from "./prompt.js";
 export {
-  DEFAULT_DEEPSEEK_BASE_URL,
-  DEFAULT_DEEPSEEK_MODEL,
   type LlmProvider,
   type LlmProviderConfig,
   type NodeChatAiResponse,
