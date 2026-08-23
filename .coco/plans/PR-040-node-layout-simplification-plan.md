@@ -1,17 +1,19 @@
 ---
 task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
-status: implementation
+status: accepted
 requirement: ../tasks/PR-040-node-layout-simplification.md
 pr: 40
 branch: task/node-layout-simplification
+finalization: ready_for_merge
+accepted_head: b8f45fe95bf77df93b96dbb5e4f285101e09fb7e
 ---
 
 # PR-040 Plan — Canvas Node Layout Simplification
 
 This is the canonical implementation plan for PR-040. It records Planning Gate code evidence and the smallest change set that satisfies the acceptance criteria **after** ChatGPT plan approval.
 
-**Gate:** `implementation` — G2 Plan Review approved; implementing on PR #40.
+**Gate:** `accepted` — G3 Acceptance approved on head `b8f45fe95bf77df93b96dbb5e4f285101e09fb7e`; merge finalization complete (`ready_for_merge`). Design content below is unchanged from the approved Plan.
 
 **Hard constraints:**
 
@@ -292,3 +294,12 @@ Menu labels (must match Requirement):
 If approved with or without amendments, set Requirement `plan_approved: true` / `stage: implementing` / `next_expected_actor: cursor` and implement on **this same branch/PR only** (`task/node-layout-simplification`, PR #40).
 
 Do **not** implement product code until that gate is recorded.
+
+## Execution finalization (metadata only)
+
+| Field | Value |
+| --- | --- |
+| Status | `accepted` |
+| Gate | `accepted` / `ready_for_merge` |
+| Accepted head | `b8f45fe95bf77df93b96dbb5e4f285101e09fb7e` |
+| Design content | Unchanged from G2-approved Plan |

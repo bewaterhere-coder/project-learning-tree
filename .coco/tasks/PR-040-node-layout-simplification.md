@@ -5,13 +5,20 @@ task_id: PR-040-node-layout-simplification
 title: Canvas Node Layout Simplification
 
 development:
-  stage: fixing
+  stage: accepted
   gates:
     requirement_ready: true
     plan_approved: true
-    acceptance_approved: false
+    acceptance_approved: true
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: none
+  accepted_head: b8f45fe95bf77df93b96dbb5e4f285101e09fb7e
+  finalization:
+    status: ready_for_merge
+    canonical_state: verified
+    plan_execution_state: accepted
+    acceptance_evidence: verified
+    transport_preconditions: verified
 
 artifacts:
   requirement: .coco/tasks/PR-040-node-layout-simplification.md
@@ -204,3 +211,43 @@ Binding confirmation:
 Acceptance blocked on stale E2E: `e2e/specs/project-bootstrap.spec.ts` still asserted `bootstrap-recommended` after `BootstrapSummary` was unmounted from the canvas.
 
 Canonical Task moved to `stage: fixing` / `acceptance_approved: false` / `next_expected_actor: cursor`.
+
+## Acceptance Fix — Complete
+
+Updated `e2e/specs/project-bootstrap.spec.ts` to the new product truth:
+
+- assert `bootstrap-summary` / `bootstrap-recommended` are absent from the canvas;
+- verify recommended entry via `[data-node-id][data-recommended='true']` learning nodes;
+- click a recommended canvas node for focus / chat / inspector.
+
+`BootstrapSummary` was not restored.
+
+E2E evidence on head `b8f45fe95bf77df93b96dbb5e4f285101e09fb7e`: Playwright **11 passed** (`project-bootstrap`, `project-lifecycle`, `project-root-canvas-stability`, `persistence-boundary`, `critical-interaction`).
+
+## Acceptance Review — Approved
+
+G3 Acceptance approved by ChatGPT.
+
+| Field | Value |
+| --- | --- |
+| Accepted head | `b8f45fe95bf77df93b96dbb5e4f285101e09fb7e` |
+| Decision | `acceptance_approved: true` |
+| Finding | Stale `bootstrap-recommended` E2E assertion — resolved |
+| Evidence | Targeted Playwright suite **11 passed** on the accepted head |
+
+`completion_verified` remains `false` pending merge.
+
+## Merge Finalization — Ready for Merge
+
+Canonical workflow metadata synchronized after G3 acceptance:
+
+| Check | State |
+| --- | --- |
+| Task stage / gates | `accepted` / `acceptance_approved: true` / `completion_verified: false` |
+| Accepted head recorded | `b8f45fe95bf77df93b96dbb5e4f285101e09fb7e` |
+| Plan execution metadata | `accepted` / finalization-complete (design content unchanged) |
+| Acceptance evidence | Verified (fix + E2E receipt on accepted head) |
+| Transport | PR #40 / `task/node-layout-simplification` |
+| Finalization status | `ready_for_merge` |
+
+No further product-code work is required on this Task before merge.
