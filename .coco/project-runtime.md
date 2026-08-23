@@ -83,12 +83,45 @@ Rules:
 - Runtime state should report whether the loaded Contract matches the latest revision.
 - Stale Contract state requires refresh before workflow execution.
 
+## Project State Version
+
+Project state and runtime contract use separate version tracking.
+
+```yaml
+project_state:
+  version: 1.0
+```
+
+Rules:
+
+- Runtime Contract version tracks workflow and execution rules.
+- Project State version tracks project goals, milestones, tasks and progress.
+- Updating workflow contracts does not modify project state version.
+- Updating project milestones or project progress does not modify runtime contract version.
+
+## State Output Requirements
+
+`项目状态` output must include both Runtime Health and Project State version.
+
+Example:
+
+```yaml
+runtime_health:
+  contract_version: 1.1
+  revision:
+  health: loaded
+
+project_state:
+  version: 1.0
+```
+
 ## State
 
 Project state should track:
 
 ```yaml
 project_state:
+  version: 1.0
   current_task:
   active_pr:
   completed_tasks:
