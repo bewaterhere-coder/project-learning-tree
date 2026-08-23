@@ -1,7 +1,7 @@
 ---
 task_id: TASK-011
 title: Light Mode Canvas Cursor Visibility
-status: implementing
+status: acceptance_review
 requirement: ../requirements/TASK-011-light-mode-canvas-cursor-visibility.md
 pr: 36
 branch: task/TASK-011-light-mode-canvas-cursor-visibility
@@ -241,20 +241,20 @@ No Domain, Application, or Workspace files expected.
 
 Manual (headed browser), at minimum:
 
-- [ ] Light empty canvas: pointer immediately locatable **before** click (default recipe + spot-check other light recipes)
-- [ ] Empty canvas pan: open-hand → closed-hand → open-hand
-- [ ] Hotspot feels aligned with the visible tip (no offset “ghost” grab)
-- [ ] Browser zoom **100%** and **one non-100%** (125% or 90%): cursor still visible; hotspot still usable
-- [ ] Node hover / select / drag (existing native node cursors preserved)
-- [ ] Node toolbar chat / add-child / more (`pointer`)
-- [ ] Inspector reflection / authoring / chat composer (`text`)
-- [ ] Sidebar / inspector / chat resize dividers
-- [ ] Dark theme empty canvas + pan (native grab/grabbing unchanged; no custom url)
+- [x] Light empty canvas: pointer immediately locatable **before** click (default recipe + spot-check other light recipes)
+- [x] Empty canvas pan: open-hand → closed-hand → open-hand
+- [x] Hotspot feels aligned with the visible tip (no offset “ghost” grab)
+- [x] Browser zoom **100%** and **one non-100%** (125% or 90%): cursor still visible; hotspot still usable
+- [x] Node hover / select / drag (existing native node cursors preserved)
+- [x] Node toolbar chat / add-child / more (`pointer`)
+- [x] Inspector reflection / authoring / chat composer (`text`)
+- [x] Sidebar / inspector / chat resize dividers
+- [x] Dark theme empty canvas + pan (native grab/grabbing unchanged; no custom url)
 
 Automated:
 
-- [ ] Existing `npm test` / `typecheck` / CI green
-- [ ] Focused assertion(s) for light pane `url(` + fallback keywords; dark stylesheet path free of those overrides
+- [x] Existing `npm test` / `typecheck` / CI green
+- [x] Focused assertion(s) for light pane `url(` + fallback keywords; dark stylesheet path free of those overrides
 
 ---
 
@@ -273,6 +273,6 @@ Automated:
 ## Gate handoff
 
 1. This file is the canonical Plan artifact: `docs/plans/TASK-011-plan.md`.
-2. Requirement is `stage: implementing`, `plan_approved: true`, `next_expected_actor: cursor`.
-3. Implementation ships light-only pane custom cursors on this same branch / PR #36.
-4. After automated + headed verification, advance to acceptance review (`next_expected_actor: chatgpt`).
+2. Requirement is `stage: acceptance_review`, `plan_approved: true`, `next_expected_actor: chatgpt`.
+3. Implementation shipped light-only pane custom cursors on this same branch / PR #36.
+4. Automated + headed verification evidence under `docs/milestones/task-011-light-mode-canvas-cursor/`.

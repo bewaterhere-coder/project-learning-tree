@@ -9,13 +9,13 @@ related_to:
 relation: same-canvas-ui
 
 development:
-  stage: implementing
+  stage: acceptance_review
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/TASK-011-light-mode-canvas-cursor-visibility.md
