@@ -9,13 +9,13 @@ related_to:
 relation: same-canvas-ui
 
 development:
-  stage: plan_review
+  stage: implementing
   gates:
     requirement_ready: true
-    plan_approved: false
+    plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/TASK-011-light-mode-canvas-cursor-visibility.md
@@ -119,8 +119,8 @@ Verify at minimum:
 
 ## 8. Planning Gate
 
-Canonical Plan is committed at `docs/plans/TASK-011-plan.md` (`status: plan_review`, revised after PR #36 Plan Review).
+Canonical Plan is committed at `docs/plans/TASK-011-plan.md` and approved after the second PR #36 Plan Review.
 
-Do not implement production code until the Plan is reviewed and `plan_approved=true`.
+`plan_approved=true`. Implementation is authorized on this same branch / PR only.
 
-Planning evidence (summary): XYFlow already applies `grab`/`grabbing` on `.react-flow__pane.draggable` / `.dragging`; app CSS does not override pane cursors; light `--color-bg-canvas` surfaces wash out native grab contrast. Re-declaring the same native keywords cannot fix contrast. Proposed fix is a light-mode-only high-contrast custom cursor on those pane states (native `grab`/`grabbing` fallback), with explicit 32×32 / hotspot / zoom verification constraints. Dark mode and non-pane cursor semantics stay unchanged.
+Approved implementation direction: XYFlow already supplies native `grab`/`grabbing`, but those native cursors are insufficiently visible against the high-luminance light canvas. Implement a light-mode-only high-contrast custom cursor for `.react-flow__pane.draggable` / `.dragging`, keep native `grab`/`grabbing` fallback, use 32×32 assets with documented hotspot, verify at 100% and one non-100% browser zoom, and leave dark mode plus node/action/text/resize cursor semantics unchanged.
