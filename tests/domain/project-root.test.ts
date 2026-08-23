@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   activateNode,
   closeNode,
+  ensureProjectRoot,
   parkNode,
-  setNodeSummary,
   updateProjectMetadata,
 } from "../../src/domain/index.js";
 import {
@@ -13,14 +13,27 @@ import {
   coreQuestionIds,
   createProjectWithRoots,
   expectError,
+  requireProjectRootId,
   sequentialPorts,
   unwrap,
 } from "./helpers.js";
 
-describe("flat core-question hierarchy (no Project Root)", () => {
-  it("activates a Core Question onto [Q1]", () => {
+describe("Project Root structural hierarchy (TASK-010)", () => {
+  it("creates one Project Root with Questions as children", () => {
+    const ports = sequentialPorts();
+    const snapshot = createProjectWithRoots(ports, ["Q1", "Q2"]);
+    const rootId = requireProjectRootId(snapshot);
+    const [q1, q2] = coreQuestionIds(snapshot);
+    expect(snapshot.pass.rootNodeIds).toEqual([rootId]);
+    expect(snapshot.nodes[rootId]?.childIds).toEqual([q1, q2]);
+    expect(q1 && snapshot.nodes[q1]?.parentId).toBe(rootId);
+    expect(q2 && snapshot.nodes[q2]?.parentId).toBe(rootId);
+  });
+
+  it("activates a Core Question onto [Q1] without Project Root on the stack", () => {
     const ports = sequentialPorts();
     const started = createProjectWithRoots(ports, ["Q1", "Q2"]);
+    const rootId = requireProjectRootId(started);
     const [q1, q2] = coreQuestionIds(started);
     if (!q1 || !q2) {
       throw new Error("missing core questions");
@@ -28,12 +41,23 @@ describe("flat core-question hierarchy (no Project Root)", () => {
 
     const snapshot = unwrap(activateNode(started, { nodeId: q1 }));
 
-    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
-    expect(snapshot.pass.rootNodeIds).toEqual([q1, q2]);
+    expect(snapshot.pass.projectRootNodeId).toBe(rootId);
     expect(snapshot.pass.activeStack).toEqual([q1]);
+    expect(snapshot.pass.activeStack).not.toContain(rootId);
     expect(snapshot.nodes[q1]?.lifecycle).toBe("active");
     expect(snapshot.nodes[q2]?.lifecycle).toBe("open");
+    expect(snapshot.nodes[rootId]?.lifecycle).toBe("open");
     assertActiveBijection(snapshot);
+  });
+
+  it("rejects activate / close / park on Project Root", () => {
+    const ports = sequentialPorts();
+    const snapshot = createProjectWithRoots(ports, ["Q1"]);
+    const rootId = requireProjectRootId(snapshot);
+
+    expectError(activateNode(snapshot, { nodeId: rootId }), "NotALearningQuestion");
+    expectError(closeNode(snapshot, { nodeId: rootId }), "NotALearningQuestion");
+    expectError(parkNode(snapshot, { nodeId: rootId }), "NotALearningQuestion");
   });
 
   it("switches Q1 → Q2 as sole active stack members", () => {
@@ -80,21 +104,27 @@ describe("flat core-question hierarchy (no Project Root)", () => {
     expect(closed.nodes[q1]?.lifecycle).toBe("closed");
     expect(closed.nodes[q2]?.lifecycle).toBe("open");
     expect(closed.pass.activeStack).toEqual([]);
+    assertActiveBijection(closed);
   });
 
-  it("updateProjectMetadata does not create or sync a Project Root node", () => {
+  it("syncs project name onto Project Root question label", () => {
     const ports = sequentialPorts();
-    const started = createProjectWithRoots(ports, ["Q1"]);
-    const q1 = coreQuestionIds(started)[0]!;
+    const snapshot = createProjectWithRoots(ports, ["Q1"]);
+    const rootId = requireProjectRootId(snapshot);
     const updated = unwrap(
-      updateProjectMetadata(started, {
-        name: "Renamed",
-        source: "https://github.com/acme/renamed",
-      }),
+      updateProjectMetadata(snapshot, { name: "Renamed Project" }),
     );
-    expect(updated.project.name).toBe("Renamed");
-    expect(updated.pass.projectRootNodeId).toBeUndefined();
-    expect(updated.pass.rootNodeIds).toEqual([q1]);
-    expect(updated.nodes[q1]?.question).toBe("Q1");
+    expect(updated.project.name).toBe("Renamed Project");
+    expect(updated.nodes[rootId]?.question).toBe("Renamed Project");
+    expect(updated.pass.projectRootNodeId).toBe(rootId);
+  });
+
+  it("ensureProjectRoot is idempotent", () => {
+    const ports = sequentialPorts();
+    const first = createProjectWithRoots(ports, ["Q1"]);
+    const rootId = requireProjectRootId(first);
+    const second = unwrap(ensureProjectRoot(first, ports));
+    expect(second.pass.projectRootNodeId).toBe(rootId);
+    expect(second.pass.rootNodeIds).toEqual([rootId]);
   });
 });

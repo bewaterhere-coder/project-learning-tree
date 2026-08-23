@@ -21,8 +21,11 @@ describe("knowledge cluster underlays", () => {
       />,
     );
 
-    expect(projectA.snapshot.pass.projectRootNodeId).toBeUndefined();
-    for (const rootId of projectA.snapshot.pass.rootNodeIds) {
+    expect(projectA.snapshot.pass.projectRootNodeId).toBeDefined();
+    const questionRoots =
+      projectA.snapshot.nodes[projectA.snapshot.pass.projectRootNodeId!]
+        ?.childIds ?? [];
+    for (const rootId of questionRoots) {
       expect(
         screen.getByTestId(`knowledge-cluster-${rootId}`),
       ).toBeInTheDocument();

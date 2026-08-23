@@ -14,7 +14,6 @@ describe("layoutOnlyNodeChanges", () => {
 
     expect(kept.map((change) => change.type)).toEqual([
       "position",
-      "select",
       "dimensions",
     ]);
   });

@@ -12,7 +12,7 @@ test("switching to zh-CN keeps node child authoring usable", async ({ page }) =>
   await page.keyboard.press("Escape");
   await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
 
-  const node = page.locator("[data-node-id]").first();
+  const node = page.locator("[data-node-id]:not([data-project-root='true'])").first();
   await expect(node).toBeVisible();
   const nodeId = await node.getAttribute("data-node-id");
   expect(nodeId).toBeTruthy();

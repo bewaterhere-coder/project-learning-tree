@@ -1,4 +1,5 @@
 import type { DomainError } from "./errors.js";
+import { isProjectRootNode } from "./project-root.js";
 import type { DomainSnapshot, LearningNode, NodeId } from "./types.js";
 
 export function pathFromRoot(
@@ -49,7 +50,10 @@ export function pathFromRoot(
     if (child?.parentId !== parentId) {
       return {
         ok: false,
-        error: { kind: "InvalidActiveStack", reason: "path is not a parent-child chain" },
+        error: {
+          kind: "InvalidActiveStack",
+          reason: "path is not a parent-child chain",
+        },
       };
     }
   }
@@ -70,15 +74,18 @@ export function validateActiveStack(
     return { kind: "InvalidActiveStack", reason: "duplicate node on stack" };
   }
 
-  const rootId = activeStack[0];
-  if (rootId === undefined || !snapshot.pass.rootNodeIds.includes(rootId)) {
-    return { kind: "InvalidActiveStack", reason: "stack does not start at a root" };
-  }
+  const projectRootId = snapshot.pass.projectRootNodeId;
 
   for (let index = 0; index < activeStack.length; index += 1) {
     const nodeId = activeStack[index];
     if (nodeId === undefined) {
       return { kind: "InvalidActiveStack", reason: "missing stack entry" };
+    }
+    if (isProjectRootNode(snapshot, nodeId)) {
+      return {
+        kind: "InvalidActiveStack",
+        reason: "stack must not include project root",
+      };
     }
     const node = snapshot.nodes[nodeId];
     if (!node) {
@@ -101,6 +108,27 @@ export function validateActiveStack(
     }
   }
 
+  const stackRoot = activeStack[0];
+  if (stackRoot === undefined) {
+    return { kind: "InvalidActiveStack", reason: "missing stack entry" };
+  }
+
+  if (projectRootId !== undefined) {
+    const stackRootNode = snapshot.nodes[stackRoot];
+    if (
+      !stackRootNode ||
+      stackRootNode.parentId !== projectRootId ||
+      !snapshot.nodes[projectRootId]?.childIds.includes(stackRoot)
+    ) {
+      return {
+        kind: "InvalidActiveStack",
+        reason: "stack does not start at a top-level learning question",
+      };
+    }
+  } else if (!snapshot.pass.rootNodeIds.includes(stackRoot)) {
+    return { kind: "InvalidActiveStack", reason: "stack does not start at a root" };
+  }
+
   return undefined;
 }
 
@@ -109,6 +137,16 @@ export function validateActiveBijection(
 ): DomainError | undefined {
   const onStack = new Set(snapshot.pass.activeStack);
   for (const node of Object.values(snapshot.nodes)) {
+    if (isProjectRootNode(snapshot, node.id)) {
+      // Project Root is never on the Question Active Stack and must not be active.
+      if (node.lifecycle === "active") {
+        return {
+          kind: "InvalidActiveStack",
+          reason: `active bijection violated for project root ${node.id}`,
+        };
+      }
+      continue;
+    }
     const shouldBeActive = onStack.has(node.id);
     if ((node.lifecycle === "active") !== shouldBeActive) {
       return {

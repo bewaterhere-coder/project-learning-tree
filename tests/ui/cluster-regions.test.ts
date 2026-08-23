@@ -30,6 +30,7 @@ function modelFixture(): TreeViewModel {
         isActiveStackLeaf: false,
         isCurrentFocus: false,
         canComplete: false,
+        isProjectRoot: false,
       },
       {
         id: "child-a",
@@ -47,6 +48,7 @@ function modelFixture(): TreeViewModel {
         isActiveStackLeaf: true,
         isCurrentFocus: true,
         canComplete: false,
+        isProjectRoot: false,
       },
       {
         id: "root-b",
@@ -63,6 +65,7 @@ function modelFixture(): TreeViewModel {
         isActiveStackLeaf: false,
         isCurrentFocus: false,
         canComplete: false,
+        isProjectRoot: false,
       },
     ],
     edges: [

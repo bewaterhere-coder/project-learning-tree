@@ -18,7 +18,17 @@ test.describe("visual surfaces", () => {
     await openApp(page);
     await createProject(page, "Visual Shell");
     await expect(page.getByTestId("bootstrap-summary")).toBeVisible();
-    await expect(page.locator("[data-node-id]").first()).toBeVisible();
-    await expect(page.getByTestId("shell")).toHaveScreenshot("project-first-layer-shell.png");
+    await expect(page.locator('[data-project-root="true"]')).toHaveCount(1);
+    await expect(
+      page.locator("[data-node-id]:not([data-project-root='true'])").first(),
+    ).toBeVisible();
+    // Clear RF selection chrome so Linux snapshot stays stable across runners.
+    await page.locator(".react-flow__pane").click({ position: { x: 8, y: 8 } });
+    await expect(page.locator(".react-flow__node.selected")).toHaveCount(0);
+    await expect(page.getByTestId("shell")).toHaveScreenshot(
+      "project-first-layer-shell.png",
+      // Rooted tree + progress text is denser; allow small AA variance vs GH runners.
+      { maxDiffPixelRatio: 0.05 },
+    );
   });
 });

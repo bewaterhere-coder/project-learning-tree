@@ -13,6 +13,7 @@ export {
   createChild,
   createProject,
   declareCriterionSatisfied,
+  ensureProjectRoot,
   evaluateConvergence,
   focusNode,
   linkEvidenceToCriterion,
@@ -27,6 +28,7 @@ export {
   unmarkChildBlocking,
   updateProjectMetadata,
 } from "./operations.js";
+export { isProjectRootNode, learningPathFromStructural } from "./project-root.js";
 export { defaultPorts } from "./ports.js";
 export type { Ports } from "./ports.js";
 export {
@@ -49,6 +51,7 @@ export {
   type DomainEvent,
   type DomainResult,
   type DomainSnapshot,
+  type EnsureProjectRoot,
   type Evidence,
   type FocusNode,
   type FrontierItem,

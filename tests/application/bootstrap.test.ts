@@ -24,9 +24,10 @@ describe("bootstrapLearningProject", () => {
 
     expect(result.snapshot.project.name).toBe("Vite");
     expect(result.snapshot.project.source).toBe("https://github.com/vitejs/vite");
-    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
-
-    const coreQuestionIds = result.snapshot.pass.rootNodeIds;
+    const rootId = result.snapshot.pass.projectRootNodeId;
+    expect(rootId).toBeDefined();
+    expect(result.snapshot.pass.rootNodeIds).toEqual([rootId]);
+    const coreQuestionIds = result.snapshot.nodes[rootId!]?.childIds ?? [];
     expect(coreQuestionIds.length).toBeGreaterThan(0);
     expect(coreQuestionIds.length).toBeLessThanOrEqual(CORE_QUESTION_LIMIT);
     expect(result.snapshot.pass.activeStack).toEqual([]);
@@ -37,7 +38,7 @@ describe("bootstrapLearningProject", () => {
 
     for (const nodeId of coreQuestionIds) {
       const node = result.snapshot.nodes[nodeId];
-      expect(node?.parentId).toBeUndefined();
+      expect(node?.parentId).toBe(rootId);
       expect(node?.lifecycle).toBe("open");
       expect(node?.goal.length).toBeGreaterThan(0);
       expect(node?.definitionOfDone.length).toBeGreaterThan(0);
@@ -77,7 +78,7 @@ describe("bootstrapLearningProject", () => {
       throw new Error(result.error.kind);
     }
     expect(result.record.evidenceStatus).toBe("partial");
-    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(result.snapshot.pass.projectRootNodeId).toBeDefined();
     expect(result.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
     for (const rootId of result.snapshot.pass.rootNodeIds) {
       expect(result.snapshot.nodes[rootId]?.parentId).toBeUndefined();
@@ -93,7 +94,7 @@ describe("bootstrapLearningProject", () => {
     if (!result.ok) {
       throw new Error(result.error.kind);
     }
-    expect(result.snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(result.snapshot.pass.projectRootNodeId).toBeDefined();
     expect(result.snapshot.pass.rootNodeIds.length).toBeGreaterThan(0);
     expect(result.record.evidenceStatus).toBe("fallback");
   });
@@ -147,8 +148,11 @@ describe("bootstrapLearningProject", () => {
     if (!result.ok) {
       throw new Error(result.error.kind);
     }
-    const firstRootId = result.snapshot.pass.rootNodeIds[0];
-    const firstNode = firstRootId ? result.snapshot.nodes[firstRootId] : undefined;
+    const projectRootId = result.snapshot.pass.projectRootNodeId!;
+    const firstQuestionId = result.snapshot.nodes[projectRootId]?.childIds[0];
+    const firstNode = firstQuestionId
+      ? result.snapshot.nodes[firstQuestionId]
+      : undefined;
     expect(firstNode?.question).toMatch(/主要解决什么问题/);
     expect(firstNode?.definitionOfDone[0]?.description).toMatch(/项目证据|机制/);
     expect(result.record.learningValue).toMatch(/这次学习应把/);

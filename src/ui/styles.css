@@ -881,6 +881,22 @@ textarea {
   outline-offset: 1px;
 }
 
+.learning-node.project-root {
+  background: color-mix(in srgb, var(--color-bg-elevated) 70%, var(--color-bg-canvas));
+  border-color: color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+}
+
+.learning-node.project-root .node-question {
+  font-size: 15px;
+}
+
+.node-project-progress {
+  margin: 8px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
 .stack-rail {
   position: absolute;
   left: 0;

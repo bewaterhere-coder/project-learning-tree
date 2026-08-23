@@ -43,7 +43,7 @@ test.describe("TASK-009 canvas simplification acceptance screenshots", () => {
       await closeChatIfOpen(page);
       const q1 = page.locator(`[data-node-id="${projectA.ids.q1}"]`);
       await expect(q1).toBeVisible();
-      await expect(page.locator('[data-project-root="true"]')).toHaveCount(0);
+      await expect(page.locator('[data-project-root="true"]')).toHaveCount(1);
 
       await page.screenshot({
         path: path.join(outDir, "01-canvas-no-selection.png"),

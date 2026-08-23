@@ -20,16 +20,25 @@ import { createMemoryConversationStore } from "../../src/conversation/index.js";
 vi.mock("@xyflow/react", () => import("./xyflow-stub.js"));
 
 describe("TASK-009 canvas simplification", () => {
-  it("maps every flat question node into React Flow without Project Root filters", () => {
+  it("maps Project Root and Questions into React Flow with Root flagged", () => {
     const { workspace, projectA } = createDemoWorkspaceFixture();
     const snapshot = selectedProject(workspace)!.snapshot;
     const model = selectTreeViewModel(snapshot);
+    const rootId = snapshot.pass.projectRootNodeId!;
 
-    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
-    expect(model.rootNodeIds).toEqual(
-      expect.arrayContaining([projectA.ids.q1, projectA.ids.q2]),
+    expect(rootId).toBeDefined();
+    expect(model.rootNodeIds).toEqual([rootId]);
+    expect(model.nodes.some((node) => node.isProjectRoot && node.id === rootId)).toBe(
+      true,
     );
-    expect(model.nodes.every((node) => !("isProjectRoot" in node))).toBe(true);
+    expect(
+      model.nodes
+        .filter((node) => !node.isProjectRoot)
+        .map((node) => node.id),
+    ).toEqual(expect.arrayContaining([projectA.ids.q1, projectA.ids.q2]));
+    expect(model.nodes.every((node) => typeof node.isProjectRoot === "boolean")).toBe(
+      true,
+    );
 
     const flow = toReactFlow(model);
     expect(flow.nodes.map((node) => node.id).sort()).toEqual(

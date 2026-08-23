@@ -64,6 +64,10 @@ export {
   type ProjectSummary,
 } from "./selectors/project-summary.js";
 export {
+  selectProjectLearningProgress,
+  type ProjectLearningProgress,
+} from "./selectors/project-progress.js";
+export {
   selectBoundConversationIdentity,
   selectFocusDiffersFromChat,
   type BoundConversationIdentity,

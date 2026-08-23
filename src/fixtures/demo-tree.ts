@@ -9,6 +9,7 @@ import {
   createProject,
   declareCriterionSatisfied,
   defaultPorts,
+  ensureProjectRoot,
   focusNode,
   linkEvidenceToCriterion,
   parkNode,
@@ -20,6 +21,10 @@ import {
 } from "../domain/index.js";
 
 function coreQuestionIds(snapshot: DomainSnapshot): NodeId[] {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (rootId !== undefined) {
+    return [...(snapshot.nodes[rootId]?.childIds ?? [])];
+  }
   return [...snapshot.pass.rootNodeIds];
 }
 
@@ -147,6 +152,7 @@ export function createBlockedBranchFixture(
   ports: Ports = sequentialFixturePorts(),
 ): BlockedBranchFixture {
   let snapshot = unwrap(createProject({ name: "Blocked Branch Fixture" }, ports), "createProject");
+  snapshot = unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
   snapshot = unwrap(
     addCoreQuestion(
       snapshot,
@@ -191,6 +197,7 @@ export function createDemoTreeFixture(
     createProject({ name: "M2 Demo Tree", source: "fixture" }, ports),
     "createProject",
   );
+  snapshot = unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
   snapshot = unwrap(
     addCoreQuestion(
       snapshot,
@@ -278,6 +285,7 @@ export function createMixedChildrenFixture(
     createProject({ name: "M2.3 Mixed Children", source: "fixture" }, ports),
     "createProject mixed",
   );
+  snapshot = unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
   snapshot = unwrap(
     addCoreQuestion(
       snapshot,
@@ -331,6 +339,7 @@ export function createSecondDemoTreeFixture(
     createProject({ name: "M2.1 Demo Tree B", source: "fixture" }, ports),
     "createProject B",
   );
+  snapshot = unwrap(ensureProjectRoot(snapshot, ports), "ensureProjectRoot");
   snapshot = unwrap(
     addCoreQuestion(
       snapshot,

@@ -11,7 +11,12 @@ import {
   validateActiveStack,
 } from "./stack.js";
 import {
+  isProjectRootNode,
+  learningPathFromStructural,
+} from "./project-root.js";
+import {
   CORE_QUESTION_LIMIT,
+  PROJECT_ROOT_ORIENTATION_GOAL,
   type ActivateBlockingChild,
   type ActivateNode,
   type AddCoreQuestion,
@@ -26,6 +31,7 @@ import {
   type DomainEvent,
   type DomainResult,
   type DomainSnapshot,
+  type EnsureProjectRoot,
   type EvaluateConvergence,
   type FocusNode,
   type LearningNode,
@@ -175,6 +181,9 @@ function ancestorsAllowActivation(
   targetId: NodeId,
 ): DomainError | undefined {
   for (const id of path) {
+    if (isProjectRootNode(snapshot, id)) {
+      continue;
+    }
     const node = snapshot.nodes[id];
     if (!node) {
       return { kind: "NodeNotFound", nodeId: id };
@@ -190,6 +199,29 @@ function ancestorsAllowActivation(
     }
   }
   return undefined;
+}
+
+function rejectIfProjectRoot(
+  snapshot: DomainSnapshot,
+  nodeId: NodeId,
+  attempted: string,
+): DomainError | undefined {
+  if (isProjectRootNode(snapshot, nodeId)) {
+    return { kind: "NotALearningQuestion", nodeId, attempted };
+  }
+  return undefined;
+}
+
+/** Learning questions only — Project Root never counts toward pass completion. */
+function openLearningQuestionIds(snapshot: DomainSnapshot): NodeId[] {
+  const rootId = snapshot.pass.projectRootNodeId;
+  return Object.keys(snapshot.nodes).filter((id) => {
+    if (rootId !== undefined && id === rootId) {
+      return false;
+    }
+    const node = snapshot.nodes[id];
+    return node === undefined || node.lifecycle !== "closed";
+  });
 }
 
 export function createProject(
@@ -224,6 +256,41 @@ export function createProject(
   return ok(snapshot, [{ type: "ProjectCreated", projectId, passId }]);
 }
 
+export function ensureProjectRoot(
+  snapshot: DomainSnapshot,
+  ports: Ports,
+  command: EnsureProjectRoot = {},
+): DomainResult<DomainSnapshot> {
+  const existingId = snapshot.pass.projectRootNodeId;
+  if (existingId !== undefined) {
+    const existing = snapshot.nodes[existingId];
+    if (existing && snapshot.pass.rootNodeIds.includes(existingId)) {
+      return ok(cloneSnapshot(snapshot), []);
+    }
+  }
+
+  const nodeId = command.nodeId ?? ports.id();
+  if (snapshot.nodes[nodeId]) {
+    return fail({
+      kind: "InvalidActiveStack",
+      reason: "project root id already used",
+    });
+  }
+
+  const rootNode = createOpenNode(ports, {
+    id: nodeId,
+    question: snapshot.project.name,
+    goal: PROJECT_ROOT_ORIENTATION_GOAL,
+  });
+
+  const next = putNode(snapshot, rootNode);
+  next.pass.projectRootNodeId = nodeId;
+  if (!next.pass.rootNodeIds.includes(nodeId)) {
+    next.pass.rootNodeIds = [nodeId, ...next.pass.rootNodeIds];
+  }
+  return ok(next, [{ type: "ProjectRootEnsured", nodeId }]);
+}
+
 export function updateProjectMetadata(
   snapshot: DomainSnapshot,
   command: UpdateProjectMetadata,
@@ -241,6 +308,13 @@ export function updateProjectMetadata(
   if (command.description !== undefined) {
     next.project.description = command.description.trim() || undefined;
   }
+  const rootId = next.pass.projectRootNodeId;
+  if (rootId !== undefined) {
+    const root = next.nodes[rootId];
+    if (root) {
+      next.nodes[rootId] = { ...root, question: name };
+    }
+  }
   return ok(next, [{ type: "ProjectMetadataUpdated", projectId: next.project.id }]);
 }
 
@@ -249,20 +323,37 @@ export function addCoreQuestion(
   command: AddCoreQuestion,
   ports: Ports,
 ): DomainResult<DomainSnapshot> {
-  if (snapshot.pass.rootNodeIds.length >= CORE_QUESTION_LIMIT) {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (rootId === undefined || !snapshot.nodes[rootId]) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  const root = snapshot.nodes[rootId];
+  if (!root) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  if (root.childIds.length >= CORE_QUESTION_LIMIT) {
     return fail({ kind: "CoreQuestionLimitReached", limit: CORE_QUESTION_LIMIT });
   }
   const authoringError = rejectIfBlankAuthoring(command.question, command.goal);
   if (authoringError) {
     return fail(authoringError);
   }
+  const closed = rejectIfClosed(root, "add-core-question");
+  if (closed) {
+    return fail(closed);
+  }
   const node = createOpenNode(ports, {
     question: command.question.trim(),
     goal: command.goal.trim(),
     targetDepth: command.targetDepth,
+    parentId: rootId,
   });
   const next = putNode(snapshot, node);
-  next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
+  const liveRoot = next.nodes[rootId];
+  if (!liveRoot) {
+    return fail({ kind: "ProjectRootRequired" });
+  }
+  next.nodes[rootId] = attachChild(liveRoot, node.id, { blocking: false });
   return ok(next, [{ type: "CoreQuestionAdded", nodeId: node.id }]);
 }
 
@@ -287,6 +378,10 @@ export function activateNode(
   if (!found.ok) {
     return fail(found.error);
   }
+  const rootReject = rejectIfProjectRoot(snapshot, command.nodeId, "activate");
+  if (rootReject) {
+    return fail(rootReject);
+  }
   if (!canBecomeActive(found.node.lifecycle)) {
     return fail({
       kind: "InvalidLifecycleTransition",
@@ -299,6 +394,13 @@ export function activateNode(
   if (!path.ok) {
     return fail(path.error);
   }
+  const learningPath = learningPathFromStructural(snapshot, path.path);
+  if (learningPath.length === 0 || learningPath[learningPath.length - 1] !== command.nodeId) {
+    return fail({
+      kind: "InvalidActiveStack",
+      reason: "learning path does not include target question",
+    });
+  }
   const ancestorError = ancestorsAllowActivation(
     snapshot,
     path.path,
@@ -307,7 +409,7 @@ export function activateNode(
   if (ancestorError) {
     return fail(ancestorError);
   }
-  return ok(applyNewStack(snapshot, path.path), [
+  return ok(applyNewStack(snapshot, learningPath), [
     { type: "NodeActivated", nodeId: command.nodeId },
   ]);
 }
@@ -323,6 +425,22 @@ export function activateBlockingChild(
   const childFound = requireNode(snapshot, command.childId);
   if (!childFound.ok) {
     return fail(childFound.error);
+  }
+  const parentRootReject = rejectIfProjectRoot(
+    snapshot,
+    command.parentId,
+    "activate-blocking-child",
+  );
+  if (parentRootReject) {
+    return fail(parentRootReject);
+  }
+  const childRootReject = rejectIfProjectRoot(
+    snapshot,
+    command.childId,
+    "activate-blocking-child",
+  );
+  if (childRootReject) {
+    return fail(childRootReject);
   }
   if (currentStackLeaf(snapshot) !== command.parentId) {
     return fail({
@@ -605,7 +723,16 @@ export function promoteFrontierItem(
       blocking: command.placement.kind === "blockingChild",
     });
   } else {
-    next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
+    const projectRootId = next.pass.projectRootNodeId;
+    if (projectRootId !== undefined && next.nodes[projectRootId]) {
+      const liveRoot = next.nodes[projectRootId];
+      next.nodes[node.id] = { ...node, parentId: projectRootId };
+      next.nodes[projectRootId] = attachChild(liveRoot, node.id, {
+        blocking: false,
+      });
+    } else {
+      next.pass.rootNodeIds = [...next.pass.rootNodeIds, node.id];
+    }
   }
 
   return ok(next, [
@@ -624,6 +751,10 @@ export function parkNode(
   const found = requireNode(snapshot, command.nodeId);
   if (!found.ok) {
     return fail(found.error);
+  }
+  const rootReject = rejectIfProjectRoot(snapshot, command.nodeId, "park");
+  if (rootReject) {
+    return fail(rootReject);
   }
   if (found.node.lifecycle !== "active") {
     return fail({
@@ -654,6 +785,10 @@ export function resumeNode(
   if (!found.ok) {
     return fail(found.error);
   }
+  const rootReject = rejectIfProjectRoot(snapshot, command.nodeId, "resume");
+  if (rootReject) {
+    return fail(rootReject);
+  }
   if (found.node.lifecycle !== "parked") {
     return fail({
       kind: "InvalidLifecycleTransition",
@@ -666,6 +801,13 @@ export function resumeNode(
   if (!path.ok) {
     return fail(path.error);
   }
+  const learningPath = learningPathFromStructural(snapshot, path.path);
+  if (learningPath.length === 0 || learningPath[learningPath.length - 1] !== command.nodeId) {
+    return fail({
+      kind: "InvalidActiveStack",
+      reason: "learning path does not include target question",
+    });
+  }
   const ancestorError = ancestorsAllowActivation(
     snapshot,
     path.path,
@@ -674,7 +816,7 @@ export function resumeNode(
   if (ancestorError) {
     return fail(ancestorError);
   }
-  return ok(applyNewStack(snapshot, path.path), [
+  return ok(applyNewStack(snapshot, learningPath), [
     { type: "NodeResumed", nodeId: command.nodeId },
   ]);
 }
@@ -687,6 +829,14 @@ export function addCriterion(
   const found = requireNode(snapshot, command.nodeId);
   if (!found.ok) {
     return fail(found.error);
+  }
+  const rootReject = rejectIfProjectRoot(
+    snapshot,
+    command.nodeId,
+    "add-criterion",
+  );
+  if (rootReject) {
+    return fail(rootReject);
   }
   const closed = rejectIfClosed(found.node, "add-criterion");
   if (closed) {
@@ -842,6 +992,14 @@ export function setNodeSummary(
   if (!found.ok) {
     return fail(found.error);
   }
+  const rootReject = rejectIfProjectRoot(
+    snapshot,
+    command.nodeId,
+    "set-summary",
+  );
+  if (rootReject) {
+    return fail(rootReject);
+  }
   const closed = rejectIfClosed(found.node, "set-summary");
   if (closed) {
     return fail(closed);
@@ -863,6 +1021,14 @@ export function evaluateConvergence(
   if (!found.ok) {
     return { ok: false, error: found.error };
   }
+  const rootReject = rejectIfProjectRoot(
+    snapshot,
+    command.nodeId,
+    "evaluate-convergence",
+  );
+  if (rootReject) {
+    return { ok: false, error: rootReject };
+  }
   return {
     ok: true,
     evaluation: evaluateNodeConvergence(snapshot, command.nodeId),
@@ -876,6 +1042,10 @@ export function closeNode(
   const found = requireNode(snapshot, command.nodeId);
   if (!found.ok) {
     return fail(found.error);
+  }
+  const rootReject = rejectIfProjectRoot(snapshot, command.nodeId, "close");
+  if (rootReject) {
+    return fail(rootReject);
   }
   // Completion is 未完成 → 已完成: allow close from open/active/parked when
   // convergence holds. Do not require Active Stack membership (no activateNode).
@@ -922,6 +1092,10 @@ export function reopenNode(
   const found = requireNode(snapshot, command.nodeId);
   if (!found.ok) {
     return fail(found.error);
+  }
+  const rootReject = rejectIfProjectRoot(snapshot, command.nodeId, "reopen");
+  if (rootReject) {
+    return fail(rootReject);
   }
   if (found.node.lifecycle !== "closed") {
     return fail({
@@ -997,11 +1171,8 @@ export function completePass(
       reason: "active stack is not empty",
     });
   }
-  const openRoots = snapshot.pass.rootNodeIds.filter((rootId) => {
-    const root = snapshot.nodes[rootId];
-    return root === undefined || root.lifecycle !== "closed";
-  });
-  if (openRoots.length > 0) {
+  const openQuestions = openLearningQuestionIds(snapshot);
+  if (openQuestions.length > 0) {
     return fail({
       kind: "PassNotCompletable",
       reason: "not all root nodes are closed",

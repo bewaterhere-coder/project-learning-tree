@@ -58,7 +58,14 @@ export function computeClusterRegions(
   nodeHeight = NODE_HEIGHT,
 ): ClusterRegion[] {
   const regions: ClusterRegion[] = [];
-  model.rootNodeIds.forEach((rootId, index) => {
+  const projectRoot = model.nodes.find((node) => node.isProjectRoot);
+  const clusterRootIds =
+    projectRoot !== undefined
+      ? model.nodes
+          .filter((node) => node.parentId === projectRoot.id)
+          .map((node) => node.id)
+      : [...model.rootNodeIds];
+  clusterRootIds.forEach((rootId, index) => {
     const memberIds = subtreeNodeIds(rootId, model);
     let minX = Number.POSITIVE_INFINITY;
     let minY = Number.POSITIVE_INFINITY;
