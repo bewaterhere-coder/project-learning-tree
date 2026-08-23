@@ -5,13 +5,13 @@ task_id: PR-038-canvas-chat-interaction-polish
 title: Canvas & Node Chat Interaction Polish
 
 development:
-  stage: acceptance_review
+  stage: fixing
   gates:
     requirement_ready: true
     plan_approved: true
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: chatgpt
+  next_expected_actor: cursor
 
 artifacts:
   requirement: docs/requirements/PR-038-canvas-chat-interaction-polish.md
@@ -213,4 +213,11 @@ Cursor implemented the approved Plan (D1–D13) on this branch:
 
 Verification: `npm run typecheck`, `npm test` (348), `npm run build`.
 
-Awaiting ChatGPT acceptance review (`acceptance_approved=true`).
+## Acceptance Review — Changes Required
+
+Acceptance is not approved yet. Two requirement-level gaps were found in the implementation diff:
+
+1. **Dragged-node identity is not guaranteed in multi-position batches.** In `TreeCanvas.tsx`, when XYFlow reports multiple position changes, the filter chooses the current-focus/selected node as `keepId` rather than the actual node being dragged. A user can drag a node that was not already current focus; the defensive path can therefore preserve/move the wrong node and discard the grabbed node's position change. Fix the logic so the gesture target is authoritative (or remove the ambiguous batch filter if disabled multi-selection makes it unnecessary), and add a regression where the dragged node is explicitly **not** the current-focus node while all peers remain unchanged.
+2. **Composer does not actually auto-grow.** `MessageComposer.tsx` changed to `textarea rows={1}`, while CSS only sets `min-height`, `max-height`, and `resize: none`. There is no content-height/autosize behavior (`field-sizing` or equivalent JS), so multi-line input stays at one visual height and scrolls instead of growing up to the intended cap. Implement actual auto-grow to the existing sensible maximum and add a focused regression where practical.
+
+Keep the task on the existing PR #38 branch. After fixes, rerun the existing verification suite and return to acceptance review.
