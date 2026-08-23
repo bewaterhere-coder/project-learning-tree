@@ -1038,6 +1038,16 @@ textarea {
   background: var(--color-bg-canvas);
 }
 
+/* TASK-011: light-mode pane cursors only — native grab washes out on bright canvas.
+   Assets are 32×32; hotspots align to the visible finger tip (grab 14,3 / grabbing 14,8). */
+html[data-theme="light"] .react-flow__pane.draggable {
+  cursor: url("./assets/cursors/canvas-grab.svg") 14 3, grab;
+}
+
+html[data-theme="light"] .react-flow__pane.dragging {
+  cursor: url("./assets/cursors/canvas-grabbing.svg") 14 8, grabbing;
+}
+
 .react-flow__node,
 .react-flow__node.selected {
   box-shadow: none;
