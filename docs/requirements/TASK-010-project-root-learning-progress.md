@@ -5,13 +5,13 @@ task_id: TASK-010
 title: Project Root Learning Progress & Canvas Interaction Stability
 
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/TASK-010-project-root-learning-progress.md
@@ -350,16 +350,12 @@ TASK-010 does not authorize:
 
 ## 14. Development Gate
 
-Current gate: **Requirement Ready → Planning**.
+Current gate: **Plan Ready → plan_review**.
 
-Cursor is authorized to:
+Planning artifacts are complete on this branch/PR:
 
-- inspect the repository;
-- reproduce/diagnose the flashing defect;
-- write/update `docs/plans/TASK-010-plan.md`;
-- update this Task artifact to Plan Ready / plan review state when the Plan is complete;
-- commit and push planning artifacts to the existing TASK-010 branch / PR.
+- `docs/plans/TASK-010-plan.md` records project-init / domain analysis, Project Root vs Question boundaries, progress derivation, migration strategy, flash root-cause evidence, expected files, and test strategy.
 
-Cursor is **not** authorized to implement production code yet.
+Cursor has completed the Planning Gate and is **not** authorized to implement production code yet.
 
-Implementation begins only after ChatGPT reviews and approves the Plan.
+Implementation begins only after ChatGPT reviews and sets `plan_approved: true`.
