@@ -4,6 +4,7 @@ import {
   CORE_QUESTION_LIMIT,
   createProject,
   defaultPorts,
+  ensureProjectRoot,
 } from "../../src/domain/index.js";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
 import { coreQuestionIds, unwrap } from "./helpers.js";
@@ -34,7 +35,7 @@ describe("addCoreQuestion authoring", () => {
       throw new Error("expected project");
     }
     const ports = sequentialFixturePorts(10);
-    const snapshot = created.snapshot;
+    const snapshot = unwrap(ensureProjectRoot(created.snapshot, ports));
     expect(addCoreQuestion(snapshot, { question: "   ", goal: "G" }, ports)).toEqual({
       ok: false,
       error: { kind: "QuestionRequired" },
@@ -44,7 +45,7 @@ describe("addCoreQuestion authoring", () => {
       error: { kind: "GoalRequired" },
     });
     expect(coreQuestionIds(snapshot)).toEqual([]);
-    expect(snapshot.pass.rootNodeIds).toHaveLength(0);
+    expect(snapshot.pass.rootNodeIds).toHaveLength(1);
   });
 
   it("trims question and goal and still enforces the core-question limit", () => {
@@ -53,7 +54,8 @@ describe("addCoreQuestion authoring", () => {
       throw new Error("expected project");
     }
     const ports = sequentialFixturePorts(20);
-    let snapshot = created.snapshot;
+    let snapshot = unwrap(ensureProjectRoot(created.snapshot, ports));
+    const rootId = snapshot.pass.projectRootNodeId!;
     for (let index = 0; index < CORE_QUESTION_LIMIT; index += 1) {
       const next = addCoreQuestion(
         snapshot,
@@ -65,8 +67,9 @@ describe("addCoreQuestion authoring", () => {
         snapshot = next.snapshot;
       }
     }
-    expect(snapshot.pass.rootNodeIds).toHaveLength(CORE_QUESTION_LIMIT);
-    expect(snapshot.pass.projectRootNodeId).toBeUndefined();
+    expect(snapshot.pass.rootNodeIds).toEqual([rootId]);
+    expect(snapshot.nodes[rootId]?.childIds).toHaveLength(CORE_QUESTION_LIMIT);
+    expect(snapshot.pass.projectRootNodeId).toBeDefined();
     const lastId = coreQuestionIds(snapshot)[CORE_QUESTION_LIMIT - 1];
     expect(lastId && snapshot.nodes[lastId]?.question).toBe("Q4");
     const rejected = addCoreQuestion(
@@ -78,6 +81,5 @@ describe("addCoreQuestion authoring", () => {
       ok: false,
       error: { kind: "CoreQuestionLimitReached", limit: 5 },
     });
-    expect(rejected.ok ? rejected.snapshot : snapshot).toBe(snapshot);
   });
 });

@@ -11,10 +11,16 @@ export interface ActionAvailability {
   canReturnToParent: boolean;
 }
 
-export function activateLabelFor(node: {
-  parentId?: NodeId;
-}): ActivateLabel {
-  return node.parentId === undefined ? "startLearning" : "enterQuestion";
+export function activateLabelFor(
+  node: {
+    parentId?: NodeId;
+  },
+  projectRootId?: NodeId,
+): ActivateLabel {
+  if (node.parentId === undefined || node.parentId === projectRootId) {
+    return "startLearning";
+  }
+  return "enterQuestion";
 }
 
 export function selectActionAvailability(
@@ -33,13 +39,26 @@ export function selectActionAvailability(
     };
   }
 
+  if (snapshot.pass.projectRootNodeId === nodeId) {
+    return {
+      canActivate: false,
+      activateLabel: "enterQuestion",
+      canPark: false,
+      canResume: false,
+      canClose: false,
+      canReturnToParent: false,
+    };
+  }
+
   const stackLeaf = snapshot.pass.activeStack[snapshot.pass.activeStack.length - 1];
   return {
     canActivate: node.lifecycle === "open" || node.lifecycle === "active",
-    activateLabel: activateLabelFor(node),
+    activateLabel: activateLabelFor(node, snapshot.pass.projectRootNodeId),
     canPark: node.lifecycle === "active" && stackLeaf === node.id,
     canResume: node.lifecycle === "parked",
     canClose: node.lifecycle === "active",
-    canReturnToParent: node.parentId !== undefined,
+    canReturnToParent:
+      node.parentId !== undefined &&
+      node.parentId !== snapshot.pass.projectRootNodeId,
   };
 }

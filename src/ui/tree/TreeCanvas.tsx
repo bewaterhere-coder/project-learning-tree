@@ -6,6 +6,7 @@ import {
   type NodeMouseHandler,
   type NodeProps,
   type OnMove,
+  type Node,
   type OnNodeDrag,
   type OnNodesChange,
 } from "@xyflow/react";
@@ -17,7 +18,10 @@ import {
   toClusterFlowNodes,
 } from "./cluster-flow.js";
 import { isClusterNodeId } from "./cluster-regions.js";
-import { layoutOnlyNodeChanges } from "./layout-node-changes.js";
+import {
+  layoutOnlyNodeChanges,
+  selectionNodeChanges,
+} from "./layout-node-changes.js";
 import {
   LearningNode,
   LearningNodeToolbarActions,
@@ -29,9 +33,19 @@ import {
   type LearningFlowNode,
 } from "./to-react-flow.js";
 
+type Callbacks = {
+  locale: WorkspaceLocale;
+  onOpenChatForNode: (nodeId: NodeId) => void;
+  onAddChildForNode: (nodeId: NodeId) => void;
+  onCompleteNode: (nodeId: NodeId) => void;
+  onOpenInspectorForNode: (nodeId: NodeId) => void;
+};
+
 function FlowLearningNode({ data, selected }: NodeProps<LearningFlowNode>) {
   const [hovered, setHovered] = useState(false);
-  const showToolbar = Boolean(selected || data.isCurrentFocus || hovered);
+  const showToolbar = Boolean(
+    !data.isProjectRoot && (selected || data.isCurrentFocus || hovered),
+  );
 
   return (
     <div
@@ -41,34 +55,36 @@ function FlowLearningNode({ data, selected }: NodeProps<LearningFlowNode>) {
     >
       <LearningNodeHandles />
       <LearningNode data={data} />
-      <NodeToolbar
-        isVisible={showToolbar}
-        position={Position.Bottom}
-        offset={8}
-        className="node-toolbar"
-      >
-        <LearningNodeToolbarActions
-          data={data}
-          onOpenChat={
-            data.onOpenChatForNode
-              ? () => data.onOpenChatForNode?.(data.id)
-              : undefined
-          }
-          onAddChild={
-            data.onAddChildForNode
-              ? () => data.onAddChildForNode?.(data.id)
-              : undefined
-          }
-          onComplete={
-            data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
-          }
-          onOpenInspector={
-            data.onOpenInspectorForNode
-              ? () => data.onOpenInspectorForNode?.(data.id)
-              : undefined
-          }
-        />
-      </NodeToolbar>
+      {data.isProjectRoot ? null : (
+        <NodeToolbar
+          isVisible={showToolbar}
+          position={Position.Bottom}
+          offset={8}
+          className="node-toolbar"
+        >
+          <LearningNodeToolbarActions
+            data={data}
+            onOpenChat={
+              data.onOpenChatForNode
+                ? () => data.onOpenChatForNode?.(data.id)
+                : undefined
+            }
+            onAddChild={
+              data.onAddChildForNode
+                ? () => data.onAddChildForNode?.(data.id)
+                : undefined
+            }
+            onComplete={
+              data.onCompleteNode ? () => data.onCompleteNode?.(data.id) : undefined
+            }
+            onOpenInspector={
+              data.onOpenInspectorForNode
+                ? () => data.onOpenInspectorForNode?.(data.id)
+                : undefined
+            }
+          />
+        </NodeToolbar>
+      )}
     </div>
   );
 }
@@ -77,6 +93,105 @@ const nodeTypes = {
   learningNode: FlowLearningNode,
   clusterRegion: ClusterRegionFlowNode,
 };
+
+function enrichNodes(
+  base: LearningFlowNode[],
+  callbacks: Callbacks,
+): LearningFlowNode[] {
+  return base.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      locale: callbacks.locale,
+      onOpenChatForNode: node.data.isProjectRoot
+        ? undefined
+        : callbacks.onOpenChatForNode,
+      onAddChildForNode: node.data.isProjectRoot
+        ? undefined
+        : callbacks.onAddChildForNode,
+      onCompleteNode: node.data.isProjectRoot
+        ? undefined
+        : callbacks.onCompleteNode,
+      onOpenInspectorForNode: node.data.isProjectRoot
+        ? undefined
+        : callbacks.onOpenInspectorForNode,
+    },
+  }));
+}
+
+function positionSignature(nodes: readonly LearningFlowNode[]): string {
+  return nodes
+    .map((node) => `${node.id}:${node.position.x.toFixed(2)},${node.position.y.toFixed(2)}`)
+    .join("|");
+}
+
+/** Topology + titles used for clusters — excludes focus/selection chrome. */
+function clusterStructureSignature(model: TreeViewModel): string {
+  const nodes = model.nodes
+    .map(
+      (node) =>
+        `${node.id}:${node.parentId ?? ""}:${node.isProjectRoot ? "1" : "0"}:${node.question}`,
+    )
+    .join("|");
+  const edges = model.edges
+    .map((edge) => `${edge.parentId}->${edge.childId}`)
+    .join("|");
+  return `${nodes}#${edges}`;
+}
+
+function positionsFromNodes(
+  nodes: readonly LearningFlowNode[],
+): Record<NodeId, NodePosition> {
+  const positions: Record<NodeId, NodePosition> = {};
+  for (const node of nodes) {
+    positions[node.id] = node.position;
+  }
+  return positions;
+}
+
+function mergeDerivedNodes(
+  previous: LearningFlowNode[],
+  next: LearningFlowNode[],
+): LearningFlowNode[] {
+  const prevById = new Map(previous.map((node) => [node.id, node]));
+  return next.map((node) => {
+    const prev = prevById.get(node.id);
+    if (!prev) {
+      return node;
+    }
+    return {
+      ...node,
+      position: prev.position,
+      selected: node.selected,
+      data: {
+        ...node.data,
+        onOpenChatForNode: prev.data.onOpenChatForNode,
+        onAddChildForNode: prev.data.onAddChildForNode,
+        onCompleteNode: prev.data.onCompleteNode,
+        onOpenInspectorForNode: prev.data.onOpenInspectorForNode,
+        locale: prev.data.locale ?? node.data.locale,
+      },
+    };
+  });
+}
+
+function normalizeSingleSelection(
+  nodes: LearningFlowNode[],
+  preferId: string | null,
+): LearningFlowNode[] {
+  const selectedIds = nodes.filter((node) => node.selected).map((node) => node.id);
+  if (selectedIds.length <= 1) {
+    return nodes;
+  }
+  const keepId =
+    preferId ??
+    nodes.find((node) => node.data.isCurrentFocus)?.id ??
+    selectedIds[0];
+  return nodes.map((node) => ({
+    ...node,
+    selected: node.id === keepId,
+  }));
+}
 
 export function TreeCanvas({
   model,
@@ -107,40 +222,63 @@ export function TreeCanvas({
   onNodeDragStop: (positions: Record<NodeId, NodePosition>) => void;
   onViewportChange: (viewport: Viewport) => void;
 }) {
+  const callbacks: Callbacks = {
+    locale,
+    onOpenChatForNode,
+    onAddChildForNode,
+    onCompleteNode,
+    onOpenInspectorForNode,
+  };
+  const callbacksRef = useRef(callbacks);
+  callbacksRef.current = callbacks;
+
   const derived = useMemo(
     () => toReactFlow(model, savedPositions, recommendedNodeIds),
     [model, savedPositions, recommendedNodeIds],
   );
-  const enrichNodes = useCallback(
-    (base: LearningFlowNode[]) =>
-      base.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          locale,
-          onOpenChatForNode,
-          onAddChildForNode,
-          onCompleteNode,
-          onOpenInspectorForNode,
-        },
-      })),
-    [locale, onOpenChatForNode, onAddChildForNode, onCompleteNode, onOpenInspectorForNode],
-  );
-  const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes));
+  const [nodes, setNodes] = useState(() => enrichNodes(derived.nodes, callbacks));
   const [derivedNodes, setDerivedNodes] = useState(derived.nodes);
+  const [structureEpoch, setStructureEpoch] = useState(0);
+  const nodesRef = useRef(nodes);
+  nodesRef.current = nodes;
+  const modelRef = useRef(model);
+  modelRef.current = model;
   const draggingNodeIdRef = useRef<string | null>(null);
+
   if (derived.nodes !== derivedNodes) {
     setDerivedNodes(derived.nodes);
-    setNodes(enrichNodes(derived.nodes));
+    setNodes((current) => {
+      const enriched = enrichNodes(derived.nodes, callbacksRef.current);
+      const sameIds =
+        current.length === enriched.length &&
+        current.every((node, index) => node.id === enriched[index]?.id);
+      if (sameIds) {
+        return mergeDerivedNodes(current, enriched);
+      }
+      setStructureEpoch((value) => value + 1);
+      return enriched;
+    });
   }
 
-  const clusterNodes = useMemo(() => {
-    const positions: Record<NodeId, NodePosition> = {};
-    for (const node of nodes) {
-      positions[node.id] = node.position;
-    }
-    return toClusterFlowNodes(model, positions);
-  }, [model, nodes]);
+  const positionsKey = positionSignature(nodes);
+  const clusterStructureKey = clusterStructureSignature(model);
+  // Rebuild underlays on topology change or after drag-stop position commit —
+  // not on pure selection / focus chrome, and not on every drag tick.
+  const [clusterNodes, setClusterNodes] = useState(() =>
+    toClusterFlowNodes(model, positionsFromNodes(nodes)),
+  );
+  const [clusterSyncKey, setClusterSyncKey] = useState(
+    () => `${clusterStructureKey}#${structureEpoch}#${positionsKey}`,
+  );
+  const nextClusterSyncKey = `${clusterStructureKey}#${structureEpoch}`;
+  if (
+    !clusterSyncKey.startsWith(`${clusterStructureKey}#${structureEpoch}`)
+  ) {
+    setClusterSyncKey(`${nextClusterSyncKey}#${positionsKey}`);
+    setClusterNodes(
+      toClusterFlowNodes(model, positionsFromNodes(nodesRef.current)),
+    );
+  }
 
   const flowNodes = useMemo(
     () => [...clusterNodes, ...nodes],
@@ -149,7 +287,7 @@ export function TreeCanvas({
 
   const edges = useMemo(
     () => routeEdgesForNodes(derived.edges, nodes),
-    [derived.edges, nodes],
+    [derived.edges, nodes, positionsKey],
   );
 
   const handleNodeClick: NodeMouseHandler = useCallback(
@@ -162,55 +300,60 @@ export function TreeCanvas({
     [onFocusNode],
   );
 
-  const handleNodesChange: OnNodesChange = useCallback(
-    (changes) => {
-      const layoutChanges = layoutOnlyNodeChanges(changes).filter(
-        (change) => "id" in change && !isClusterNodeId(String(change.id)),
-      );
-      if (layoutChanges.length === 0) {
-        return;
-      }
+  const handleNodesChange: OnNodesChange = useCallback((changes) => {
+    const selectChanges = selectionNodeChanges(changes).filter(
+      (change) => "id" in change && !isClusterNodeId(String(change.id)),
+    );
+    if (selectChanges.length > 0) {
       setNodes((current) => {
-        const positionChanges = layoutChanges.filter(
-          (change) => change.type === "position" && "id" in change,
-        ) as Array<{ id: string; type: "position"; dragging?: boolean }>;
-        const positionIds = [...new Set(positionChanges.map((change) => change.id))];
-        // PR-038: only one learning node may translate; gesture target wins —
-        // never prefer current-focus over the node actually being dragged.
-        let applied = layoutChanges;
-        if (positionIds.length > 1) {
-          const draggingMarked = positionChanges.find(
-            (change) => change.dragging === true,
-          )?.id;
-          const keepId =
-            draggingNodeIdRef.current ?? draggingMarked ?? positionIds[0];
-          applied = layoutChanges.filter(
-            (change) =>
-              change.type !== "position" ||
-              ("id" in change && String(change.id) === keepId),
-          );
+        const selectedById = new Map<string, boolean>();
+        for (const change of selectChanges) {
+          if (change.type === "select" && "id" in change && "selected" in change) {
+            selectedById.set(String(change.id), Boolean(change.selected));
+          }
         }
-        const next = enrichNodes(
-          applyNodeChanges(applied, current) as LearningFlowNode[],
+        if (selectedById.size === 0) {
+          return current;
+        }
+        const patched = current.map((node) =>
+          selectedById.has(node.id)
+            ? { ...node, selected: selectedById.get(node.id) }
+            : node,
         );
-        const selectedIds = next
-          .filter((node) => node.selected)
-          .map((node) => node.id);
-        if (selectedIds.length <= 1) {
-          return next;
-        }
-        const keepSelected =
-          draggingNodeIdRef.current ??
-          next.find((node) => node.data.isCurrentFocus)?.id ??
-          selectedIds[0];
-        return next.map((node) => ({
-          ...node,
-          selected: node.id === keepSelected,
-        }));
+        // PR-038: never leave multiple learning nodes selected.
+        return normalizeSingleSelection(patched, draggingNodeIdRef.current);
       });
-    },
-    [enrichNodes],
-  );
+    }
+
+    const layoutChanges = layoutOnlyNodeChanges(changes).filter(
+      (change) => "id" in change && !isClusterNodeId(String(change.id)),
+    );
+    if (layoutChanges.length === 0) {
+      return;
+    }
+    setNodes((current) => {
+      const positionChanges = layoutChanges.filter(
+        (change) => change.type === "position" && "id" in change,
+      ) as Array<{ id: string; type: "position"; dragging?: boolean }>;
+      const positionIds = [...new Set(positionChanges.map((change) => change.id))];
+      // PR-038: only one learning node may translate; gesture target wins —
+      // never prefer current-focus over the node actually being dragged.
+      let applied = layoutChanges;
+      if (positionIds.length > 1) {
+        const draggingMarked = positionChanges.find(
+          (change) => change.dragging === true,
+        )?.id;
+        const keepId =
+          draggingNodeIdRef.current ?? draggingMarked ?? positionIds[0];
+        applied = layoutChanges.filter(
+          (change) =>
+            change.type !== "position" ||
+            ("id" in change && String(change.id) === keepId),
+        );
+      }
+      return applyNodeChanges(applied, current) as LearningFlowNode[];
+    });
+  }, []);
 
   const handleNodeDragStart: OnNodeDrag = useCallback((_event, node) => {
     if (isClusterNodeId(node.id)) {
@@ -225,10 +368,17 @@ export function TreeCanvas({
         draggingNodeIdRef.current = null;
         return;
       }
+      const live = nodesRef.current;
+      setClusterNodes(
+        toClusterFlowNodes(modelRef.current, positionsFromNodes(live)),
+      );
+      setClusterSyncKey(
+        `${clusterStructureSignature(modelRef.current)}#${structureEpoch}#${positionSignature(live)}`,
+      );
       onNodeDragStop({ [node.id]: { x: node.position.x, y: node.position.y } });
       draggingNodeIdRef.current = null;
     },
-    [onNodeDragStop],
+    [onNodeDragStop, structureEpoch],
   );
 
   const handleMoveEnd: OnMove = useCallback(
@@ -270,7 +420,7 @@ export function TreeCanvas({
         </defs>
       </svg>
       <ReactFlow
-        nodes={flowNodes}
+        nodes={flowNodes as Node[]}
         edges={edges}
         nodeTypes={nodeTypes}
         onNodeClick={handleNodeClick}

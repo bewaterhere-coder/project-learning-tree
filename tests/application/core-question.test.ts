@@ -9,29 +9,36 @@ import {
 import {
   createProject,
   defaultPorts,
+  ensureProjectRoot,
 } from "../../src/domain/index.js";
 import { isMessageKey } from "../../src/ui/i18n/messages.js";
 import { sequentialFixturePorts } from "../../src/fixtures/demo-tree.js";
 
 describe("addCoreQuestion application command", () => {
-  it("creates a top-level core question through Domain", () => {
+  it("creates a core question under Project Root through Domain", () => {
     const ports = sequentialFixturePorts();
     const created = createProject({ name: "P" }, ports);
     if (!created.ok) {
       throw new Error("expected project");
     }
-    const session = createSession(created.snapshot);
+    const rooted = ensureProjectRoot(created.snapshot, ports);
+    if (!rooted.ok) {
+      throw new Error("expected project root");
+    }
+    const session = createSession(rooted.snapshot);
     const next = dispatchCommand(
       session,
       { type: "addCoreQuestion", question: "How?", goal: "Know" },
       sequentialFixturePorts(8),
     );
     expect(next.lastError).toBeUndefined();
-    expect(next.snapshot.pass.projectRootNodeId).toBeUndefined();
-    expect(next.snapshot.pass.rootNodeIds).toHaveLength(1);
-    const questionId = next.snapshot.pass.rootNodeIds[0]!;
-    expect(next.snapshot.nodes[questionId]?.parentId).toBeUndefined();
-    expect(next.snapshot.nodes[questionId]?.question).toBe("How?");
+    const rootId = next.snapshot.pass.projectRootNodeId;
+    expect(rootId).toBeDefined();
+    expect(next.snapshot.pass.rootNodeIds).toEqual([rootId]);
+    const questionId = next.snapshot.nodes[rootId!]?.childIds[0];
+    expect(questionId).toBeDefined();
+    expect(next.snapshot.nodes[questionId!]?.parentId).toBe(rootId);
+    expect(next.snapshot.nodes[questionId!]?.question).toBe("How?");
     expect(isAuthoringCommand("addCoreQuestion")).toBe(true);
   });
 
@@ -41,7 +48,11 @@ describe("addCoreQuestion application command", () => {
     if (!created.ok) {
       throw new Error("expected project");
     }
-    const session = createSession(created.snapshot);
+    const rooted = ensureProjectRoot(created.snapshot, ports);
+    if (!rooted.ok) {
+      throw new Error("expected project root");
+    }
+    const session = createSession(rooted.snapshot);
     const next = dispatchCommand(session, {
       type: "addCoreQuestion",
       question: " ",
@@ -52,13 +63,17 @@ describe("addCoreQuestion application command", () => {
     expect(next.lastErrorCommand).toBe("addCoreQuestion");
   });
 
-  it("reports remaining core-question slots", () => {
+  it("reports remaining core-question slots from Project Root children", () => {
     const ports = sequentialFixturePorts();
     const created = createProject({ name: "P" }, ports);
     if (!created.ok) {
       throw new Error("expected project");
     }
-    expect(selectCoreQuestionAuthoring(created.snapshot)).toMatchObject({
+    const rooted = ensureProjectRoot(created.snapshot, ports);
+    if (!rooted.ok) {
+      throw new Error("expected project root");
+    }
+    expect(selectCoreQuestionAuthoring(rooted.snapshot)).toMatchObject({
       canAdd: true,
       remaining: 5,
       atLimit: false,

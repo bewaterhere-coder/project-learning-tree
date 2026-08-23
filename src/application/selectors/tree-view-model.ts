@@ -1,11 +1,13 @@
 import {
   isBlocked,
+  isProjectRootNode,
   unresolvedBlockingChildIds,
   type DomainSnapshot,
   type NodeId,
   type NodeLifecycle,
 } from "../../domain/index.js";
 import { selectCloseReadiness } from "./close-readiness.js";
+import { selectProjectLearningProgress } from "./project-progress.js";
 
 export interface TreeNodeView {
   id: NodeId;
@@ -26,6 +28,11 @@ export interface TreeNodeView {
   canCreateChild: boolean;
   /** True when convergence/readiness allows Complete (not merely non-closed). */
   canComplete: boolean;
+  isProjectRoot: boolean;
+  /** Project-level derived progress — only set on Project Root. */
+  projectProgressCompleted?: number;
+  projectProgressTotal?: number;
+  projectProgressPercent?: number;
 }
 
 export interface TreeEdgeView {
@@ -77,6 +84,10 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
         completedChildCount += 1;
       }
     }
+    const isProjectRoot = isProjectRootNode(snapshot, node.id);
+    const projectProgress = isProjectRoot
+      ? selectProjectLearningProgress(snapshot)
+      : undefined;
     nodes.push({
       id: node.id,
       parentId: node.parentId,
@@ -93,12 +104,17 @@ export function selectTreeViewModel(snapshot: DomainSnapshot): TreeViewModel {
       childCount,
       completedChildCount,
       progressPercent:
-        childCount > 0
+        !isProjectRoot && childCount > 0
           ? Math.round((completedChildCount / childCount) * 100)
           : undefined,
-      isCompleted: node.lifecycle === "closed",
-      canCreateChild: node.lifecycle !== "closed",
-      canComplete: selectCloseReadiness(snapshot, node.id).allowed,
+      isCompleted: !isProjectRoot && node.lifecycle === "closed",
+      canCreateChild: !isProjectRoot && node.lifecycle !== "closed",
+      canComplete:
+        !isProjectRoot && selectCloseReadiness(snapshot, node.id).allowed,
+      isProjectRoot,
+      projectProgressCompleted: projectProgress?.completed,
+      projectProgressTotal: projectProgress?.total,
+      projectProgressPercent: projectProgress?.percent,
     });
     for (const childId of node.childIds) {
       const child = snapshot.nodes[childId];

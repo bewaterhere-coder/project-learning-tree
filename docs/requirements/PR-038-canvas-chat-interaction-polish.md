@@ -241,3 +241,12 @@ Verified against the implementation diff and dedicated regressions:
 4. Cursor reports `npm run typecheck`, `npm test`, and `npm run build` passing. No PR-triggered GitHub Actions workflow is configured for the current head, so there is no independent CI receipt to add.
 
 `acceptance_approved=true`. Completion remains unverified because PR #38 is currently reported by GitHub as not mergeable against the latest `main`; integration conflict resolution/rebase is still required before merge.
+
+## Integration
+
+Cursor merged `origin/main` (TASK-010 / TASK-011) into this branch and resolved the sole conflict in `src/ui/tree/TreeCanvas.tsx` by keeping:
+
+- TASK-010 canvas stability (derived merge, cluster sync on topology/drag-stop, select patching via `selectionNodeChanges`, project-root toolbar gating);
+- PR-038 accepted drag semantics (`draggingNodeIdRef` / gesture-target multi-position filter, `multiSelectionKeyCode`/`selectionKeyCode` null, `onNodeDragStart`).
+
+No accepted PR-038 product semantics were intentionally changed.

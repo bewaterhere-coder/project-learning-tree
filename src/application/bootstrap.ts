@@ -3,6 +3,7 @@ import {
   addCriterion,
   CORE_QUESTION_LIMIT,
   createProject,
+  ensureProjectRoot,
   type DomainEvent,
   type DomainSnapshot,
   type NodeId,
@@ -87,10 +88,15 @@ export async function bootstrapLearningProject(
     return created;
   }
 
+  const rooted = ensureProjectRoot(created.snapshot, ports);
+  if (!rooted.ok) {
+    return rooted;
+  }
+
   const source = await loadEvidenceSource(
     {
-      name: created.snapshot.project.name,
-      source: created.snapshot.project.source,
+      name: rooted.snapshot.project.name,
+      source: rooted.snapshot.project.source,
       description: input.description,
     },
     provider,
@@ -102,8 +108,8 @@ export async function bootstrapLearningProject(
     Math.min(EXPLORATION_BUDGET.coreQuestions, CORE_QUESTION_LIMIT),
   );
 
-  let snapshot = created.snapshot;
-  const events: DomainEvent[] = [...created.events];
+  let snapshot = rooted.snapshot;
+  const events: DomainEvent[] = [...created.events, ...rooted.events];
   const createdNodeIds: NodeId[] = [];
 
   for (const question of questions) {
@@ -197,6 +203,11 @@ async function loadEvidenceSource(
 }
 
 export function isEmptyFirstLayer(snapshot: DomainSnapshot): boolean {
+  const rootId = snapshot.pass.projectRootNodeId;
+  if (rootId !== undefined) {
+    const root = snapshot.nodes[rootId];
+    return (root?.childIds.length ?? 0) === 0;
+  }
   return snapshot.pass.rootNodeIds.length === 0;
 }
 

@@ -16,9 +16,11 @@ describe("learning context", () => {
     );
     expect(context.node?.question).toBe("Q1");
     expect(context.node?.goal).toBe("Understand Q1");
-    expect(context.node?.parentId).toBeUndefined();
-    expect(context.node?.ancestorPath).toEqual([{ id: ids.q1, question: "Q1" }]);
+    expect(context.node?.parentId).toBe(snapshot.pass.projectRootNodeId);
     expect(context.node?.ancestorPath.at(-1)?.question).toBe("Q1");
+    expect(context.node?.ancestorPath.some((item) => item.id === ids.q1)).toBe(
+      true,
+    );
     expect(context.activeStack.map((item) => item.question)).toContain("Q1");
     expect(context.node?.definitionOfDone).toBeDefined();
     expect(context.node?.unresolvedBlockingChildren.some((child) => child.question === "Q1.2")).toBe(

@@ -44,7 +44,7 @@ describe("blocking children", () => {
     expect(snapshot.nodes[rootId]?.blockingChildIds).toEqual([childId]);
     expect(snapshot.pass.activeStack).toEqual(stackBefore);
     expect(snapshot.pass.currentFocusNodeId).toBe(focusBefore);
-    expect(Object.keys(snapshot.nodes)).toHaveLength(2);
+    expect(Object.keys(snapshot.nodes)).toHaveLength(3);
     assertActiveBijection(snapshot);
   });
 
