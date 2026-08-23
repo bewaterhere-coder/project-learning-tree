@@ -9,13 +9,13 @@ related_to:
 relation: same-canvas-ui
 
 development:
-  stage: planning
+  stage: plan_review
   gates:
     requirement_ready: true
     plan_approved: false
     acceptance_approved: false
     completion_verified: false
-  next_expected_actor: cursor
+  next_expected_actor: chatgpt
 
 artifacts:
   requirement: docs/requirements/TASK-011-light-mode-canvas-cursor-visibility.md
@@ -119,6 +119,8 @@ Verify at minimum:
 
 ## 8. Planning Gate
 
-Cursor must first produce `docs/plans/TASK-011-plan.md` and commit it to this task branch.
+Canonical Plan is committed at `docs/plans/TASK-011-plan.md` (`status: plan_review`).
 
 Do not implement production code until the Plan is reviewed and `plan_approved=true`.
+
+Planning evidence (summary): XYFlow already applies `grab`/`grabbing` on `.react-flow__pane.draggable` / `.dragging`; app CSS does not override pane cursors; light `--color-bg-canvas` surfaces wash out native grab contrast. Proposed fix is light-scoped CSS reinforcement, with custom SVG cursors only as a documented fallback.
