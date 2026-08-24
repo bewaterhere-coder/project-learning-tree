@@ -17,6 +17,15 @@ export {
   type LlmTraceMiddlewareOptions,
 } from "./with-trace.js";
 export {
+  createLlmTraceApiClient,
+  resolveLlmTraceApiUrl,
+  type LlmTraceApiClient,
+  type LlmTraceApiClientOptions,
+  type LlmTraceListClientQuery,
+  type LlmTraceListItem,
+  type LlmTraceListResponse,
+} from "./trace-api.js";
+export {
   type LlmProvider,
   type LlmProviderConfig,
   type NodeChatAiResponse,

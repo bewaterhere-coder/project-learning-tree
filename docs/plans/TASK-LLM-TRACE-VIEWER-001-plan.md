@@ -1,7 +1,7 @@
 ---
 task_id: TASK-LLM-TRACE-VIEWER-001
 title: LLM Trace Viewer
-status: plan_review
+status: implementation
 requirement: null
 depends_on: TASK-LLM-TRACE-001
 ---
@@ -10,9 +10,7 @@ depends_on: TASK-LLM-TRACE-001
 
 This is the canonical implementation plan for TASK-LLM-TRACE-VIEWER-001. It records current-architecture evidence and the smallest change that lets developers inspect traces produced by TASK-LLM-TRACE-001.
 
-**Gate:** `plan_review` — awaiting plan approval before any product/code implementation (`plan_approved=true`).
-
-Writing this file is not Done for the task. Implementation of product code is forbidden until that gate is recorded after Plan review.
+**Gate:** `implementation` — plan approved; implementing read-path API + Trace Viewer UI.
 
 **Hard constraints (Plan + Implementation):**
 

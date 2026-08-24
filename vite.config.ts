@@ -11,6 +11,10 @@ export default defineConfig({
         target: CHAT_API_TARGET,
         changeOrigin: true,
       },
+      "/api/llm-traces": {
+        target: CHAT_API_TARGET,
+        changeOrigin: true,
+      },
     },
   },
   test: {

@@ -55,11 +55,13 @@ import {
 } from "../workspace/index.js";
 import type { ChatProvider } from "../ai/index.js";
 import type { ConversationStore } from "../conversation/index.js";
+import type { LlmTraceApiClient } from "../infrastructure/index.js";
 
 const EMPTY_NODE_IDS: readonly string[] = [];
 import type { RepositoryEvidenceProvider } from "../application/index.js";
 import { createGitHubRepositoryEvidenceProvider } from "../infrastructure/index.js";
 import { ChatHost } from "./chat/ChatHost.js";
+import { LlmTraceViewer } from "./dev/LlmTraceViewer.js";
 import { DomainErrorBanner } from "./errors/DomainErrorBanner.js";
 import { useExitHold } from "./hooks/useExitHold.js";
 import { formatPresentedError, LocaleProvider, t } from "./i18n/index.js";
@@ -104,6 +106,8 @@ export function App({
   conversationStore,
   chatProvider,
   evidenceProvider,
+  llmTraceApiUrl,
+  llmTraceClient,
 }: {
   initialSnapshot?: DomainSnapshot;
   initialWorkspace?: LearningWorkspace;
@@ -111,6 +115,8 @@ export function App({
   conversationStore?: ConversationStore;
   chatProvider?: ChatProvider;
   evidenceProvider?: RepositoryEvidenceProvider;
+  llmTraceApiUrl?: string;
+  llmTraceClient?: LlmTraceApiClient;
 }) {
   const storage = useMemo(
     () => preferenceStorage ?? createBrowserPreferenceStorage(),
@@ -122,6 +128,7 @@ export function App({
   const workspaceRef = useRef(workspace);
   workspaceRef.current = workspace;
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [llmTraceViewerOpen, setLlmTraceViewerOpen] = useState(false);
   const [coreFormOpen, setCoreFormOpen] = useState(false);
   const [childAuthoringParentId, setChildAuthoringParentId] = useState<
     string | undefined
@@ -531,10 +538,29 @@ export function App({
                     </button>
                   ))}
                 </div>
+                <p className="settings-label">{t(locale, "app.developer")}</p>
+                <button
+                  type="button"
+                  className="ui-button ui-button-secondary settings-dev-action"
+                  data-testid="llm-traces-open"
+                  onClick={() => {
+                    setSettingsOpen(false);
+                    setLlmTraceViewerOpen(true);
+                  }}
+                >
+                  {t(locale, "llmTrace.open")}
+                </button>
               </Menu>
             </div>
           </div>
         </header>
+        <LlmTraceViewer
+          locale={locale}
+          open={llmTraceViewerOpen}
+          onClose={() => setLlmTraceViewerOpen(false)}
+          apiUrl={llmTraceApiUrl}
+          client={llmTraceClient}
+        />
         {globalError && current ? (
           <DomainErrorBanner
             message={formatPresentedError(locale, globalError, current.snapshot)}

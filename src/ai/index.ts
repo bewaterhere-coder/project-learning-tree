@@ -16,6 +16,8 @@ export { createStubProvider, type StubProviderOptions } from "./stub-provider.js
 export type {
   LLMInteractionTrace,
   LlmTraceError,
+  LlmTraceListQuery,
+  LlmTraceListResult,
   LlmTraceProviderId,
   LlmTraceRegistry,
   LlmTraceRequestSummary,
@@ -24,9 +26,12 @@ export type {
   LlmTraceStore,
 } from "./trace/index.js";
 export {
+  LLM_TRACE_LIST_DEFAULT_LIMIT,
   LLM_TRACE_MAX_ENTRIES,
   LLM_TRACE_STORE_KEY,
   LLM_TRACE_STORE_VERSION,
   createMemoryLlmTraceStore,
+  findLlmTraceById,
   parseLlmTraceRegistry,
+  queryLlmTraces,
 } from "./trace/index.js";

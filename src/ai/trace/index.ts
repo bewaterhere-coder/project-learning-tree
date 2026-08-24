@@ -14,6 +14,11 @@ export {
 } from "./types.js";
 export {
   createMemoryLlmTraceStore,
+  findLlmTraceById,
+  LLM_TRACE_LIST_DEFAULT_LIMIT,
   parseLlmTraceRegistry,
+  queryLlmTraces,
+  type LlmTraceListQuery,
+  type LlmTraceListResult,
   type LlmTraceStore,
 } from "./store.js";
