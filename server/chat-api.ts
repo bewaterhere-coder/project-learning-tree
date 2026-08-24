@@ -1,8 +1,12 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createMemoryLlmTraceStore, type LlmTraceStore } from "../src/ai/trace/index.js";
 import type { NodeLifecycle } from "../src/domain/index.js";
 import {
   createDeepSeekProvider,
   resolveDeepSeekApiKey,
+  resolveDeepSeekRuntimeConfig,
+  withLlmTrace,
+  type LlmProvider,
   type NodeChatHistoryMessage,
   type NodeChatRequest,
 } from "../src/infrastructure/llm/index.js";
@@ -13,10 +17,30 @@ export function createChatApiServer(options: {
   port?: number;
   apiKey?: string;
   fetchImpl?: typeof fetch;
+  /** Optional override (e.g. mock). When set, skips DeepSeek configuration. */
+  provider?: LlmProvider;
+  providerName?: string;
+  model?: string;
+  traceStore?: LlmTraceStore;
 } = {}) {
   const apiKey = options.apiKey ?? resolveDeepSeekApiKey();
-  const provider = apiKey
-    ? createDeepSeekProvider({ apiKey, fetchImpl: options.fetchImpl })
+  const runtime = resolveDeepSeekRuntimeConfig();
+  const traceStore = options.traceStore ?? createMemoryLlmTraceStore();
+  const providerName = options.providerName ?? (options.provider ? "custom" : "deepseek");
+  const model = options.model ?? (options.provider ? undefined : runtime.model);
+
+  const baseProvider: LlmProvider | undefined = options.provider
+    ? options.provider
+    : apiKey
+      ? createDeepSeekProvider({ apiKey, fetchImpl: options.fetchImpl })
+      : undefined;
+
+  const provider = baseProvider
+    ? withLlmTrace(baseProvider, {
+        providerName,
+        model,
+        store: traceStore,
+      })
     : undefined;
 
   const server = createServer(async (request, response) => {
@@ -28,7 +52,7 @@ export function createChatApiServer(options: {
     if (request.method === "GET" && request.url === "/health") {
       writeJson(response, 200, {
         ok: true,
-        provider: provider ? "deepseek" : "unconfigured",
+        provider: provider ? providerName : "unconfigured",
       });
       return;
     }
@@ -62,7 +86,7 @@ export function createChatApiServer(options: {
   });
 
   server.listen(options.port ?? DEFAULT_PORT);
-  return server;
+  return Object.assign(server, { traceStore });
 }
 
 function parseChatRequest(value: unknown): NodeChatRequest | undefined {
