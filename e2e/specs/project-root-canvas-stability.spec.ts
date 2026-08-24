@@ -148,6 +148,21 @@ test("select and drag do not rebuild knowledge-cluster underlays", async ({
     mockGitHub: false,
   });
 
+  const parent = page.locator("[data-node-id]:not([data-project-root='true'])").first();
+  const parentId = await parent.getAttribute("data-node-id");
+  expect(parentId).toBeTruthy();
+  await parent.click();
+  await parent.hover();
+  await page.getByTestId(`node-add-child-${parentId}`).click();
+  await page.getByTestId("authoring-question").fill("How does the cluster stay stable?");
+  await page.getByTestId("authoring-goal").fill("Verify underlay stability");
+  await page.getByTestId("authoring-submit").click();
+  await expect(
+    page.locator(".node-question", {
+      hasText: "How does the cluster stay stable?",
+    }),
+  ).toBeVisible();
+
   await expect(page.locator(".knowledge-cluster").first()).toBeVisible({
     timeout: 10_000,
   });

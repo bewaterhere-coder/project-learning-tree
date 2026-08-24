@@ -80,14 +80,14 @@ function modelFixture(): TreeViewModel {
 }
 
 describe("cluster regions", () => {
-  it("derives presentation-only underlays from top-level question subtrees without external titles", () => {
+  it("derives presentation-only underlays from multi-node top-level subtrees without external titles", () => {
     const regions = computeClusterRegions(modelFixture(), {
       "root-a": { x: 0, y: 0 },
       "child-a": { x: 40, y: NODE_HEIGHT + 72 },
       "root-b": { x: 400, y: 0 },
     });
 
-    expect(regions).toHaveLength(2);
+    expect(regions).toHaveLength(1);
     expect(regions[0]?.id).toBe(clusterNodeId("root-a"));
     expect(regions[0]).not.toHaveProperty("title");
     expect(regions[0]?.toneIndex).toBe(0);
@@ -97,9 +97,16 @@ describe("cluster regions", () => {
     expect(regions[0]?.height).toBe(
       NODE_HEIGHT + 72 + NODE_HEIGHT + CLUSTER_PADDING * 2,
     );
-    expect(regions[1]?.rootId).toBe("root-b");
-    expect(regions[1]?.toneIndex).toBe(1);
     expect(isClusterNodeId(regions[0]!.id)).toBe(true);
     expect(isClusterNodeId("root-a")).toBe(false);
+  });
+
+  it("omits single-node clusters so leaves are not wrapped in an outer frame", () => {
+    const regions = computeClusterRegions(modelFixture(), {
+      "root-a": { x: 0, y: 0 },
+      "child-a": { x: 40, y: NODE_HEIGHT + 72 },
+      "root-b": { x: 400, y: 0 },
+    });
+    expect(regions.some((region) => region.rootId === "root-b")).toBe(false);
   });
 });
