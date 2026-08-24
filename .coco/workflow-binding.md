@@ -10,12 +10,20 @@ Source:
 
 ```
 bewaterhere-coder/DevForge
+devforge.runtime.yaml
+system/development-project-registry.yaml
+workflows/workflow-registry.yaml
 contracts/development/workflow-core.md
 ```
 
 ## Workflow Binding
 
 ```yaml
+runtime:
+  manifest: devforge.runtime.yaml
+  project_registry: system/development-project-registry.yaml
+  workflow_registry: workflows/workflow-registry.yaml
+
 workflow:
   source: bewaterhere-coder/DevForge
   contract: contracts/development/workflow-core.md
