@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import type { NodeLifecycle } from "../src/domain/index.js";
 import {

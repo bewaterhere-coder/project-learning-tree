@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { createChatApiServer } from "./chat-api.js";
 
 const port = Number(process.env.CHAT_API_PORT ?? 8787);
