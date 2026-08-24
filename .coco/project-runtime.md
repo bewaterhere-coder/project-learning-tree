@@ -25,6 +25,29 @@ Load Runtime
 Execute Workflow
 ```
 
+## Project Bootstrap Invocation
+
+Bootstrap MUST be checked when:
+
+- ChatGPT Project session starts
+- Project context is entered
+- Runtime Contract status is requested
+- Development Workflow execution begins
+
+Execution order:
+
+```
+Chat Session Start
+      ↓
+Project Bootstrap
+      ↓
+Project Runtime Contract
+      ↓
+Coco Runtime Resolution
+      ↓
+Development Workflow Contracts
+```
+
 ## Project Scope
 
 Project context priority:
@@ -83,19 +106,39 @@ Runtime loading status must be visible in project state.
 
 ```yaml
 runtime_contract:
-  version: 1.1
-  revision: e51681c16556935a841ef0bb97735706dfecf447
-  source: GitHub
-  branch: main
-  health: loaded
+  expected:
+    version: 1.1
+    revision: e51681c16556935a841ef0bb97735706dfecf447
+    source: GitHub
+    branch: main
+
+  loaded:
+    revision:
+    health: unknown
 ```
 
 Rules:
 
-- Version identifies Contract semantic version.
-- Revision identifies the exact Git commit.
-- Runtime state should report whether the loaded Contract matches the latest revision.
+- Expected records the Runtime Contract required by this project.
+- Loaded records the Runtime Contract actually resolved in the current session.
+- A project file must not assume the current session has loaded the expected Runtime.
 - Stale Contract state requires refresh before workflow execution.
+
+Runtime Contract states:
+
+```text
+loaded:
+  Current session matches expected revision.
+
+outdated:
+  Current session loaded an older revision.
+
+unknown:
+  Runtime resolution has not been executed.
+
+unavailable:
+  Canonical Runtime source cannot be reached.
+```
 
 ## Project State Version
 
@@ -122,8 +165,9 @@ Example:
 ```yaml
 runtime_health:
   contract_version: 1.1
-  revision:
-  health: loaded
+  expected_revision:
+  loaded_revision:
+  health: unknown
 
 project_state:
   version: 1.0
