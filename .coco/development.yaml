@@ -1,0 +1,36 @@
+schema_version: 1
+kind: devforge_project_binding
+
+runtime:
+  repository: bewaterhere-coder/DevForge
+  branch: main
+  manifest: devforge.runtime.yaml
+  workflow: project_development
+  compatibility: "^1.0"
+  revision_policy: compatible_main
+
+project:
+  id: project-learning-tree
+  repository: bewaterhere-coder/project-learning-tree
+  default_branch: main
+
+artifacts:
+  requirement_root: .coco/tasks
+  plan_root: .coco/plans
+  receipt_root: .coco/receipts
+
+adapters:
+  development: cursor
+  collaboration: github-pr
+
+commands:
+  start: "#开发"
+  status: "#开发状态"
+  review: "#开发评审"
+  acceptance: "#开发验收"
+
+rules:
+  - project_files_store_only_binding_and_project_specific_overrides
+  - runtime_loading_does_not_execute_development
+  - task_id_is_independent_from_pull_request_identity_for_new_tasks
+  - existing_historical_task_ids_are_not_renamed

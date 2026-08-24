@@ -4,12 +4,12 @@
 
 This project no longer maintains a standalone development workflow.
 
-The canonical workflow is provided by Coco Development Core.
+The canonical workflow is provided by DevForge.
 
 Source:
 
 ```
-Coco-AI-OS
+bewaterhere-coder/DevForge
 contracts/development/workflow-core.md
 ```
 
@@ -17,7 +17,7 @@ contracts/development/workflow-core.md
 
 ```yaml
 workflow:
-  source: Coco-AI-OS
+  source: bewaterhere-coder/DevForge
   contract: contracts/development/workflow-core.md
   id: project_development
   version: 1.0
@@ -32,9 +32,10 @@ adapter:
 Project commands are resolved only after `.coco/bootstrap.md` has loaded this binding:
 
 - `发送需求给 Cursor` → enter Requirement handoff for the current project.
-- `Review TASK-<id> Plan` → run the Plan Review gate.
-- `Review TASK-<id> PR` → run the Implementation Review gate.
-- `验收 TASK-<id>` → run the Acceptance gate.
+- `#开发评审 TASK-<id>` → review the current Plan or implementation gate.
+- `#开发验收 TASK-<id>` → run the Acceptance gate.
+
+Legacy forms `Review TASK-<id> Plan`, `Review TASK-<id> PR`, and `验收 TASK-<id>` remain DevForge 1.x compatibility aliases.
 
 Loading this binding never executes a command by itself.
 
@@ -85,4 +86,4 @@ Cursor Prompt only provides context location and next action.
 - One requirement uses one Task/PR flow.
 - Task-specific constraints belong to Task PR.
 - Project-level rules belong to project overrides.
-- Global workflow rules belong to Coco Development Core.
+- Global workflow rules belong to DevForge.
