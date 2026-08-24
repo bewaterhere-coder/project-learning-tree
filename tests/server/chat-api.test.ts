@@ -118,6 +118,91 @@ describe("chat api server", () => {
       input: "ping",
     });
   });
+
+  it("lists and details traces recorded by chat, then clears them", async () => {
+    const traceStore = createMemoryLlmTraceStore();
+    server = createChatApiServer({
+      port: 0,
+      provider: createMockLlmProvider({
+        reply: { answer: "listed", suggestions: [{ type: "question", content: "next?" }] },
+      }),
+      providerName: MOCK_LLM_PROVIDER_ID,
+      model: "mock-model",
+      traceStore,
+    });
+    await new Promise<void>((resolve) => server?.once("listening", () => resolve()));
+    const port = serverPort(server);
+
+    await postJson(port, {
+      context: { project: { id: "p1", name: "Demo" } },
+      input: "inspect me",
+      locale: "en-US",
+    });
+
+    const list = await requestJson(port, "GET", "/api/llm-traces");
+    expect(list.status).toBe(200);
+    expect(list.body).toMatchObject({
+      total: 1,
+      traces: [
+        {
+          status: "ok",
+          provider: "mock",
+          model: "mock-model",
+          inputPreview: "inspect me",
+          projectId: "p1",
+          suggestionCount: 1,
+        },
+      ],
+    });
+    const id = (list.body as { traces: Array<{ id: string }> }).traces[0]?.id;
+    expect(id).toBeTruthy();
+
+    const detail = await requestJson(port, "GET", `/api/llm-traces/${id}`);
+    expect(detail.status).toBe(200);
+    expect(detail.body).toMatchObject({
+      id,
+      input: "inspect me",
+      response: { answer: "listed", suggestionCount: 1 },
+    });
+
+    const missing = await requestJson(port, "GET", "/api/llm-traces/missing-id");
+    expect(missing.status).toBe(404);
+
+    const cleared = await requestJson(port, "DELETE", "/api/llm-traces");
+    expect(cleared.status).toBe(204);
+    const after = await requestJson(port, "GET", "/api/llm-traces");
+    expect(after.body).toEqual({ traces: [], total: 0 });
+  });
+
+  it("filters llm traces by status=error", async () => {
+    const traceStore = createMemoryLlmTraceStore();
+    server = createChatApiServer({
+      port: 0,
+      provider: createMockLlmProvider({
+        error: new Error("forced failure"),
+      }),
+      providerName: MOCK_LLM_PROVIDER_ID,
+      traceStore,
+    });
+    await new Promise<void>((resolve) => server?.once("listening", () => resolve()));
+    const port = serverPort(server);
+
+    const chat = await postJson(port, {
+      context: { project: { id: "p1", name: "Demo" } },
+      input: "fail please",
+    });
+    expect(chat.status).toBe(502);
+
+    const badQuery = await requestJson(port, "GET", "/api/llm-traces?status=nope");
+    expect(badQuery.status).toBe(400);
+
+    const list = await requestJson(port, "GET", "/api/llm-traces?status=error");
+    expect(list.status).toBe(200);
+    expect(list.body).toMatchObject({
+      total: 1,
+      traces: [{ status: "error", errorMessage: "forced failure", inputPreview: "fail please" }],
+    });
+  });
 });
 
 function serverPort(server: ReturnType<typeof createChatApiServer> | undefined): number {
@@ -129,18 +214,29 @@ function postJson(
   port: number,
   payload: unknown,
 ): Promise<{ status: number; body: unknown }> {
-  const body = JSON.stringify(payload);
+  return requestJson(port, "POST", "/api/chat", payload);
+}
+
+function requestJson(
+  port: number,
+  method: string,
+  path: string,
+  payload?: unknown,
+): Promise<{ status: number; body: unknown }> {
+  const body = payload === undefined ? undefined : JSON.stringify(payload);
   return new Promise((resolve, reject) => {
     const req = httpRequest(
       {
         hostname: "127.0.0.1",
         port,
-        path: "/api/chat",
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Content-Length": Buffer.byteLength(body),
-        },
+        path,
+        method,
+        headers: body
+          ? {
+              "Content-Type": "application/json",
+              "Content-Length": Buffer.byteLength(body),
+            }
+          : undefined,
       },
       (res) => {
         const chunks: Buffer[] = [];
@@ -157,7 +253,9 @@ function postJson(
       },
     );
     req.on("error", reject);
-    req.write(body);
+    if (body) {
+      req.write(body);
+    }
     req.end();
   });
 }

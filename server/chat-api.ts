@@ -1,6 +1,11 @@
 import "dotenv/config";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { createMemoryLlmTraceStore, type LlmTraceStore } from "../src/ai/trace/index.js";
+import {
+  createMemoryLlmTraceStore,
+  type LLMInteractionTrace,
+  type LlmTraceListQuery,
+  type LlmTraceStore,
+} from "../src/ai/trace/index.js";
 import type { NodeLifecycle } from "../src/domain/index.js";
 import {
   createDeepSeekProvider,
@@ -13,6 +18,22 @@ import {
 } from "../src/infrastructure/llm/index.js";
 
 const DEFAULT_PORT = 8787;
+const LLM_TRACES_PATH = "/api/llm-traces";
+const INPUT_PREVIEW_MAX = 120;
+
+export interface LlmTraceListItem {
+  id: string;
+  createdAt: string;
+  durationMs: number;
+  provider: string;
+  model?: string;
+  status: "ok" | "error";
+  inputPreview: string;
+  projectId?: string;
+  nodeId?: string;
+  suggestionCount?: number;
+  errorMessage?: string;
+}
 
 export function createChatApiServer(options: {
   port?: number;
@@ -58,7 +79,59 @@ export function createChatApiServer(options: {
       return;
     }
 
-    if (request.method === "POST" && request.url === "/api/chat") {
+    const url = new URL(request.url ?? "/", "http://127.0.0.1");
+
+    if (request.method === "GET" && url.pathname === LLM_TRACES_PATH) {
+      const parsed = parseTraceListQuery(url.searchParams);
+      if (parsed === undefined) {
+        writeJson(response, 400, { error: "Invalid llm trace list query." });
+        return;
+      }
+      try {
+        const result = await traceStore.list(parsed);
+        writeJson(response, 200, {
+          traces: result.traces.map(toListItem),
+          total: result.total,
+        });
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unexpected llm trace list failure.";
+        writeJson(response, 500, { error: message });
+      }
+      return;
+    }
+
+    if (request.method === "DELETE" && url.pathname === LLM_TRACES_PATH) {
+      try {
+        await traceStore.clear();
+        writeJson(response, 204, {});
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unexpected llm trace clear failure.";
+        writeJson(response, 500, { error: message });
+      }
+      return;
+    }
+
+    const detailMatch = url.pathname.match(/^\/api\/llm-traces\/([^/]+)$/);
+    if (request.method === "GET" && detailMatch) {
+      const id = decodeURIComponent(detailMatch[1] ?? "");
+      try {
+        const trace = await traceStore.getById(id);
+        if (trace === undefined) {
+          writeJson(response, 404, { error: "Trace not found" });
+          return;
+        }
+        writeJson(response, 200, trace);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Unexpected llm trace detail failure.";
+        writeJson(response, 500, { error: message });
+      }
+      return;
+    }
+
+    if (request.method === "POST" && url.pathname === "/api/chat") {
       if (!provider) {
         writeJson(response, 503, {
           error: "DeepSeek API key is not configured. Set DEEPSEEK_API_KEY.",
@@ -88,6 +161,71 @@ export function createChatApiServer(options: {
 
   server.listen(options.port ?? DEFAULT_PORT);
   return Object.assign(server, { traceStore });
+}
+
+export function toLlmTraceListItem(trace: LLMInteractionTrace): LlmTraceListItem {
+  return toListItem(trace);
+}
+
+function toListItem(trace: LLMInteractionTrace): LlmTraceListItem {
+  const item: LlmTraceListItem = {
+    id: trace.id,
+    createdAt: trace.createdAt,
+    durationMs: trace.durationMs,
+    provider: trace.provider,
+    status: trace.status,
+    inputPreview: truncatePreview(trace.input),
+  };
+  if (trace.model) {
+    item.model = trace.model;
+  }
+  if (trace.request.projectId) {
+    item.projectId = trace.request.projectId;
+  }
+  if (trace.request.nodeId) {
+    item.nodeId = trace.request.nodeId;
+  }
+  if (trace.response) {
+    item.suggestionCount = trace.response.suggestionCount;
+  }
+  if (trace.error) {
+    item.errorMessage = trace.error.message;
+  }
+  return item;
+}
+
+function truncatePreview(input: string): string {
+  if (input.length <= INPUT_PREVIEW_MAX) {
+    return input;
+  }
+  return `${input.slice(0, INPUT_PREVIEW_MAX)}…`;
+}
+
+function parseTraceListQuery(params: URLSearchParams): LlmTraceListQuery | undefined {
+  const query: LlmTraceListQuery = {};
+  const limitRaw = params.get("limit");
+  if (limitRaw !== null) {
+    const limit = Number(limitRaw);
+    if (!Number.isFinite(limit) || limit < 1) {
+      return undefined;
+    }
+    query.limit = limit;
+  }
+  const status = params.get("status");
+  if (status !== null) {
+    if (status !== "ok" && status !== "error") {
+      return undefined;
+    }
+    query.status = status;
+  }
+  const projectId = params.get("projectId");
+  if (projectId !== null) {
+    if (projectId === "") {
+      return undefined;
+    }
+    query.projectId = projectId;
+  }
+  return query;
 }
 
 function parseChatRequest(value: unknown): NodeChatRequest | undefined {
@@ -180,9 +318,13 @@ function writeJson(response: ServerResponse, status: number, payload: unknown): 
   response.writeHead(status, {
     "Content-Type": "application/json",
     "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Methods": "GET,POST,DELETE,OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
   });
+  if (status === 204) {
+    response.end();
+    return;
+  }
   response.end(JSON.stringify(payload));
 }
 

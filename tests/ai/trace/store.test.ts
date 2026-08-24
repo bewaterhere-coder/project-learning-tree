@@ -100,6 +100,65 @@ describe("llm interaction trace persistence", () => {
       JSON.stringify({ version: 1, traces: [] }),
     );
   });
+
+  it("getById returns a match or undefined", async () => {
+    const store = createMemoryLlmTraceStore();
+    await store.append(sampleTrace("t1"));
+    await store.append(sampleTrace("t2", "second"));
+    expect(await store.getById("t2")).toMatchObject({ id: "t2", input: "second" });
+    expect(await store.getById("missing")).toBeUndefined();
+  });
+
+  it("list returns newest-first with limit and filters", async () => {
+    const store = createMemoryLlmTraceStore();
+    await store.append({
+      ...sampleTrace("old"),
+      createdAt: "2026-08-24T00:00:00.000Z",
+      request: {
+        hasNode: true,
+        hasParent: false,
+        historyCount: 0,
+        projectId: "p1",
+        nodeId: "n1",
+      },
+    });
+    await store.append({
+      ...sampleTrace("error-p1", "boom"),
+      createdAt: "2026-08-24T00:01:00.000Z",
+      status: "error",
+      error: { message: "boom" },
+      response: undefined,
+      request: {
+        hasNode: true,
+        hasParent: false,
+        historyCount: 0,
+        projectId: "p1",
+        nodeId: "n1",
+      },
+    });
+    await store.append({
+      ...sampleTrace("new-p2", "other"),
+      createdAt: "2026-08-24T00:02:00.000Z",
+      request: {
+        hasNode: false,
+        hasParent: false,
+        historyCount: 0,
+        projectId: "p2",
+      },
+    });
+
+    const newest = await store.list({ limit: 2 });
+    expect(newest.total).toBe(3);
+    expect(newest.traces.map((trace) => trace.id)).toEqual(["new-p2", "error-p1"]);
+
+    const errors = await store.list({ status: "error" });
+    expect(errors.total).toBe(1);
+    expect(errors.traces[0]?.id).toBe("error-p1");
+
+    const project = await store.list({ projectId: "p2" });
+    expect(project.total).toBe(1);
+    expect(project.traces[0]?.id).toBe("new-p2");
+  });
 });
 
 function sampleTrace(id: string, input = "hello"): LLMInteractionTrace {

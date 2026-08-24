@@ -18,10 +18,53 @@ const FORBIDDEN_KEYS = [
   "messages",
 ] as const;
 
+export interface LlmTraceListQuery {
+  limit?: number;
+  status?: LLMInteractionTrace["status"];
+  projectId?: string;
+}
+
+export interface LlmTraceListResult {
+  traces: LLMInteractionTrace[];
+  total: number;
+}
+
 export interface LlmTraceStore {
   load(): Promise<LlmTraceRegistry>;
   append(trace: LLMInteractionTrace): Promise<void>;
   clear(): Promise<void>;
+  getById(id: string): Promise<LLMInteractionTrace | undefined>;
+  list(query?: LlmTraceListQuery): Promise<LlmTraceListResult>;
+}
+
+export const LLM_TRACE_LIST_DEFAULT_LIMIT = 50;
+
+/** Newest-first projection over a loaded registry. Does not mutate storage. */
+export function queryLlmTraces(
+  registry: LlmTraceRegistry,
+  query: LlmTraceListQuery = {},
+): LlmTraceListResult {
+  const limit = clampLimit(query.limit);
+  let matched = [...registry.traces].sort((a, b) =>
+    b.createdAt.localeCompare(a.createdAt),
+  );
+  if (query.status !== undefined) {
+    matched = matched.filter((trace) => trace.status === query.status);
+  }
+  if (query.projectId !== undefined) {
+    matched = matched.filter((trace) => trace.request.projectId === query.projectId);
+  }
+  return {
+    total: matched.length,
+    traces: matched.slice(0, limit),
+  };
+}
+
+export function findLlmTraceById(
+  registry: LlmTraceRegistry,
+  id: string,
+): LLMInteractionTrace | undefined {
+  return registry.traces.find((trace) => trace.id === id);
 }
 
 export function createMemoryLlmTraceStore(
@@ -49,7 +92,16 @@ export function createMemoryLlmTraceStore(
     clear: async () => {
       writeRegistry(backing, { traces: [] });
     },
+    getById: async (id) => findLlmTraceById(readRegistry(backing), id),
+    list: async (query) => queryLlmTraces(readRegistry(backing), query),
   };
+}
+
+function clampLimit(limit: number | undefined): number {
+  if (limit === undefined || !Number.isFinite(limit)) {
+    return LLM_TRACE_LIST_DEFAULT_LIMIT;
+  }
+  return Math.min(LLM_TRACE_MAX_ENTRIES, Math.max(1, Math.floor(limit)));
 }
 
 export function parseLlmTraceRegistry(value: unknown): LlmTraceRegistry | undefined {

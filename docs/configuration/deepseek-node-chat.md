@@ -110,6 +110,24 @@ AI Reply → Question Proposal → Learning Node Evolution
 
 The UI renders the answer in the message list and typed suggestions below the conversation.
 
+## LLM Trace Viewer
+
+Node Chat writes process-local traces through TASK-LLM-TRACE-001 (`plt.llm_trace.v1` in the Chat API process). Developers can inspect them without changing the write path:
+
+1. Start `npm run dev:chat`.
+2. Send a Node Chat message.
+3. Open **Settings → LLM Traces**.
+
+HTTP contracts (proxied by Vite as `/api/llm-traces`):
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/api/llm-traces` | List summaries (`limit`, optional `status`, `projectId`) |
+| `GET` | `/api/llm-traces/:id` | Full `LLMInteractionTrace` |
+| `DELETE` | `/api/llm-traces` | Clear process-local traces |
+
+Traces are lost when the Chat API process restarts. This is expected for the MVP.
+
 ## Test
 
 Automated tests:
@@ -125,5 +143,7 @@ Manual smoke test:
 2. Open a project and click a node chat action.
 3. Send a question such as “What should I focus on next?”
 4. Confirm the assistant answer and question suggestions appear.
+5. Open Settings → LLM Traces and confirm the call appears; open detail for input/answer.
 
 Without an API key, the chat API returns `503` and the UI shows the existing provider error message.
+Without `VITE_CHAT_API_URL`, the Trace Viewer shows that the Chat API is not configured.

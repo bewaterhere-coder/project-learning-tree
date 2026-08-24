@@ -1698,3 +1698,219 @@ html[data-theme="light"] .react-flow__pane.dragging {
   font-size: 13px;
   box-shadow: var(--shadow-overlay);
 }
+
+.settings-dev-action {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.llm-trace-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--color-bg-canvas) 35%, rgba(0, 0, 0, 0.45));
+}
+
+.llm-trace-viewer {
+  width: min(1100px, 100%);
+  height: min(720px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-panel);
+  box-shadow: var(--shadow-overlay);
+  animation: motion-dialog-in var(--motion-normal) var(--motion-ease);
+}
+
+.llm-trace-viewer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.llm-trace-viewer-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.llm-trace-viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.llm-trace-viewer-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(240px, 0.9fr) minmax(280px, 1.2fr);
+  gap: 12px;
+}
+
+.llm-trace-viewer-side {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-right: 1px solid var(--color-border-default);
+  padding-right: 12px;
+}
+
+.llm-trace-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.llm-trace-row {
+  width: 100%;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: start;
+  text-align: left;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border-default);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-canvas);
+  color: inherit;
+  cursor: pointer;
+}
+
+.llm-trace-row[data-selected="true"] {
+  border-color: var(--color-accent);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-canvas));
+}
+
+.llm-trace-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.llm-trace-row-meta,
+.llm-trace-muted,
+.llm-trace-count {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.llm-trace-row-preview {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.llm-trace-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  background: color-mix(in srgb, var(--color-border-default) 55%, transparent);
+}
+
+.llm-trace-status[data-status="ok"] {
+  background: color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
+
+.llm-trace-status[data-status="error"] {
+  background: color-mix(in srgb, var(--color-danger, #c44) 28%, transparent);
+}
+
+.llm-trace-detail {
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.llm-trace-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.llm-trace-detail-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+}
+
+.llm-trace-detail-meta dt {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+
+.llm-trace-detail-meta dd {
+  margin: 0;
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.llm-trace-block h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+}
+
+.llm-trace-block pre {
+  margin: 0;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border-default);
+  background: var(--color-bg-canvas);
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  max-height: 220px;
+  overflow: auto;
+}
+
+.llm-trace-block-error pre {
+  border-color: color-mix(in srgb, var(--color-danger, #c44) 45%, var(--color-border-default));
+}
+
+.llm-trace-banner {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  background: color-mix(in srgb, var(--color-accent) 12%, var(--color-bg-canvas));
+  font-size: 13px;
+}
+
+.llm-trace-banner-error {
+  background: color-mix(in srgb, var(--color-danger, #c44) 16%, var(--color-bg-canvas));
+}
+
+@media (max-width: 800px) {
+  .llm-trace-viewer-body {
+    grid-template-columns: 1fr;
+  }
+
+  .llm-trace-viewer-side {
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-default);
+    padding-right: 0;
+    padding-bottom: 12px;
+    max-height: 40%;
+  }
+}
