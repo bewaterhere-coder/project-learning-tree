@@ -5,6 +5,8 @@ runtime:
   repository: bewaterhere-coder/DevForge
   branch: main
   manifest: devforge.runtime.yaml
+  project_registry: system/development-project-registry.yaml
+  workflow_registry: workflows/workflow-registry.yaml
   workflow: project_development
   compatibility: "^1.0"
   revision_policy: compatible_main
