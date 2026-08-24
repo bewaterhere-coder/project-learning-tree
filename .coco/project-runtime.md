@@ -77,6 +77,9 @@ It inherits the DevForge Development Runtime contracts.
 ```yaml
 workflow_binding:
   source: bewaterhere-coder/DevForge
+  manifest: devforge.runtime.yaml
+  project_registry: system/development-project-registry.yaml
+  workflow_registry: workflows/workflow-registry.yaml
   core:
     contract: contracts/development/workflow-core.md
   task:
@@ -111,6 +114,8 @@ runtime_contract:
       repository: bewaterhere-coder/DevForge
       branch: main
       manifest: devforge.runtime.yaml
+      project_registry: system/development-project-registry.yaml
+      workflow_registry: workflows/workflow-registry.yaml
     workflow:
       id: project_development
       version: 1.0
