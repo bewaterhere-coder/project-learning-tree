@@ -10,7 +10,7 @@ depends_on: TASK-LLM-TRACE-001
 
 This is the canonical implementation plan for TASK-LLM-TRACE-VIEWER-001. It records current-architecture evidence and the smallest change that lets developers inspect traces produced by TASK-LLM-TRACE-001.
 
-**Gate:** `implementation` — plan approved; implementing read-path API + Trace Viewer UI.
+**Gate:** `acceptance` — implementation complete on PR; awaiting acceptance review.
 
 **Hard constraints (Plan + Implementation):**
 
