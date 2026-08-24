@@ -36,7 +36,7 @@ Implement one milestone at a time. Do not implement future milestone functionali
 
 ## Project workflow bootstrap
 
-Before a project-development command or workflow-sensitive action, load `.coco/bootstrap.md` and follow its required load order. In particular, commands such as `发送需求给 Cursor`, `Review TASK-<id> Plan`, `Review TASK-<id> PR`, and `验收 TASK-<id>` require the project workflow binding to be resolved first.
+Before a project-development command or workflow-sensitive action, load `.coco/bootstrap.md` and follow its required load order. In particular, commands such as `发送需求给 Cursor`, `#开发评审 TASK-<id>`, and `#开发验收 TASK-<id>` require `.coco/development.yaml` and the DevForge workflow binding to be resolved first. Legacy Review/验收 forms remain compatibility aliases only.
 
 Loading project contracts restores context only. It does not authorize or start a workflow action.
 

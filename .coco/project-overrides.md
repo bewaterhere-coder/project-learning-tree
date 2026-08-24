@@ -4,7 +4,7 @@
 
 Define project-specific development rules for learntree.
 
-The project inherits the global Development Workflow Core from Coco-AI-OS.
+The project inherits the global Development Workflow Core from DevForge.
 
 This file only contains project-specific differences.
 
@@ -13,7 +13,7 @@ This file only contains project-specific differences.
 Global workflow source:
 
 ```
-Coco-AI-OS/contracts/development/
+bewaterhere-coder/DevForge:contracts/development/
 ```
 
 Adapter:

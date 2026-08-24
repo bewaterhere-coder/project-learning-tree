@@ -13,6 +13,8 @@ Load order:
 ```
 .coco/project.md
         ↓
+.coco/development.yaml
+        ↓
 .coco/project-runtime.md
         ↓
 .coco/workflow-binding.md
@@ -69,11 +71,9 @@ Example:
 Then:
 
 ```
-Create Task
+Write Requirement Artifact + Create Task ID
         ↓
-Create PR
-        ↓
-Write Requirement Artifact
+Resolve transport and create/reuse branch or Draft PR when required
         ↓
 Wait for Cursor Plan
 ```
@@ -86,3 +86,5 @@ After loading contracts:
 - report current Project State
 - report current Task Stage
 - wait for user action
+
+`.coco/development.yaml` is the machine-readable Development Runtime binding. `project-runtime.md`, `workflow-binding.md`, and `task-state-model.md` remain compatibility documentation during the DevForge 1.x migration and must not override it.

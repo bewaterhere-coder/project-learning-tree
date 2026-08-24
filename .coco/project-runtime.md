@@ -43,7 +43,7 @@ Project Bootstrap
       ↓
 Project Runtime Contract
       ↓
-Coco Runtime Resolution
+DevForge Runtime Resolution
       ↓
 Development Workflow Contracts
 ```
@@ -53,7 +53,7 @@ Development Workflow Contracts
 Project context priority:
 
 ```
-Coco Runtime
+DevForge Runtime
     >
 Project Runtime Contract
     >
@@ -72,11 +72,11 @@ project:
 
 This project does not own a standalone development workflow.
 
-It inherits the Coco Development System contracts.
+It inherits the DevForge Development Runtime contracts.
 
 ```yaml
 workflow_binding:
-  source: bewaterhere-coder/Coco-AI-OS
+  source: bewaterhere-coder/DevForge
   core:
     contract: contracts/development/workflow-core.md
   task:
@@ -108,13 +108,13 @@ Runtime loading status must be visible in project state.
 runtime_contract:
   expected:
     source:
-      repository: bewaterhere-coder/Coco-AI-OS
+      repository: bewaterhere-coder/DevForge
       branch: main
-      manifest: coco.runtime.yaml
+      manifest: devforge.runtime.yaml
     workflow:
       id: project_development
       version: 1.0
-    revision_policy: canonical_main
+    revision_policy: compatible_main
 
   loaded:
     version:
@@ -125,7 +125,7 @@ runtime_contract:
 Rules:
 
 - Expected records the canonical Runtime source and compatible Workflow required by this project.
-- `revision_policy: canonical_main` resolves the current canonical revision; this project must not pin an unrelated project commit as the Coco Runtime revision.
+- `revision_policy: compatible_main` resolves the current canonical revision only within the declared compatible DevForge major version.
 - Loaded records the Runtime Contract actually resolved in the current session.
 - A project file must not assume the current session has loaded the canonical Runtime.
 - Stale Contract state requires refresh before workflow execution.
@@ -170,11 +170,11 @@ Example:
 
 ```yaml
 runtime_health:
-  source_repository: bewaterhere-coder/Coco-AI-OS
+  source_repository: bewaterhere-coder/DevForge
   source_branch: main
   workflow_id: project_development
-  contract_version: 1.1
-  revision_policy: canonical_main
+  contract_version: 1.0
+  revision_policy: compatible_main
   loaded_revision:
   health: unknown
 

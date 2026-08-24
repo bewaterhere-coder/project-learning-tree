@@ -1,5 +1,7 @@
 # Task State Model
 
+This file records the project-facing compatibility view of DevForge 1.x stages. DevForge owns the canonical transition rules; this project does not redefine them.
+
 ## Stages
 
 ```
