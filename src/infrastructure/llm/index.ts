@@ -5,8 +5,17 @@ export {
   resolveDeepSeekRuntimeConfig,
   DEEPSEEK_DEFAULTS,
 } from "./deepseek.js";
+export {
+  createMockLlmProvider,
+  MOCK_LLM_PROVIDER_ID,
+  type MockLlmProviderOptions,
+} from "./mock.js";
 export { parseNodeChatAiResponse } from "./parse-response.js";
 export { buildNodeChatMessages, extractNodeChatHistory } from "./prompt.js";
+export {
+  withLlmTrace,
+  type LlmTraceMiddlewareOptions,
+} from "./with-trace.js";
 export {
   type LlmProvider,
   type LlmProviderConfig,
