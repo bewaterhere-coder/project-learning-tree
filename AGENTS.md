@@ -34,6 +34,12 @@ LLMs propose learning actions. The domain engine validates and executes state ch
 
 Implement one milestone at a time. Do not implement future milestone functionality unless required by an explicit current-milestone invariant.
 
+## Project workflow bootstrap
+
+Before a project-development command or workflow-sensitive action, load `.coco/bootstrap.md` and follow its required load order. In particular, commands such as `发送需求给 Cursor`, `Review TASK-<id> Plan`, `Review TASK-<id> PR`, and `验收 TASK-<id>` require the project workflow binding to be resolved first.
+
+Loading project contracts restores context only. It does not authorize or start a workflow action.
+
 ## Verification
 
 Every material domain state transition requires unit tests. A milestone is not complete until its acceptance tests pass.

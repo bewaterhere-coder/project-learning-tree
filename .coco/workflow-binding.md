@@ -18,12 +18,25 @@ contracts/development/workflow-core.md
 ```yaml
 workflow:
   source: Coco-AI-OS
-  contract: development/workflow-core
+  contract: contracts/development/workflow-core.md
+  id: project_development
+  version: 1.0
 
 adapter:
   development:
     - cursor
 ```
+
+## Project Commands
+
+Project commands are resolved only after `.coco/bootstrap.md` has loaded this binding:
+
+- `发送需求给 Cursor` → enter Requirement handoff for the current project.
+- `Review TASK-<id> Plan` → run the Plan Review gate.
+- `Review TASK-<id> PR` → run the Implementation Review gate.
+- `验收 TASK-<id>` → run the Acceptance gate.
+
+Loading this binding never executes a command by itself.
 
 ## Project Usage
 

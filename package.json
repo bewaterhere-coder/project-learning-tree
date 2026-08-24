@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:update-snapshots": "E2E_VISUAL=1 playwright test --update-snapshots changed",
+    "validate:coco-runtime": "node scripts/validate-coco-runtime.mjs",
     "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.e2e.json"
   },
   "dependencies": {

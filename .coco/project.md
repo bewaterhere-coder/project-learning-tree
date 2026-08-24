@@ -36,6 +36,11 @@ Continue evolving the Learning Tree MVP beyond M3 Node Conversation, including M
 
 Read only as needed for the current task:
 
+- `.coco/bootstrap.md` — project workflow bootstrap and load order.
+- `.coco/project-runtime.md` — canonical Coco Runtime and Workflow binding expectations.
+- `.coco/workflow-binding.md` — Development Workflow Core and Cursor adapter binding.
+- `.coco/project-overrides.md` — project-specific development rules.
+- `.coco/task-state-model.md` — project development stages and gates.
 - `AGENTS.md`
 - `docs/product/interaction-spec.md`
 - `docs/product/domain-model.md`

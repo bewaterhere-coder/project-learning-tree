@@ -107,28 +107,34 @@ Runtime loading status must be visible in project state.
 ```yaml
 runtime_contract:
   expected:
-    version: 1.1
-    revision: e51681c16556935a841ef0bb97735706dfecf447
-    source: GitHub
-    branch: main
+    source:
+      repository: bewaterhere-coder/Coco-AI-OS
+      branch: main
+      manifest: coco.runtime.yaml
+    workflow:
+      id: project_development
+      version: 1.0
+    revision_policy: canonical_main
 
   loaded:
+    version:
     revision:
     health: unknown
 ```
 
 Rules:
 
-- Expected records the Runtime Contract required by this project.
+- Expected records the canonical Runtime source and compatible Workflow required by this project.
+- `revision_policy: canonical_main` resolves the current canonical revision; this project must not pin an unrelated project commit as the Coco Runtime revision.
 - Loaded records the Runtime Contract actually resolved in the current session.
-- A project file must not assume the current session has loaded the expected Runtime.
+- A project file must not assume the current session has loaded the canonical Runtime.
 - Stale Contract state requires refresh before workflow execution.
 
 Runtime Contract states:
 
 ```text
 loaded:
-  Current session matches expected revision.
+  Current session matches the resolved canonical revision and compatible Workflow version.
 
 outdated:
   Current session loaded an older revision.
@@ -164,8 +170,11 @@ Example:
 
 ```yaml
 runtime_health:
+  source_repository: bewaterhere-coder/Coco-AI-OS
+  source_branch: main
+  workflow_id: project_development
   contract_version: 1.1
-  expected_revision:
+  revision_policy: canonical_main
   loaded_revision:
   health: unknown
 

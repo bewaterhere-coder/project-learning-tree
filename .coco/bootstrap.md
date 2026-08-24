@@ -11,14 +11,20 @@ Entering this project should restore context before any workflow action.
 Load order:
 
 ```
+.coco/project.md
+        ↓
 .coco/project-runtime.md
         ↓
-.coco/develop-workflow.md
+.coco/workflow-binding.md
+        ↓
+.coco/project-overrides.md
         ↓
 .coco/task-state-model.md
         ↓
 .coco/project-state.md (if exists)
 ```
+
+Every required path above must be read successfully before the Development Workflow is reported as loaded. Optional project state may be absent.
 
 ## Important Boundary
 
